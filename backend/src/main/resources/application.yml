@@ -1,0 +1,291 @@
+spring:
+  application:
+    name: ggwifi-backend
+  
+  # Database Configuration - Using H2 for testing
+  datasource:
+    url: jdbc:mysql://localhost:3306/ggwifi?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: root
+    password: kolombo@123%
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  # JPA Configuration
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        show-sql: ${SHOW_SQL:false}
+        format-sql: true
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+    open-in-view: false
+
+  # Flyway Migration - Enabled for MySQL
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    validate-on-migrate: true
+    out-of-order: false
+    table: flyway_schema_history
+
+  # Redis Configuration - Disabled for now
+  data:
+    redis:
+      enabled: false
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: 0
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
+
+  # Mail Configuration
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+
+# Server Configuration
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: /api/v1
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:Z2duZXR3b3Jrcy1zdXBlci1zZWNyZXQta2V5LWZvci1qd3QtdG9rZW4tZ2VuZXJhdGlvbi1hbmQtdmFsaWRhdGlvbi0yMDI0}
+  expiration: ${JWT_EXPIRATION:86400000} # 24 hours in milliseconds
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800000} # 7 days in milliseconds
+
+# OTP Configuration
+otp:
+  expiration: ${OTP_EXPIRATION:300} # 5 minutes in seconds
+  max-retries: ${OTP_MAX_RETRIES:3}
+  length: ${OTP_LENGTH:6}
+
+# Rate Limiting Configuration
+rate-limit:
+  login:
+    requests: ${RATE_LIMIT_LOGIN_REQUESTS:5}
+    window: ${RATE_LIMIT_LOGIN_WINDOW:300} # 5 minutes
+  otp:
+    requests: ${RATE_LIMIT_OTP_REQUESTS:3}
+    window: ${RATE_LIMIT_OTP_WINDOW:300} # 5 minutes
+  general:
+    requests: ${RATE_LIMIT_GENERAL_REQUESTS:100}
+    window: ${RATE_LIMIT_GENERAL_WINDOW:60} # 1 minute
+
+# Backend Configuration - Make backend optional
+backend:
+  enabled: ${BACKEND_ENABLED:true}
+  database-enabled: ${BACKEND_DATABASE_ENABLED:true}
+  radius-enabled: ${BACKEND_RADIUS_ENABLED:true}
+  mikrotik-enabled: ${BACKEND_MIKROTIK_ENABLED:true}
+  payment-enabled: ${BACKEND_PAYMENT_ENABLED:true}
+  sms-enabled: ${BACKEND_SMS_ENABLED:true}
+  email-enabled: ${BACKEND_EMAIL_ENABLED:true}
+  voucher-enabled: ${BACKEND_VOUCHER_ENABLED:true}
+  loyalty-enabled: ${BACKEND_LOYALTY_ENABLED:true}
+  marketing-enabled: ${BACKEND_MARKETING_ENABLED:true}
+  analytics-enabled: ${BACKEND_ANALYTICS_ENABLED:true}
+  
+  # Fallback modes
+  use-mock-data: ${BACKEND_USE_MOCK_DATA:true}
+  use-local-storage: ${BACKEND_USE_LOCAL_STORAGE:true}
+  use-file-config: ${BACKEND_USE_FILE_CONFIG:true}
+  
+  # Mock data configuration
+  mock-data:
+    enabled: ${BACKEND_MOCK_DATA_ENABLED:true}
+    data-path: ${BACKEND_MOCK_DATA_PATH:mock-data/}
+    auto-generate: ${BACKEND_MOCK_AUTO_GENERATE:true}
+    default-package-count: ${BACKEND_MOCK_PACKAGE_COUNT:10}
+    default-voucher-count: ${BACKEND_MOCK_VOUCHER_COUNT:50}
+    default-user-count: ${BACKEND_MOCK_USER_COUNT:100}
+  
+  # Feature toggles
+  features:
+    user-management: ${BACKEND_FEATURE_USER_MANAGEMENT:true}
+    package-management: ${BACKEND_FEATURE_PACKAGE_MANAGEMENT:true}
+    voucher-management: ${BACKEND_FEATURE_VOUCHER_MANAGEMENT:true}
+    payment-management: ${BACKEND_FEATURE_PAYMENT_MANAGEMENT:true}
+    session-management: ${BACKEND_FEATURE_SESSION_MANAGEMENT:true}
+    coverage-management: ${BACKEND_FEATURE_COVERAGE_MANAGEMENT:true}
+    campaign-management: ${BACKEND_FEATURE_CAMPAIGN_MANAGEMENT:true}
+    loyalty-management: ${BACKEND_FEATURE_LOYALTY_MANAGEMENT:true}
+    analytics-management: ${BACKEND_FEATURE_ANALYTICS_MANAGEMENT:true}
+    router-management: ${BACKEND_FEATURE_ROUTER_MANAGEMENT:true}
+
+# CORS Configuration
+cors:
+  allowed-origins:
+    - https://admin.ggwifi.co.tz
+    - https://connect.ggwifi.co.tz
+    - https://www.ggwifi.co.tz
+    - http://localhost:3000
+    - http://localhost:3001
+    - http://localhost:3002
+  allowed-methods:
+    - GET
+    - POST
+    - PUT
+    - DELETE
+    - OPTIONS
+  allowed-headers:
+    - "*"
+  allow-credentials: true
+  max-age: 3600
+
+# RADIUS Configuration
+radius:
+  server:
+    host: ${RADIUS_HOST:localhost}
+    port: ${RADIUS_PORT:1812}
+    secret: ${RADIUS_SECRET:testing123}
+    timeout: ${RADIUS_TIMEOUT:5000} # 5 seconds
+    retries: ${RADIUS_RETRIES:3}
+  accounting:
+    port: ${RADIUS_ACCOUNTING_PORT:1813}
+  nas-identifier: ${RADIUS_NAS_IDENTIFIER:GGNetworks-Hotspot}
+
+# MikroTik Configuration
+mikrotik:
+  routers:
+    - name: "Main Router"
+      ip: ${MIKROTIK_MAIN_IP:192.168.1.1}
+      username: ${MIKROTIK_USERNAME:admin}
+      password: ${MIKROTIK_PASSWORD:}
+      port: ${MIKROTIK_PORT:8728}
+      location: "Main Office"
+      enabled: true
+    - name: "Branch Router"
+      ip: ${MIKROTIK_BRANCH_IP:192.168.2.1}
+      username: ${MIKROTIK_USERNAME:admin}
+      password: ${MIKROTIK_PASSWORD:}
+      port: ${MIKROTIK_PORT:8728}
+      location: "Branch Office"
+      enabled: true
+  api:
+    timeout: ${MIKROTIK_API_TIMEOUT:10000} # 10 seconds
+    retries: ${MIKROTIK_API_RETRIES:3}
+    session-timeout: ${MIKROTIK_SESSION_TIMEOUT:300} # 5 minutes
+
+# SELCOM Payment Gateway Configuration
+selcom:
+  api:
+    base-url: ${SELCOM_BASE_URL:https://paypoint.selcommobile.com}
+    merchant-id: ${SELCOM_MERCHANT_ID:}
+    merchant-key: ${SELCOM_MERCHANT_KEY:}
+    api-key: ${SELCOM_API_KEY:}
+    api-secret: ${SELCOM_API_SECRET:}
+  webhook:
+    secret: ${SELCOM_WEBHOOK_SECRET:}
+  payment:
+    timeout: ${SELCOM_PAYMENT_TIMEOUT:300000} # 5 minutes
+    currency: ${SELCOM_CURRENCY:TZS}
+    language: ${SELCOM_LANGUAGE:en}
+
+# SMS Service Configuration
+sms:
+  api:
+    base-url: ${SMS_API_BASE_URL:https://api.smsprovider.com}
+    key: ${SMS_API_KEY:}
+    secret: ${SMS_API_SECRET:}
+  sender-id: ${SMS_SENDER_ID:GGNetworks}
+  timeout: ${SMS_TIMEOUT:30000} # 30 seconds
+
+# Voucher Configuration
+voucher:
+  code:
+    length: ${VOUCHER_CODE_LENGTH:8}
+    prefix: ${VOUCHER_PREFIX:G}
+  expiration:
+    default-days: ${VOUCHER_DEFAULT_EXPIRATION:30}
+  validation:
+    check-mac: ${VOUCHER_CHECK_MAC:true}
+    allow-multiple-devices: ${VOUCHER_ALLOW_MULTIPLE_DEVICES:false}
+
+# Session Management
+session:
+  timeout: ${SESSION_TIMEOUT:3600} # 1 hour in seconds
+  cleanup-interval: ${SESSION_CLEANUP_INTERVAL:300} # 5 minutes
+  max-concurrent: ${SESSION_MAX_CONCURRENT:3}
+
+# Logging Configuration
+logging:
+  level:
+    com.ggnetworks: ${LOG_LEVEL:DEBUG}
+    org.springframework.security: ${SECURITY_LOG_LEVEL:DEBUG}
+    org.hibernate.SQL: ${SQL_LOG_LEVEL:DEBUG}
+    org.hibernate.type.descriptor.sql.BasicBinder: ${SQL_PARAM_LOG_LEVEL:DEBUG}
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/ggnetworks-backend.log
+    max-size: 100MB
+    max-history: 30
+
+# Management Endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+  health:
+    mail:
+      enabled: false
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# Health Check Configuration
+health:
+  check:
+    interval: ${HEALTH_CHECK_INTERVAL:30} # 30 seconds
+    timeout: ${HEALTH_CHECK_TIMEOUT:5} # 5 seconds
+
+# Swagger/OpenAPI
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+  info:
+    title: GGNetworks Backend API
+    description: Centralized backend API for GGNetworks admin, hotspot, and PPPoE portals
+    version: 1.0.0
+    contact:
+      name: GGNetworks Support
+      email: support@ggnetworks.co.tz 

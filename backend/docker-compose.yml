@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: ggnetworks-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: ggnetworks
+      MYSQL_USER: ggnetworks
+      MYSQL_PASSWORD: ggnetworks123
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./src/main/resources/db/migration:/docker-entrypoint-initdb.d
+      - ./backend/freeradius-sql-init:/docker-entrypoint-initdb.d/radius
+    networks:
+      - ggnetworks-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: ggnetworks-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - ggnetworks-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      timeout: 20s
+      retries: 10
+
+  # GGNetworks Backend Application
+  ggnetworks-backend:
+    build: .
+    container_name: ggnetworks-backend
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - DB_USERNAME=ggnetworks
+      - DB_PASSWORD=ggnetworks123
+      - DB_HOST=mysql
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - JWT_SECRET=ggnetworks-super-secret-key-for-jwt-token-generation-and-validation-2024
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - ggnetworks-network
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+  redis_data:
+
+networks:
+  ggnetworks-network:
+    driver: bridge 

@@ -1,0 +1,53 @@
+name: Deploy Admin Portal to Cloudflare Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Frontend/admin_portal/**'
+      - 'Frontend/admin_portal/**/*'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy Admin Portal
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'Frontend/admin_portal/package-lock.json'
+          
+      - name: Install dependencies
+        run: |
+          cd Frontend/admin_portal
+          npm ci
+          
+      - name: Build application
+        run: |
+          cd Frontend/admin_portal
+          npm run build
+          
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: ggwifi-admin-portal
+          directory: Frontend/admin_portal/dist
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Notify deployment status
+        if: always()
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ Admin Portal deployed successfully to admin.ggwifi.co.tz"
+          else
+            echo "❌ Admin Portal deployment failed"
+          fi

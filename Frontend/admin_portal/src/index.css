@@ -1,0 +1,85 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1E1E1E;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #FFD700;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #E6C200;
+}
+
+/* Custom focus styles */
+.gg-focus {
+  @apply focus:outline-none focus:ring-2 focus:ring-gg-gold focus:ring-opacity-50;
+}
+
+/* Golden glow utility */
+.gg-glow {
+  @apply shadow-gg-glow;
+}
+
+.gg-glow-strong {
+  @apply shadow-gg-glow-strong;
+}
+
+.gg-glow-subtle {
+  @apply shadow-gg-glow-subtle;
+}
+
+/* Glass morphism effect */
+.glass {
+  @apply bg-gg-charcoal bg-opacity-80 backdrop-blur-sm border border-gg-gold border-opacity-20;
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #FFD700 0%, #FFF176 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Custom button styles */
+.btn-primary {
+  @apply bg-gg-gold text-gg-black font-semibold px-6 py-3 rounded-2xl hover:bg-gg-gold-dark transition-all duration-300 gg-focus gg-glow-subtle hover:gg-glow;
+}
+
+.btn-secondary {
+  @apply bg-gg-dark-gray text-gg-text-primary font-semibold px-6 py-3 rounded-2xl hover:bg-gg-light-gray transition-all duration-300 gg-focus border border-gg-gold border-opacity-30 hover:border-opacity-60;
+}
+
+/* Card styles */
+.card {
+  @apply bg-gg-charcoal rounded-2xl p-6 border border-gg-gold border-opacity-10 hover:border-opacity-30 transition-all duration-300;
+}
+
+/* Input styles */
+.input-primary {
+  @apply bg-gg-dark-gray border border-gg-gold border-opacity-30 rounded-xl px-4 py-3 text-gg-text-primary placeholder-gg-text-muted focus:border-opacity-60 focus:ring-2 focus:ring-gg-gold focus:ring-opacity-20 transition-all duration-300;
+}
+
+/* Animation classes */
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite alternate;
+}

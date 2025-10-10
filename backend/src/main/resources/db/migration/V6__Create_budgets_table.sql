@@ -1,0 +1,27 @@
+-- Create budgets table
+CREATE TABLE budgets (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    budget_name VARCHAR(255) NOT NULL,
+    description TEXT,
+    budget_amount DECIMAL(15,2) NOT NULL,
+    spent_amount DECIMAL(15,2) DEFAULT 0.00,
+    remaining_amount DECIMAL(15,2),
+    budget_type ENUM('OPERATIONAL', 'CAPITAL', 'MARKETING', 'MAINTENANCE', 'SALARY', 'UTILITIES', 'RENT', 'INSURANCE', 'TAXES', 'EMERGENCY', 'PROFIT_SHARING', 'INVESTMENT', 'SAVINGS', 'OTHER') NOT NULL,
+    budget_category ENUM('INCOME', 'EXPENSE', 'PROFIT', 'SAVINGS', 'INVESTMENT') NOT NULL,
+    status ENUM('ACTIVE', 'COMPLETED', 'OVERSPENT', 'SUSPENDED', 'CANCELLED') NOT NULL DEFAULT 'ACTIVE',
+    start_date DATETIME NOT NULL,
+    end_date DATETIME NOT NULL,
+    is_recurring BOOLEAN DEFAULT FALSE,
+    recurrence_type ENUM('DAILY', 'WEEKLY', 'MONTHLY', 'QUARTERLY', 'YEARLY', 'NONE'),
+    alert_threshold_percentage INT DEFAULT 80,
+    notes TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at DATETIME NULL,
+    INDEX idx_budget_type (budget_type),
+    INDEX idx_budget_category (budget_category),
+    INDEX idx_status (status),
+    INDEX idx_start_date (start_date),
+    INDEX idx_end_date (end_date),
+    INDEX idx_deleted_at (deleted_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci; 

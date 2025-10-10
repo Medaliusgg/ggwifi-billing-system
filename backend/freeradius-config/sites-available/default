@@ -1,0 +1,134 @@
+# FreeRADIUS Default Site Configuration for GGWIFI
+# This file configures the default virtual server for authentication and accounting
+
+# Authorize section
+authorize {
+    # Pre-process the incoming request
+    preprocess
+
+    # Look for users in the database
+    sql
+
+    # Look for groups in the database
+    sql
+
+    # Check if user exists and is active
+    -sql
+
+    # Handle different authentication methods
+    chap
+    mschap
+    digest
+    suffix
+    eap {
+        ok = return
+    }
+
+    # Log the authorization attempt
+    sql
+
+    # Set default reply attributes
+    reply_log
+
+    # Post-process the authorization
+    post-auth
+}
+
+# Authenticate section
+authenticate {
+    # PAP authentication
+    Auth-Type PAP {
+        sql
+    }
+
+    # CHAP authentication
+    Auth-Type CHAP {
+        sql
+    }
+
+    # MS-CHAP authentication
+    Auth-Type MS-CHAP {
+        sql
+    }
+
+    # EAP authentication
+    eap
+}
+
+# Preaccounting section
+preacct {
+    # Pre-process accounting packets
+    preprocess
+
+    # Set accounting session ID
+    acct_unique
+
+    # Log accounting start
+    sql
+
+    # Set reply attributes
+    reply_log
+}
+
+# Accounting section
+accounting {
+    # Log accounting packets
+    sql
+
+    # Update accounting records
+    sql
+
+    # Log accounting updates
+    reply_log
+
+    # Post-process accounting
+    post-auth
+}
+
+# Session section
+session {
+    # Update session information
+    sql
+
+    # Log session changes
+    reply_log
+}
+
+# Post-Auth section
+post-auth {
+    # Log successful authentication
+    sql
+
+    # Log failed authentication
+    sql
+
+    # Set reply attributes
+    reply_log
+
+    # Handle different reply types
+    if (reply:Packet-Type == Access-Accept) {
+        sql
+        reply_log
+    } else {
+        sql
+        reply_log
+    }
+}
+
+# Pre-Proxy section
+pre-proxy {
+    # Pre-process proxy requests
+    sql
+
+    # Log proxy requests
+    reply_log
+}
+
+# Post-Proxy section
+post-proxy {
+    # Post-process proxy responses
+    sql
+
+    # Log proxy responses
+    reply_log
+}
