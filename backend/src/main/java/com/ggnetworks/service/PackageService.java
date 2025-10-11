@@ -1,4 +1,5 @@
 package com.ggnetworks.service;
+import com.ggnetworks.entity.PackageType;
 
 import com.ggnetworks.entity.Package;
 import com.ggnetworks.repository.PackageRepository;
@@ -30,7 +31,7 @@ public class PackageService {
     public List<Package> getHotspotPackages() {
         try {
             log.info("Fetching hotspot packages for customer portal");
-            return packageRepository.findByTypeAndActive(Package.PackageType.HOTSPOT);
+            return packageRepository.findByTypeAndActive(PackageType.HOTSPOT);
         } catch (Exception e) {
             log.error("Failed to get hotspot packages", e);
             return List.of();
@@ -43,7 +44,7 @@ public class PackageService {
     public Page<Package> getHotspotPackages(Pageable pageable) {
         try {
             log.info("Fetching hotspot packages with pagination for customer portal");
-            return packageRepository.findByType(Package.PackageType.HOTSPOT, pageable);
+            return packageRepository.findByType(PackageType.HOTSPOT, pageable);
         } catch (Exception e) {
             log.error("Failed to get hotspot packages with pagination", e);
             return Page.empty(pageable);
@@ -56,7 +57,7 @@ public class PackageService {
     public List<Package> getPopularHotspotPackages() {
         try {
             log.info("Fetching popular hotspot packages for customer portal");
-            return packageRepository.findPopularPackagesByType(Package.PackageType.HOTSPOT);
+            return packageRepository.findPopularPackagesByType(PackageType.HOTSPOT);
         } catch (Exception e) {
             log.error("Failed to get popular hotspot packages", e);
             return List.of();
@@ -85,7 +86,7 @@ public class PackageService {
     public List<Package> getPppoePackages() {
         try {
             log.info("Fetching PPPoE packages for admin portal");
-            return packageRepository.findByTypeAndActive(Package.PackageType.PPPOE);
+            return packageRepository.findByTypeAndActive(PackageType.PPPOE);
         } catch (Exception e) {
             log.error("Failed to get PPPoE packages", e);
             return List.of();
@@ -95,7 +96,7 @@ public class PackageService {
     /**
      * Get packages by type for admin portal
      */
-    public List<Package> getPackagesByType(Package.PackageType type) {
+    public List<Package> getPackagesByType(PackageType type) {
         try {
             log.info("Fetching packages by type: {} for admin portal", type);
             return packageRepository.findByTypeAndActive(type);
@@ -124,7 +125,7 @@ public class PackageService {
     public Page<Package> getPppoePackages(Pageable pageable) {
         try {
             log.info("Fetching PPPoE packages with pagination for admin portal");
-            return packageRepository.findByType(Package.PackageType.PPPOE, pageable);
+            return packageRepository.findByType(PackageType.PPPOE, pageable);
         } catch (Exception e) {
             log.error("Failed to get PPPoE packages with pagination", e);
             return Page.empty(pageable);
@@ -137,7 +138,7 @@ public class PackageService {
     public List<Package> getPopularPppoePackages() {
         try {
             log.info("Fetching popular PPPoE packages for admin portal");
-            return packageRepository.findPopularPackagesByType(Package.PackageType.PPPOE);
+            return packageRepository.findPopularPackagesByType(PackageType.PPPOE);
         } catch (Exception e) {
             log.error("Failed to get popular PPPoE packages", e);
             return List.of();
@@ -238,8 +239,8 @@ public class PackageService {
      */
     public long getActivePackagesCount() {
         try {
-            long hotspotCount = packageRepository.countActiveByType(Package.PackageType.HOTSPOT);
-            long pppoeCount = packageRepository.countActiveByType(Package.PackageType.PPPOE);
+            long hotspotCount = packageRepository.countActiveByType(PackageType.HOTSPOT);
+            long pppoeCount = packageRepository.countActiveByType(PackageType.PPPOE);
             return hotspotCount + pppoeCount;
         } catch (Exception e) {
             log.error("Failed to get active packages count", e);
@@ -256,8 +257,8 @@ public class PackageService {
             
             long totalPackages = packageRepository.count();
             long activePackages = packageRepository.countByIsActiveTrue();
-            long hotspotPackages = packageRepository.countByType(Package.PackageType.HOTSPOT);
-            long pppoePackages = packageRepository.countByType(Package.PackageType.PPPOE);
+            long hotspotPackages = packageRepository.countByType(PackageType.HOTSPOT);
+            long pppoePackages = packageRepository.countByType(PackageType.PPPOE);
             long popularPackages = 0; // Placeholder - will be implemented when repository method is available
             
             Map<String, Object> stats = new HashMap<>();

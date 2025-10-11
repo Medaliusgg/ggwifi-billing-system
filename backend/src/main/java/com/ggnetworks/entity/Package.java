@@ -1,4 +1,5 @@
 package com.ggnetworks.entity;
+import com.ggnetworks.entity.PackageType;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
