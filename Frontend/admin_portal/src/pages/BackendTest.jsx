@@ -57,7 +57,7 @@ const BackendTest = () => {
       name: 'Login Test',
       endpoint: '/auth/login',
       method: 'POST',
-      data: { username: 'admin', password: 'admin123' }
+      data: { phoneNumber: '0773404760', password: 'Ashruha@123%' }
     },
     {
       name: 'Packages Test',
