@@ -154,14 +154,14 @@ const Dashboard = () => {
             className="text-gg-text-primary font-bold mb-2"
           >
             Dashboard Overview
-          </Typography>
+            </Typography>
           <Typography
             variant="body2"
             className="text-gg-text-secondary"
           >
             Welcome back! Here's what's happening with your network today.
-          </Typography>
-        </Box>
+            </Typography>
+          </Box>
         
         <Box className="flex items-center space-x-2">
           <Chip
@@ -175,10 +175,10 @@ const Dashboard = () => {
             disabled={refreshing}
             className="text-gg-gold hover:bg-gg-gold hover:bg-opacity-10"
           >
-            <RefreshIcon />
-          </IconButton>
+              <RefreshIcon />
+            </IconButton>
+          </Box>
         </Box>
-      </Box>
 
       {/* Stats Cards */}
       <Grid container spacing={3}>
@@ -199,7 +199,7 @@ const Dashboard = () => {
             />
           </motion.div>
         </Grid>
-        
+
         <Grid item xs={12} sm={6} lg={3}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -217,7 +217,7 @@ const Dashboard = () => {
             />
           </motion.div>
         </Grid>
-        
+
         <Grid item xs={12} sm={6} lg={3}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -235,7 +235,7 @@ const Dashboard = () => {
             />
           </motion.div>
         </Grid>
-        
+
         <Grid item xs={12} sm={6} lg={3}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -380,11 +380,11 @@ const Dashboard = () => {
       <Grid container spacing={3}>
         {/* Router Status */}
         <Grid item xs={12} lg={8}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.7 }}
-          >
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.7 }}
+      >
             <Typography
               variant="h6"
               className="text-gg-text-primary font-semibold mb-4"
@@ -428,7 +428,7 @@ const Dashboard = () => {
                   className="text-gg-text-primary font-semibold mb-4"
                 >
                   Recent Activities
-                </Typography>
+                        </Typography>
                 <List>
                   {recentActivities.map((activity, index) => (
                     <motion.div
@@ -456,7 +456,7 @@ const Dashboard = () => {
                               className="text-gg-text-primary"
                             >
                               {activity.message}
-                            </Typography>
+                        </Typography>
                           }
                           secondary={
                             <Typography
@@ -464,7 +464,7 @@ const Dashboard = () => {
                               className="text-gg-text-muted"
                             >
                               {activity.user} • {activity.time.toLocaleTimeString()}
-                            </Typography>
+                        </Typography>
                           }
                         />
                       </ListItem>
@@ -474,13 +474,13 @@ const Dashboard = () => {
                     </motion.div>
                   ))}
                 </List>
-              </CardContent>
-            </Card>
-          </motion.div>
+          </CardContent>
+        </Card>
+      </motion.div>
         </Grid>
       </Grid>
     </Box>
   );
 };
 
-export default Dashboard;
+export default Dashboard; 
