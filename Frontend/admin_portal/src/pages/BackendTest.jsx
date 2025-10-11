@@ -142,7 +142,7 @@ const BackendTest = () => {
             Backend Information
           </Typography>
           <Typography variant="body2">
-            <strong>Backend URL:</strong> http://ggwifiapp.medaliusggg.xyz:8080/api/v1
+            <strong>Backend URL:</strong> http://api.ggwifi.co.tz:8080/api/v1
           </Typography>
           <Typography variant="body2">
             <strong>Context Path:</strong> /api/v1
