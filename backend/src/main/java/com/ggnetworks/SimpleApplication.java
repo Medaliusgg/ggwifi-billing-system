@@ -21,14 +21,15 @@ public class SimpleApplication {
         SpringApplication.run(SimpleApplication.class, args);
     }
     
-    @GetMapping("/test")
-    public ResponseEntity<Map<String, Object>> test() {
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "success");
-        response.put("message", "Spring Boot is running!");
-        response.put("timestamp", System.currentTimeMillis());
-        return ResponseEntity.ok(response);
-    }
+        @GetMapping("/test")
+        public ResponseEntity<Map<String, Object>> test() {
+            Map<String, Object> response = new HashMap<>();
+            response.put("status", "success");
+            response.put("message", "Spring Boot is running! - CI/CD Test " + System.currentTimeMillis());
+            response.put("timestamp", System.currentTimeMillis());
+            response.put("deployment", "GitHub Actions CI/CD");
+            return ResponseEntity.ok(response);
+        }
     
     @GetMapping("/health")
     public ResponseEntity<Map<String, Object>> health() {
