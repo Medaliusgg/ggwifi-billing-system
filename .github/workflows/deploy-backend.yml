@@ -1,0 +1,48 @@
+name: Deploy Backend to VPS
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy-backend.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Deploy to VPS
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USERNAME }}
+        password: ${{ secrets.VPS_PASSWORD }}
+        port: ${{ secrets.VPS_PORT }}
+        script: |
+          cd /opt/ggwifi-billing-system/backend
+          
+          # Stop current Spring Boot application
+          sudo pkill -f java || true
+          
+          # Pull latest changes
+          git pull origin main
+          
+          # Rebuild application
+          mvn clean package -DskipTests
+          
+          # Start Spring Boot application in background
+          nohup java -jar target/ggnetworks-backend-1.0.0.jar > /var/log/ggwifi-backend.log 2>&1 &
+          
+          # Wait a moment and check if it's running
+          sleep 10
+          if pgrep -f "ggnetworks-backend" > /dev/null; then
+            echo "✅ Backend deployed successfully!"
+          else
+            echo "❌ Backend deployment failed!"
+            exit 1
+          fi

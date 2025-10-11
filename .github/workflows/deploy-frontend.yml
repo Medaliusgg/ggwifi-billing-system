@@ -1,0 +1,76 @@
+name: Deploy Frontend to Cloudflare Pages
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'Frontend/**'
+      - '.github/workflows/deploy-frontend.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy-admin-portal:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: Frontend/admin_portal/package-lock.json
+        
+    - name: Install dependencies
+      working-directory: Frontend/admin_portal
+      run: npm ci
+      
+    - name: Build admin portal
+      working-directory: Frontend/admin_portal
+      run: npm run build
+      env:
+        VITE_API_BASE_URL: https://api.ggwifi.co.tz/api/v1
+        
+    - name: Deploy to Cloudflare Pages
+      uses: cloudflare/pages-action@v1
+      with:
+        apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        projectName: ggwifi-admin-portal
+        directory: Frontend/admin_portal/dist
+        gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+
+  deploy-customer-portal:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: Frontend/customer_portal/package-lock.json
+        
+    - name: Install dependencies
+      working-directory: Frontend/customer_portal
+      run: npm ci
+      
+    - name: Build customer portal
+      working-directory: Frontend/customer_portal
+      run: npm run build
+      env:
+        VITE_API_BASE_URL: https://api.ggwifi.co.tz/api/v1
+        
+    - name: Deploy to Cloudflare Pages
+      uses: cloudflare/pages-action@v1
+      with:
+        apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        projectName: ggwifi-customer-portal
+        directory: Frontend/customer_portal/dist
+        gitHubToken: ${{ secrets.GITHUB_TOKEN }}
