@@ -31,6 +31,7 @@ import {
   AttachMoney as FinanceIcon,
   Star as LoyaltyIcon,
   Settings as SettingsIcon,
+  BugReport as BugReportIcon,
   Notifications as NotificationsIcon,
   AccountCircle as AccountIcon,
   Logout as LogoutIcon,

@@ -7,6 +7,7 @@ import AuthLayout from '@/layouts/AuthLayout';
 // Pages
 import Login from '@/pages/Login';
 import Dashboard from '@/pages/Dashboard';
+import BackendTest from '@/pages/BackendTest';
 
 // Placeholder pages for other routes
 const Customers = () => (
@@ -190,6 +191,17 @@ function App() {
           <ProtectedRoute>
             <DashboardLayout>
               <Settings />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/backend-test"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <BackendTest />
             </DashboardLayout>
           </ProtectedRoute>
         }

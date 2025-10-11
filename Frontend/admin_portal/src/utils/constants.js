@@ -244,6 +244,13 @@ export const NAVIGATION_ITEMS = [
     path: '/settings',
     roles: [USER_ROLES.ADMIN],
   },
+  {
+    id: 'backend-test',
+    label: 'Backend Test',
+    icon: 'BugReport',
+    path: '/backend-test',
+    roles: [USER_ROLES.ADMIN],
+  },
 ];
 
 // Export all constants
