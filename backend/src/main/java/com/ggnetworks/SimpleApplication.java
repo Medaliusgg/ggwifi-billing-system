@@ -25,9 +25,10 @@ public class SimpleApplication {
         public ResponseEntity<Map<String, Object>> test() {
             Map<String, Object> response = new HashMap<>();
             response.put("status", "success");
-            response.put("message", "Spring Boot is running! - CI/CD Test " + System.currentTimeMillis());
+            response.put("message", "Spring Boot is running! - Complete CI/CD Test " + System.currentTimeMillis());
             response.put("timestamp", System.currentTimeMillis());
-            response.put("deployment", "GitHub Actions CI/CD");
+            response.put("deployment", "GitHub Actions CI/CD - FULLY CONFIGURED");
+            response.put("status", "PRODUCTION READY");
             return ResponseEntity.ok(response);
         }
     
