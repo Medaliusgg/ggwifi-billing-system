@@ -157,7 +157,7 @@ note: these below are the creadentials
 
 Username: medalius
 
-Password: Kolombo@123
+Password: Kolombo@123%
 
 Base64 encoded string: QWxhZGRpbjpvcGVuIHNlc2FtZQ==
 

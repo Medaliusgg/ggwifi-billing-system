@@ -163,13 +163,13 @@ public class VoucherService {
      * Get active vouchers
      */
     public List<Voucher> getActiveVouchers() {
-        return voucherRepository.findByIsActiveTrue();
+        return voucherRepository.findUnusedVouchers(java.time.LocalDateTime.now());
     }
 
     /**
      * Get unused vouchers
      */
     public List<Voucher> getUnusedVouchers() {
-        return voucherRepository.findByIsUsedFalse();
+        return voucherRepository.findUnusedVouchers(java.time.LocalDateTime.now());
     }
 }

@@ -103,17 +103,17 @@ public class TransactionService {
     }
     
     /**
-     * Get transactions by customer phone
+     * Get transactions by customer ID
      */
-    public List<Transaction> getTransactionsByCustomerPhone(String phoneNumber) {
-        return transactionRepository.findByCustomerPhoneOrderByCreatedAtDesc(phoneNumber);
+    public List<Transaction> getTransactionsByCustomerId(Long customerId) {
+        return transactionRepository.findByCustomerIdOrderByCreatedAtDesc(customerId);
     }
     
     /**
-     * Get successful transactions by customer phone
+     * Get successful transactions by customer ID
      */
-    public List<Transaction> getSuccessfulTransactionsByCustomerPhone(String phoneNumber) {
-        return transactionRepository.findByCustomerPhoneAndStatusOrderByCreatedAtDesc(phoneNumber, Transaction.TransactionStatus.COMPLETED);
+    public List<Transaction> getSuccessfulTransactionsByCustomerId(Long customerId) {
+        return transactionRepository.findByCustomerIdAndStatusOrderByCreatedAtDesc(customerId, Transaction.TransactionStatus.COMPLETED);
     }
     
     /**

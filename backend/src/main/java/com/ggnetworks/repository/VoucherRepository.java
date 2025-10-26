@@ -100,8 +100,5 @@ public interface VoucherRepository extends JpaRepository<Voucher, Long> {
     // Dashboard methods
     long countByUsedAtAfter(LocalDateTime date);
     
-    // Additional methods needed by services
-    List<Voucher> findByIsActiveTrue();
-    
-    List<Voucher> findByIsUsedFalse();
+    // Additional methods needed by services (removed - use existing methods instead)
 }

@@ -13,7 +13,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration
-VPS_IP=""
+VPS_IP="139.84.241.182"
 VPS_USER="root"
 VPS_PORT="22"
 APP_NAME="ggnetworks-backend"

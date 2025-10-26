@@ -259,7 +259,7 @@ public class ZenoPayService {
      */
     private String getWebhookUrl() {
         try {
-            Optional<SystemConfiguration> webhookConfig = systemConfigurationRepository.findByKey("zenopay_webhook_url");
+            Optional<SystemConfiguration> webhookConfig = systemConfigurationRepository.findByConfigKey("zenopay_webhook_url");
             if (webhookConfig.isPresent()) {
                 return webhookConfig.get().getValue();
             }

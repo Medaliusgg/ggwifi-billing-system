@@ -12,8 +12,6 @@ public interface SystemConfigurationRepository extends JpaRepository<SystemConfi
     
     Optional<SystemConfiguration> findByConfigKey(String configKey);
     
-    Optional<SystemConfiguration> findByKey(String key);
-    
     List<SystemConfiguration> findByCategory(SystemConfiguration.ConfigCategory category);
     
     List<SystemConfiguration> findByIsActive(Boolean isActive);
