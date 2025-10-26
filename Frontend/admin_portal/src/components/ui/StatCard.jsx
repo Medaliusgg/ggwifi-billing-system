@@ -1,6 +1,7 @@
-import { Card, CardContent, Typography, Box, IconButton } from '@mui/material';
+import { Card, CardContent, Typography, Box, IconButton, Avatar, Chip, Skeleton } from '@mui/material';
 import { motion } from 'framer-motion';
-import { TrendingUp, TrendingDown, MoreVert } from '@mui/icons-material';
+import { TrendingUp, TrendingDown, MoreVert, Security as SecurityIcon } from '@mui/icons-material';
+import ggwifiTheme from '/src/theme/ggwifiTheme.js';
 
 const StatCard = ({ 
   title, 
@@ -11,16 +12,20 @@ const StatCard = ({
   color = 'primary',
   onClick,
   loading = false,
+  subtitle,
+  trend,
+  trendValue,
+  delay = 0,
   ...props 
 }) => {
   const getChangeColor = () => {
     switch (changeType) {
       case 'positive':
-        return '#4CAF50';
+        return ggwifiTheme.colors.success;
       case 'negative':
-        return '#F44336';
+        return ggwifiTheme.colors.error;
       default:
-        return '#9E9E9E';
+        return ggwifiTheme.colors.neutral;
     }
   };
 
@@ -36,86 +41,151 @@ const StatCard = ({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -5 }}
-      transition={{ duration: 0.3 }}
+      transition={{ duration: 0.5, delay }}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
     >
       <Card
-        className="card hover:shadow-gg-glow cursor-pointer transition-all duration-300"
         onClick={onClick}
         sx={{
-          backgroundColor: '#1E1E1E',
-          border: '1px solid rgba(255, 215, 0, 0.1)',
-          borderRadius: 3,
+          height: '100%',
+          background: ggwifiTheme.gradients.card,
+          borderRadius: ggwifiTheme.borderRadius.lg,
+          boxShadow: ggwifiTheme.shadows.lg,
+          border: `1px solid rgba(245, 183, 0, 0.1)`,
+          cursor: onClick ? 'pointer' : 'default',
+          transition: ggwifiTheme.transitions.normal,
+          position: 'relative',
+          overflow: 'hidden',
           '&:hover': {
-            borderColor: 'rgba(255, 215, 0, 0.3)',
-            boxShadow: '0 0 20px rgba(255, 215, 0, 0.2)',
+            boxShadow: ggwifiTheme.shadows.golden,
+            transform: 'translateY(-4px)',
+            borderColor: `rgba(245, 183, 0, 0.3)`,
           },
         }}
-        {...props}
       >
-        <CardContent className="p-6">
-          <Box className="flex items-center justify-between mb-4">
-            <Box
-              className="w-12 h-12 rounded-2xl flex items-center justify-center"
-              sx={{
-                backgroundColor: color === 'primary' ? '#FFD70020' : '#FFD70010',
-                border: `1px solid ${color === 'primary' ? '#FFD70040' : '#FFD70020'}`,
-              }}
-            >
-              {Icon && (
-                <Icon
-                  className={color === 'primary' ? 'text-gg-gold' : 'text-gg-text-secondary'}
-                  sx={{ fontSize: 24 }}
-                />
-              )}
-            </Box>
-            <IconButton
-              size="small"
-              className="text-gg-text-muted hover:text-gg-gold"
-              onClick={(e) => {
-                e.stopPropagation();
-                // Handle menu actions
-              }}
-            >
-              <MoreVert />
-            </IconButton>
-          </Box>
-
-          <Box className="space-y-2">
-            <Typography
-              variant="h4"
-              className="text-gg-text-primary font-bold"
-            >
-              {loading ? '...' : value}
-            </Typography>
-            
-            <Typography
-              variant="body2"
-              className="text-gg-text-secondary"
-            >
-              {title}
-            </Typography>
-
-            {change && (
-              <Box className="flex items-center space-x-1 mt-3">
-                {ChangeIcon && (
-                  <ChangeIcon
-                    sx={{ 
-                      fontSize: 16, 
-                      color: getChangeColor(),
-                    }}
-                  />
-                )}
+        {/* Golden Accent Border */}
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 4,
+            background: ggwifiTheme.gradients.primary,
+          }}
+        />
+        
+        <CardContent sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Avatar
+                sx={{
+                  width: 48,
+                  height: 48,
+                  background: ggwifiTheme.gradients.primary,
+                  color: ggwifiTheme.colors.secondary,
+                  boxShadow: ggwifiTheme.shadows.golden,
+                }}
+              >
+                {Icon ? <Icon /> : <SecurityIcon />}
+              </Avatar>
+              <Box>
                 <Typography
-                  variant="caption"
-                  sx={{ color: getChangeColor() }}
-                  className="font-medium"
+                  variant="body2"
+                  sx={{
+                    color: ggwifiTheme.colors.neutral,
+                    fontFamily: ggwifiTheme.typography.fontFamily.primary,
+                    fontWeight: ggwifiTheme.typography.fontWeight.medium,
+                    fontSize: ggwifiTheme.typography.fontSize.sm,
+                  }}
                 >
-                  {change}
+                  {title}
                 </Typography>
+                {subtitle && (
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: ggwifiTheme.colors.neutral,
+                      fontFamily: ggwifiTheme.typography.fontFamily.primary,
+                    }}
+                  >
+                    {subtitle}
+                  </Typography>
+                )}
               </Box>
+            </Box>
+            
+            {(change || trend) && (
+              <Chip
+                icon={change ? (ChangeIcon ? <ChangeIcon /> : null) : (trend === 'up' ? <TrendingUp /> : <TrendingDown />)}
+                label={change || `${trendValue}%`}
+                size="small"
+                sx={{
+                  backgroundColor: change 
+                    ? `rgba(${getChangeColor().replace('#', '')}, 0.1)` 
+                    : trend === 'up' 
+                    ? 'rgba(76, 175, 80, 0.1)' 
+                    : 'rgba(244, 67, 54, 0.1)',
+                  color: change 
+                    ? getChangeColor() 
+                    : trend === 'up' 
+                    ? ggwifiTheme.colors.success 
+                    : ggwifiTheme.colors.error,
+                  border: `1px solid ${change 
+                    ? getChangeColor() 
+                    : trend === 'up' 
+                    ? ggwifiTheme.colors.success 
+                    : ggwifiTheme.colors.error}`,
+                  fontFamily: ggwifiTheme.typography.fontFamily.primary,
+                  fontWeight: ggwifiTheme.typography.fontWeight.semibold,
+                }}
+              />
             )}
           </Box>
+
+          {loading ? (
+            <Skeleton variant="text" width="60%" height={40} />
+          ) : (
+            <Typography
+              variant="h4"
+              sx={{
+                fontFamily: ggwifiTheme.typography.fontFamily.primary,
+                fontWeight: ggwifiTheme.typography.fontWeight.bold,
+                color: ggwifiTheme.colors.secondary,
+                mb: 1,
+                background: ggwifiTheme.gradients.primary,
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}
+            >
+              {value}
+            </Typography>
+          )}
+
+          {change && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              {ChangeIcon && (
+                <ChangeIcon 
+                  sx={{ 
+                    fontSize: 16, 
+                    color: getChangeColor() 
+                  }} 
+                />
+              )}
+              <Typography
+                variant="body2"
+                sx={{
+                  color: getChangeColor(),
+                  fontFamily: ggwifiTheme.typography.fontFamily.primary,
+                  fontWeight: ggwifiTheme.typography.fontWeight.medium,
+                }}
+              >
+                {change}
+              </Typography>
+            </Box>
+          )}
         </CardContent>
       </Card>
     </motion.div>

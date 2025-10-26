@@ -1,0 +1,384 @@
+/* GG Wi-Fi Brand Styles */
+/* "The Signal That Cares" - Premium yet caring wireless internet provider */
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* Brand Colors */
+  --gg-primary: #F5B700;
+  --gg-primary-hover: #FFCB00;
+  --gg-secondary: #000000;
+  --gg-contrast: #FFFFFF;
+  --gg-neutral: #2E2E2E;
+  --gg-success: #4CAF50;
+  --gg-error: #F44336;
+  --gg-warning: #FF9800;
+  --gg-info: #2196F3;
+
+  /* Typography */
+  --gg-font-primary: 'Poppins', 'Inter', sans-serif;
+  --gg-font-secondary: 'Inter', sans-serif;
+
+  /* Spacing */
+  --gg-space-xs: 0.25rem;
+  --gg-space-sm: 0.5rem;
+  --gg-space-md: 1rem;
+  --gg-space-lg: 1.5rem;
+  --gg-space-xl: 2rem;
+  --gg-space-2xl: 3rem;
+  --gg-space-3xl: 4rem;
+  --gg-space-4xl: 6rem;
+
+  /* Border Radius */
+  --gg-radius-sm: 0.25rem;
+  --gg-radius-md: 0.5rem;
+  --gg-radius-lg: 1rem;
+  --gg-radius-xl: 1.5rem;
+  --gg-radius-full: 50px;
+
+  /* Shadows */
+  --gg-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --gg-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --gg-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  --gg-shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1);
+  --gg-shadow-golden: 0 4px 20px rgba(245, 183, 0, 0.3);
+  --gg-shadow-golden-hover: 0 8px 30px rgba(245, 183, 0, 0.4);
+
+  /* Transitions */
+  --gg-transition-fast: 0.15s ease-in-out;
+  --gg-transition-normal: 0.3s ease-in-out;
+  --gg-transition-slow: 0.5s ease-in-out;
+
+  /* Gradients */
+  --gg-gradient-primary: linear-gradient(135deg, #F5B700 0%, #FFCB00 100%);
+  --gg-gradient-primary-hover: linear-gradient(135deg, #FFCB00 0%, #F5B700 100%);
+  --gg-gradient-background: linear-gradient(180deg, #000000 0%, #1a1a1a 100%);
+  --gg-gradient-card: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+}
+
+/* Global Styles */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--gg-font-primary);
+  background: var(--gg-gradient-background);
+  color: var(--gg-contrast);
+  margin: 0;
+  padding: 0;
+  line-height: 1.6;
+}
+
+/* GG Wi-Fi Brand Components */
+
+/* Logo Styles */
+.gg-logo {
+  display: flex;
+  align-items: center;
+  gap: var(--gg-space-sm);
+  font-family: var(--gg-font-primary);
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: var(--gg-primary);
+}
+
+.gg-logo-main {
+  font-size: 2rem;
+  font-weight: 800;
+  background: var(--gg-gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gg-logo-sub {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--gg-contrast);
+}
+
+.gg-tagline {
+  font-size: 0.875rem;
+  color: var(--gg-neutral);
+  font-style: italic;
+  margin-top: -0.25rem;
+}
+
+/* Button Styles */
+.gg-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gg-space-sm);
+  padding: var(--gg-space-md) var(--gg-space-xl);
+  border: none;
+  border-radius: var(--gg-radius-full);
+  font-family: var(--gg-font-primary);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--gg-transition-normal);
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.gg-btn-primary {
+  background: var(--gg-gradient-primary);
+  color: var(--gg-secondary);
+  box-shadow: var(--gg-shadow-golden);
+}
+
+.gg-btn-primary:hover {
+  background: var(--gg-gradient-primary-hover);
+  box-shadow: var(--gg-shadow-golden-hover);
+  transform: translateY(-2px);
+}
+
+.gg-btn-secondary {
+  background: transparent;
+  color: var(--gg-contrast);
+  border: 2px solid var(--gg-primary);
+}
+
+.gg-btn-secondary:hover {
+  background: var(--gg-primary);
+  color: var(--gg-secondary);
+  transform: translateY(-2px);
+}
+
+.gg-btn:active {
+  transform: translateY(0);
+}
+
+/* Card Styles */
+.gg-card {
+  background: var(--gg-gradient-card);
+  border-radius: var(--gg-radius-lg);
+  box-shadow: var(--gg-shadow-lg);
+  padding: var(--gg-space-xl);
+  border: 1px solid rgba(245, 183, 0, 0.1);
+  transition: var(--gg-transition-normal);
+  position: relative;
+  overflow: hidden;
+}
+
+.gg-card:hover {
+  box-shadow: var(--gg-shadow-golden);
+  transform: translateY(-4px);
+}
+
+.gg-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--gg-gradient-primary);
+}
+
+/* Input Styles */
+.gg-input {
+  width: 100%;
+  padding: var(--gg-space-md) var(--gg-space-lg);
+  border: 2px solid var(--gg-neutral);
+  border-radius: var(--gg-radius-md);
+  font-family: var(--gg-font-primary);
+  font-size: 1rem;
+  background: var(--gg-contrast);
+  color: var(--gg-secondary);
+  transition: var(--gg-transition-normal);
+}
+
+.gg-input:focus {
+  outline: none;
+  border-color: var(--gg-primary);
+  box-shadow: 0 0 0 3px rgba(245, 183, 0, 0.1);
+}
+
+.gg-input::placeholder {
+  color: var(--gg-neutral);
+}
+
+.gg-input-group {
+  position: relative;
+  margin-bottom: var(--gg-space-lg);
+}
+
+.gg-input-label {
+  display: block;
+  margin-bottom: var(--gg-space-sm);
+  font-weight: 500;
+  color: var(--gg-contrast);
+  font-size: 0.875rem;
+}
+
+/* Header Styles */
+.gg-header {
+  background: var(--gg-secondary);
+  color: var(--gg-contrast);
+  padding: var(--gg-space-md) var(--gg-space-xl);
+  box-shadow: var(--gg-shadow-md);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+}
+
+.gg-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.gg-nav-links {
+  display: flex;
+  align-items: center;
+  gap: var(--gg-space-lg);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.gg-nav-link {
+  color: var(--gg-contrast);
+  text-decoration: none;
+  padding: var(--gg-space-sm) var(--gg-space-md);
+  border-radius: var(--gg-radius-md);
+  transition: var(--gg-transition-normal);
+  position: relative;
+  font-weight: 500;
+}
+
+.gg-nav-link:hover {
+  color: var(--gg-primary);
+}
+
+.gg-nav-link:hover::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--gg-primary);
+  border-radius: 1px;
+}
+
+/* Footer Styles */
+.gg-footer {
+  background: var(--gg-secondary);
+  color: var(--gg-contrast);
+  padding: var(--gg-space-xl) var(--gg-space-xl);
+  text-align: center;
+  font-size: 0.75rem;
+  border-top: 1px solid var(--gg-neutral);
+}
+
+/* Animation Styles */
+@keyframes gg-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes gg-bounce {
+  0%, 20%, 53%, 80%, 100% {
+    transform: translate3d(0, 0, 0);
+  }
+  40%, 43% {
+    transform: translate3d(0, -8px, 0);
+  }
+  70% {
+    transform: translate3d(0, -4px, 0);
+  }
+  90% {
+    transform: translate3d(0, -2px, 0);
+  }
+}
+
+@keyframes gg-glow {
+  0%, 100% {
+    box-shadow: var(--gg-shadow-golden);
+  }
+  50% {
+    box-shadow: var(--gg-shadow-golden-hover);
+  }
+}
+
+.gg-animate-pulse {
+  animation: gg-pulse 2s infinite;
+}
+
+.gg-animate-bounce {
+  animation: gg-bounce 1s infinite;
+}
+
+.gg-animate-glow {
+  animation: gg-glow 2s infinite;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .gg-nav {
+    flex-direction: column;
+    gap: var(--gg-space-md);
+  }
+  
+  .gg-nav-links {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .gg-card {
+    padding: var(--gg-space-lg);
+  }
+  
+  .gg-btn {
+    padding: var(--gg-space-sm) var(--gg-space-lg);
+    font-size: 0.875rem;
+  }
+}
+
+/* Utility Classes */
+.gg-text-center { text-align: center; }
+.gg-text-left { text-align: left; }
+.gg-text-right { text-align: right; }
+
+.gg-mb-xs { margin-bottom: var(--gg-space-xs); }
+.gg-mb-sm { margin-bottom: var(--gg-space-sm); }
+.gg-mb-md { margin-bottom: var(--gg-space-md); }
+.gg-mb-lg { margin-bottom: var(--gg-space-lg); }
+.gg-mb-xl { margin-bottom: var(--gg-space-xl); }
+
+.gg-mt-xs { margin-top: var(--gg-space-xs); }
+.gg-mt-sm { margin-top: var(--gg-space-sm); }
+.gg-mt-md { margin-top: var(--gg-space-md); }
+.gg-mt-lg { margin-top: var(--gg-space-lg); }
+.gg-mt-xl { margin-top: var(--gg-space-xl); }
+
+.gg-p-xs { padding: var(--gg-space-xs); }
+.gg-p-sm { padding: var(--gg-space-sm); }
+.gg-p-md { padding: var(--gg-space-md); }
+.gg-p-lg { padding: var(--gg-space-lg); }
+.gg-p-xl { padding: var(--gg-space-xl); }
+
+/* Status Colors */
+.gg-status-success { color: var(--gg-success); }
+.gg-status-error { color: var(--gg-error); }
+.gg-status-warning { color: var(--gg-warning); }
+.gg-status-info { color: var(--gg-info); }
+
+.gg-bg-success { background-color: var(--gg-success); }
+.gg-bg-error { background-color: var(--gg-error); }
+.gg-bg-warning { background-color: var(--gg-warning); }
+.gg-bg-info { background-color: var(--gg-info); }

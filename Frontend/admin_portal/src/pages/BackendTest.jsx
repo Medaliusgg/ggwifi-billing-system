@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Card, CardContent, Typography, Button, Box, Alert, CircularProgress } from '@mui/material';
-import apiClient from '@/api/client';
+import apiClient from '../api/client';
 
 const BackendTest = () => {
   const [testResults, setTestResults] = useState({});

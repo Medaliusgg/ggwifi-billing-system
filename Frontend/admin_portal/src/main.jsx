@@ -9,7 +9,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { SnackbarProvider } from 'notistack';
 import App from './App.jsx';
-import ggTheme from './styles/theme.js';
+import ggTheme from './theme/index.js';
 import './index.css';
 
 // Create a client

@@ -1,23 +1,22 @@
 import { createTheme } from '@mui/material/styles';
 
-// GGWIFI Brand Colors
+// GGWIFI Brand Colors - Official Brand Palette
 const ggColors = {
-  gold: '#FFD700',
-  goldDark: '#E6C200',
-  goldLight: '#FFF176',
-  black: '#000000',
-  charcoal: '#1E1E1E',
-  darkGray: '#2E2E2E',
-  lightGray: '#404040',
-  textPrimary: '#FFFFFF',
-  textSecondary: '#BFBFBF',
-  textMuted: '#8A8A8A',
+  gold: '#FFC72C', // Golden Yellow - Primary Brand Color
+  goldDark: '#E6B800', // Darker Golden Yellow
+  goldLight: '#FFD700', // Bright Golden Yellow
+  black: '#000000', // Black - Main text, headings, overlays
+  blue: '#0072CE', // Blue - Secondary Accent Color
+  white: '#FFFFFF', // White - Backgrounds, clean layout areas
+  textPrimary: '#000000', // Black - Main text
+  textSecondary: '#333333', // Dark Gray - Secondary text
+  textMuted: '#666666', // Medium Gray - Muted text
 };
 
 // Create MUI theme with GGWIFI branding
 export const ggTheme = createTheme({
   palette: {
-    mode: 'dark',
+    mode: 'light',
     primary: {
       main: ggColors.gold,
       dark: ggColors.goldDark,
@@ -25,21 +24,21 @@ export const ggTheme = createTheme({
       contrastText: ggColors.black,
     },
     secondary: {
-      main: ggColors.lightGray,
-      dark: ggColors.darkGray,
-      light: ggColors.textSecondary,
-      contrastText: ggColors.textPrimary,
+      main: ggColors.blue,
+      dark: '#0056A3',
+      light: '#4A9EFF',
+      contrastText: ggColors.white,
     },
     background: {
-      default: ggColors.black,
-      paper: ggColors.charcoal,
+      default: ggColors.white,
+      paper: ggColors.white,
     },
     text: {
       primary: ggColors.textPrimary,
       secondary: ggColors.textSecondary,
       disabled: ggColors.textMuted,
     },
-    divider: ggColors.darkGray,
+    divider: '#E0E0E0',
     action: {
       hover: `${ggColors.gold}10`,
       selected: `${ggColors.gold}20`,

@@ -1,8 +1,8 @@
 import axios from 'axios';
-import { useAuthStore } from '@/store/authStore';
+import useAuthStore from '/src/store/authStore.js';
 
-// Create axios instance
-const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://api.ggwifi.co.tz:8080/api/v1';
+// Create axios instance - LOCAL DEVELOPMENT
+const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1';
 console.log('🔍 Debug: API Base URL configured as:', baseURL);
 
 const apiClient = axios.create({
@@ -10,7 +10,9 @@ const apiClient = axios.create({
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
+    'Accept': 'application/json',
   },
+  withCredentials: false,
 });
 
 // Request interceptor to add auth token

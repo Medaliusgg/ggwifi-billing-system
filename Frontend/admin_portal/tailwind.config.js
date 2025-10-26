@@ -7,17 +7,16 @@ export default {
   theme: {
     extend: {
       colors: {
-        // GGWIFI Brand Colors
-        'gg-gold': '#FFD700',
-        'gg-gold-dark': '#E6C200',
-        'gg-gold-light': '#FFF176',
-        'gg-black': '#000000',
-        'gg-charcoal': '#1E1E1E',
-        'gg-dark-gray': '#2E2E2E',
-        'gg-light-gray': '#404040',
-        'gg-text-primary': '#FFFFFF',
-        'gg-text-secondary': '#BFBFBF',
-        'gg-text-muted': '#8A8A8A',
+        // GGWIFI Brand Colors - Official Brand Palette
+        'gg-gold': '#FFC72C', // Golden Yellow - Primary Brand Color
+        'gg-gold-dark': '#E6B800', // Darker Golden Yellow
+        'gg-gold-light': '#FFD700', // Bright Golden Yellow
+        'gg-black': '#000000', // Black - Main text, headings, overlays
+        'gg-blue': '#0072CE', // Blue - Secondary Accent Color
+        'gg-white': '#FFFFFF', // White - Backgrounds, clean layout areas
+        'gg-text-primary': '#000000', // Black - Main text
+        'gg-text-secondary': '#333333', // Dark Gray - Secondary text
+        'gg-text-muted': '#666666', // Medium Gray - Muted text
       },
       fontFamily: {
         'sans': ['Inter', 'Poppins', 'system-ui', 'sans-serif'],

@@ -1,4 +1,4 @@
-import { Card, CardContent, Typography, Box, Chip, IconButton, LinearProgress } from '@mui/material';
+import { Card, CardContent, Typography, Box, Chip, IconButton, LinearProgress, Avatar, Tooltip } from '@mui/material';
 import {
   Router as RouterIcon,
   Wifi as WifiIcon,
@@ -7,9 +7,14 @@ import {
   Speed as SpeedIcon,
   MoreVert as MoreVertIcon,
   Refresh as RefreshIcon,
+  CheckCircle as CheckCircleIcon,
+  Error as ErrorIcon,
+  Warning as WarningIcon,
+  Build as BuildIcon,
+  Security as SecurityIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
-import { formatStatus, formatDuration } from '@/utils/formatters';
+import ggwifiTheme from '/src/theme/ggwifiTheme.js';
 
 const RouterStatusCard = ({ 
   router,
@@ -17,259 +22,274 @@ const RouterStatusCard = ({
   onConfigure,
   onReboot,
   onViewDetails,
+  loading = false,
+  delay = 0,
   ...props 
 }) => {
   const getStatusColor = (status) => {
     switch (status) {
       case 'ONLINE':
-        return 'success';
+        return ggwifiTheme.colors.success;
       case 'OFFLINE':
-        return 'error';
+        return ggwifiTheme.colors.error;
       case 'MAINTENANCE':
-        return 'warning';
+        return ggwifiTheme.colors.warning;
       case 'ERROR':
-        return 'error';
+        return ggwifiTheme.colors.error;
       default:
-        return 'default';
+        return ggwifiTheme.colors.neutral;
     }
   };
 
   const getStatusIcon = (status) => {
     switch (status) {
       case 'ONLINE':
-        return '🟢';
+        return <CheckCircleIcon />;
       case 'OFFLINE':
-        return '🔴';
+        return <ErrorIcon />;
       case 'MAINTENANCE':
-        return '🟡';
+        return <BuildIcon />;
       case 'ERROR':
-        return '🔴';
+        return <ErrorIcon />;
       default:
-        return '⚪';
+        return <WarningIcon />;
     }
   };
 
-  const formatUptime = (uptimeSeconds) => {
-    if (!uptimeSeconds) return 'Unknown';
-    return formatDuration(uptimeSeconds);
+  const getSignalStrength = (signal) => {
+    if (signal >= 80) return { label: 'Excellent', color: ggwifiTheme.colors.success };
+    if (signal >= 60) return { label: 'Good', color: ggwifiTheme.colors.info };
+    if (signal >= 40) return { label: 'Fair', color: ggwifiTheme.colors.warning };
+    return { label: 'Poor', color: ggwifiTheme.colors.error };
   };
 
-  const formatBandwidth = (usage) => {
-    if (!usage) return '0 Mbps';
-    return `${usage} Mbps`;
-  };
-
-  const formatTemperature = (temp) => {
-    if (!temp) return 'N/A';
-    return `${temp}°C`;
-  };
+  const signalInfo = getSignalStrength(router?.signalStrength || 0);
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -5 }}
-      transition={{ duration: 0.3 }}
+      transition={{ duration: 0.5, delay }}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
     >
       <Card
-        className="card hover:shadow-gg-glow cursor-pointer transition-all duration-300"
         sx={{
-          backgroundColor: '#1E1E1E',
-          border: '1px solid rgba(255, 215, 0, 0.1)',
-          borderRadius: 3,
+          height: '100%',
+          background: ggwifiTheme.gradients.card,
+          borderRadius: ggwifiTheme.borderRadius.lg,
+          boxShadow: ggwifiTheme.shadows.lg,
+          border: `1px solid rgba(245, 183, 0, 0.1)`,
+          transition: ggwifiTheme.transitions.normal,
+          position: 'relative',
+          overflow: 'hidden',
           '&:hover': {
-            borderColor: 'rgba(255, 215, 0, 0.3)',
-            boxShadow: '0 0 20px rgba(255, 215, 0, 0.2)',
+            boxShadow: ggwifiTheme.shadows.golden,
+            transform: 'translateY(-4px)',
+            borderColor: `rgba(245, 183, 0, 0.3)`,
           },
         }}
-        {...props}
       >
-        <CardContent className="p-6">
+        {/* Golden Accent Border */}
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 4,
+            background: ggwifiTheme.gradients.primary,
+          }}
+        />
+        
+        <CardContent sx={{ p: 3 }}>
           {/* Header */}
-          <Box className="flex items-center justify-between mb-4">
-            <Box className="flex items-center space-x-3">
-              <Box className="w-12 h-12 bg-gg-gold bg-opacity-20 rounded-2xl flex items-center justify-center">
-                <RouterIcon className="text-gg-gold" sx={{ fontSize: 24 }} />
-              </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Avatar
+                sx={{
+                  width: 48,
+                  height: 48,
+                  background: ggwifiTheme.gradients.primary,
+                  color: ggwifiTheme.colors.secondary,
+                  boxShadow: ggwifiTheme.shadows.golden,
+                }}
+              >
+                <RouterIcon />
+              </Avatar>
               <Box>
-                <Typography variant="h6" className="text-gg-text-primary font-semibold">
-                  {router.name}
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: ggwifiTheme.colors.neutral,
+                    fontFamily: ggwifiTheme.typography.fontFamily.primary,
+                    fontWeight: ggwifiTheme.typography.fontWeight.medium,
+                    fontSize: ggwifiTheme.typography.fontSize.sm,
+                  }}
+                >
+                  {router?.name || 'Router'}
                 </Typography>
-                <Typography variant="body2" className="text-gg-text-secondary">
-                  {router.ipAddress}
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: ggwifiTheme.colors.neutral,
+                    fontFamily: ggwifiTheme.typography.fontFamily.primary,
+                  }}
+                >
+                  {router?.location || 'Location'}
                 </Typography>
               </Box>
             </Box>
             
-            <Box className="flex items-center space-x-2">
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Chip
-                icon={<span className="text-sm">{getStatusIcon(router.status)}</span>}
-                label={router.status}
-                color={getStatusColor(router.status)}
-                variant="outlined"
+                icon={getStatusIcon(router?.status || 'UNKNOWN')}
+                label={router?.status || 'Unknown'}
                 size="small"
+                sx={{
+                  backgroundColor: `rgba(${getStatusColor(router?.status || 'UNKNOWN').replace('#', '')}, 0.1)`,
+                  color: getStatusColor(router?.status || 'UNKNOWN'),
+                  border: `1px solid ${getStatusColor(router?.status || 'UNKNOWN')}`,
+                  fontFamily: ggwifiTheme.typography.fontFamily.primary,
+                  fontWeight: ggwifiTheme.typography.fontWeight.semibold,
+                }}
               />
               <IconButton
                 size="small"
-                className="text-gg-text-muted hover:text-gg-gold"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  // Handle menu actions
+                onClick={onRefresh}
+                sx={{
+                  color: ggwifiTheme.colors.neutral,
+                  '&:hover': {
+                    color: ggwifiTheme.colors.primary,
+                    backgroundColor: 'rgba(245, 183, 0, 0.1)',
+                  },
+                }}
+              >
+                <RefreshIcon />
+              </IconButton>
+            </Box>
+          </Box>
+
+          {/* Connection Stats */}
+          <Box sx={{ mb: 2 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: ggwifiTheme.colors.neutral,
+                  fontFamily: ggwifiTheme.typography.fontFamily.primary,
+                }}
+              >
+                Connected Users
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{
+                  color: ggwifiTheme.colors.secondary,
+                  fontFamily: ggwifiTheme.typography.fontFamily.primary,
+                  fontWeight: ggwifiTheme.typography.fontWeight.semibold,
+                }}
+              >
+                {router?.connectedUsers || 0}/{router?.maxUsers || 100}
+              </Typography>
+            </Box>
+            <LinearProgress
+              variant="determinate"
+              value={(router?.connectedUsers || 0) / (router?.maxUsers || 100) * 100}
+              sx={{
+                height: 8,
+                borderRadius: ggwifiTheme.borderRadius.sm,
+                backgroundColor: 'rgba(245, 183, 0, 0.1)',
+                '& .MuiLinearProgress-bar': {
+                  background: ggwifiTheme.gradients.primary,
+                  borderRadius: ggwifiTheme.borderRadius.sm,
+                },
+              }}
+            />
+          </Box>
+
+          {/* Performance Metrics */}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <WifiIcon sx={{ fontSize: 16, color: signalInfo.color }} />
+              <Typography
+                variant="caption"
+                sx={{
+                  color: ggwifiTheme.colors.neutral,
+                  fontFamily: ggwifiTheme.typography.fontFamily.primary,
+                }}
+              >
+                Signal: {signalInfo.label}
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <SpeedIcon sx={{ fontSize: 16, color: ggwifiTheme.colors.primary }} />
+              <Typography
+                variant="caption"
+                sx={{
+                  color: ggwifiTheme.colors.neutral,
+                  fontFamily: ggwifiTheme.typography.fontFamily.primary,
+                }}
+              >
+                {router?.speed || 'N/A'} Mbps
+              </Typography>
+            </Box>
+          </Box>
+
+          {/* Uptime */}
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: ggwifiTheme.colors.neutral,
+                fontFamily: ggwifiTheme.typography.fontFamily.primary,
+              }}
+            >
+              Uptime: {router?.uptime || 'N/A'}
+            </Typography>
+            <Typography
+              variant="caption"
+              sx={{
+                color: ggwifiTheme.colors.neutral,
+                fontFamily: ggwifiTheme.typography.fontFamily.primary,
+              }}
+            >
+              Last Update: {router?.lastUpdate || 'N/A'}
+            </Typography>
+          </Box>
+
+          {/* Action Buttons */}
+          <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+            <Tooltip title="Configure">
+              <IconButton
+                size="small"
+                onClick={onConfigure}
+                sx={{
+                  color: ggwifiTheme.colors.neutral,
+                  '&:hover': {
+                    color: ggwifiTheme.colors.primary,
+                    backgroundColor: 'rgba(245, 183, 0, 0.1)',
+                  },
+                }}
+              >
+                <SecurityIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="View Details">
+              <IconButton
+                size="small"
+                onClick={onViewDetails}
+                sx={{
+                  color: ggwifiTheme.colors.neutral,
+                  '&:hover': {
+                    color: ggwifiTheme.colors.primary,
+                    backgroundColor: 'rgba(245, 183, 0, 0.1)',
+                  },
                 }}
               >
                 <MoreVertIcon />
               </IconButton>
-            </Box>
-          </Box>
-
-          {/* Router Info */}
-          <Box className="grid grid-cols-2 gap-4 mb-4">
-            <Box>
-              <Typography variant="caption" className="text-gg-text-muted">
-                Model
-              </Typography>
-              <Typography variant="body2" className="text-gg-text-primary font-medium">
-                {router.model || 'Unknown'}
-              </Typography>
-            </Box>
-            <Box>
-              <Typography variant="caption" className="text-gg-text-muted">
-                Location
-              </Typography>
-              <Typography variant="body2" className="text-gg-text-primary font-medium">
-                {router.location || 'Unknown'}
-              </Typography>
-            </Box>
-            <Box>
-              <Typography variant="caption" className="text-gg-text-muted">
-                Uptime
-              </Typography>
-              <Typography variant="body2" className="text-gg-text-primary font-medium">
-                {formatUptime(router.uptimeSeconds)}
-              </Typography>
-            </Box>
-            <Box>
-              <Typography variant="caption" className="text-gg-text-muted">
-                Temperature
-              </Typography>
-              <Typography variant="body2" className="text-gg-text-primary font-medium">
-                {formatTemperature(router.temperatureCelsius)}
-              </Typography>
-            </Box>
-          </Box>
-
-          {/* Performance Metrics */}
-          <Box className="space-y-3">
-            {/* CPU Usage */}
-            <Box>
-              <Box className="flex items-center justify-between mb-1">
-                <Box className="flex items-center space-x-2">
-                  <SpeedIcon className="text-gg-gold" sx={{ fontSize: 16 }} />
-                  <Typography variant="caption" className="text-gg-text-muted">
-                    CPU Usage
-                  </Typography>
-                </Box>
-                <Typography variant="caption" className="text-gg-text-primary font-medium">
-                  {router.cpuUsagePercent || 0}%
-                </Typography>
-              </Box>
-              <LinearProgress
-                variant="determinate"
-                value={router.cpuUsagePercent || 0}
-                sx={{
-                  backgroundColor: '#2E2E2E',
-                  '& .MuiLinearProgress-bar': {
-                    backgroundColor: router.cpuUsagePercent > 80 ? '#F44336' : 
-                                   router.cpuUsagePercent > 60 ? '#FF9800' : '#FFD700',
-                  },
-                }}
-              />
-            </Box>
-
-            {/* Memory Usage */}
-            <Box>
-              <Box className="flex items-center justify-between mb-1">
-                <Box className="flex items-center space-x-2">
-                  <MemoryIcon className="text-gg-gold" sx={{ fontSize: 16 }} />
-                  <Typography variant="caption" className="text-gg-text-muted">
-                    Memory Usage
-                  </Typography>
-                </Box>
-                <Typography variant="caption" className="text-gg-text-primary font-medium">
-                  {router.memoryUsagePercent || 0}%
-                </Typography>
-              </Box>
-              <LinearProgress
-                variant="determinate"
-                value={router.memoryUsagePercent || 0}
-                sx={{
-                  backgroundColor: '#2E2E2E',
-                  '& .MuiLinearProgress-bar': {
-                    backgroundColor: router.memoryUsagePercent > 80 ? '#F44336' : 
-                                   router.memoryUsagePercent > 60 ? '#FF9800' : '#FFD700',
-                  },
-                }}
-              />
-            </Box>
-
-            {/* Bandwidth Usage */}
-            <Box>
-              <Box className="flex items-center justify-between mb-1">
-                <Box className="flex items-center space-x-2">
-                  <WifiIcon className="text-gg-gold" sx={{ fontSize: 16 }} />
-                  <Typography variant="caption" className="text-gg-text-muted">
-                    Bandwidth
-                  </Typography>
-                </Box>
-                <Typography variant="caption" className="text-gg-text-primary font-medium">
-                  {formatBandwidth(router.bandwidthUsageMbps)}
-                </Typography>
-              </Box>
-            </Box>
-
-            {/* Active Connections */}
-            <Box>
-              <Box className="flex items-center justify-between">
-                <Box className="flex items-center space-x-2">
-                  <PeopleIcon className="text-gg-gold" sx={{ fontSize: 16 }} />
-                  <Typography variant="caption" className="text-gg-text-muted">
-                    Active Users
-                  </Typography>
-                </Box>
-                <Typography variant="caption" className="text-gg-text-primary font-medium">
-                  {router.activeConnections || 0}
-                </Typography>
-              </Box>
-            </Box>
-          </Box>
-
-          {/* Action Buttons */}
-          <Box className="flex items-center justify-between mt-4 pt-4 border-t border-gg-gold border-opacity-20">
-            <Box className="flex items-center space-x-2">
-              <IconButton
-                size="small"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onRefresh?.(router);
-                }}
-                className="text-gg-text-muted hover:text-gg-gold"
-              >
-                <RefreshIcon sx={{ fontSize: 18 }} />
-              </IconButton>
-            </Box>
-            
-            <Box className="flex items-center space-x-1">
-              <Typography
-                variant="caption"
-                className="text-gg-text-muted cursor-pointer hover:text-gg-gold transition-colors"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onViewDetails?.(router);
-                }}
-              >
-                View Details
-              </Typography>
-            </Box>
+            </Tooltip>
           </Box>
         </CardContent>
       </Card>

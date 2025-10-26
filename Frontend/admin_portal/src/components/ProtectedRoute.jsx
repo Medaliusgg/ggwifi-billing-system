@@ -1,10 +1,19 @@
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuthStore } from '@/store/authStore';
+import useAuthStore from '../store/authStore';
 import { Box, CircularProgress } from '@mui/material';
 
 const ProtectedRoute = ({ children, requiredRole = null }) => {
   const { isAuthenticated, user, isLoading } = useAuthStore();
   const location = useLocation();
+
+  console.log('🔍 ProtectedRoute - Auth state:', { 
+    isAuthenticated, 
+    user: user?.username, 
+    role: user?.role, 
+    isLoading,
+    requiredRole,
+    currentPath: location.pathname
+  });
 
   // Show loading spinner while checking authentication
   if (isLoading) {

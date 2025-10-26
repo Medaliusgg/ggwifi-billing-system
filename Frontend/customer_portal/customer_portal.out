@@ -1,0 +1,376 @@
+
+> ggnetworks-customer-portal@1.0.0 dev
+> vite
+
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+  VITE v5.4.21  ready in 2748 ms
+
+  ➜  Local:   http://localhost:3001/
+  ➜  Network: http://192.168.0.74:3001/
+8:01:51 PM [vite] hmr update /src/components/BuyPackage.jsx
+8:01:58 PM [vite] hmr update /src/components/BuyPackage.jsx
+8:08:57 PM [vite] hmr update /src/components/BuyPackage.jsx
+8:09:30 PM [vite] hmr update /src/components/BuyPackage.jsx
+8:10:11 PM [vite] hmr update /src/components/BuyPackage.jsx
+8:10:47 PM [vite] hmr update /src/components/BuyPackage.jsx
+8:22:09 PM [vite] hmr update /src/components/VoucherLogin.jsx, /src/components/BuyPackage.jsx
+8:25:47 PM [vite] hmr update /src/components/VoucherLogin.jsx, /src/components/BuyPackage.jsx
+8:25:47 PM [vite] hmr update /src/components/BuyPackage.jsx
+8:34:25 PM [vite] hmr update /src/components/BuyPackage.jsx
+8:35:14 PM [vite] hmr update /src/components/BuyPackage.jsx
+8:35:55 PM [vite] hmr update /src/components/BuyPackage.jsx
+8:36:33 PM [vite] hmr update /src/components/BuyPackage.jsx
+8:37:12 PM [vite] hmr update /src/components/BuyPackage.jsx
+8:38:11 PM [vite] hmr update /src/components/BuyPackage.jsx
+8:38:50 PM [vite] hmr update /src/components/BuyPackage.jsx
+8:39:35 PM [vite] hmr update /src/components/BuyPackage.jsx
+8:40:16 PM [vite] hmr update /src/components/BuyPackage.jsx
+8:40:57 PM [vite] hmr update /src/components/BuyPackage.jsx
+8:41:40 PM [vite] hmr update /src/components/BuyPackage.jsx
+8:42:22 PM [vite] hmr update /src/components/BuyPackage.jsx
+8:43:08 PM [vite] hmr update /src/components/BuyPackage.jsx
+8:43:50 PM [vite] hmr update /src/components/BuyPackage.jsx
+8:44:43 PM [vite] hmr update /src/components/BuyPackage.jsx
+8:44:54 PM [vite] hmr update /src/components/BuyPackage.jsx
+8:55:07 PM [vite] hmr update /src/components/BuyPackage.jsx
+9:01:06 PM [vite] hmr update /src/components/VoucherLogin.jsx, /src/components/BuyPackage.jsx
+9:01:06 PM [vite] hmr update /src/components/BuyPackage.jsx
+9:06:58 PM [vite] hmr update /src/components/BuyPackage.jsx
+9:07:06 PM [vite] hmr update /src/components/BuyPackage.jsx
+9:12:51 PM [vite] hmr update /src/components/BuyPackage.jsx
+9:13:51 PM [vite] hmr update /src/components/BuyPackage.jsx
+9:15:26 PM [vite] hmr update /src/components/BuyPackage.jsx
+9:15:57 PM [vite] hmr update /src/components/BuyPackage.jsx
+9:15:57 PM [vite] hmr update /src/components/BuyPackage.jsx
+9:40:46 PM [vite] hmr update /src/components/BuyPackage.jsx
+9:40:47 PM [vite] hmr update /src/App.jsx
+9:40:52 PM [vite] hmr update /src/components/BuyPackage.jsx
+9:40:52 PM [vite] Internal server error: /home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/src/components/BuyPackage.jsx: Unexpected token (1129:14)
+
+  1127 |                   Try Again
+  1128 |                 </Button>
+> 1129 |               )}
+       |               ^
+  1130 |             </DialogActions>
+  1131 |           </Dialog>
+  1132 |         </motion.div>
+  Plugin: vite:react-babel
+  File: /home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/src/components/BuyPackage.jsx:1129:14
+  1127|                    Try Again
+  1128|                  </Button>
+  1129|                )}
+     |                ^
+  1130|              </DialogActions>
+  1131|            </Dialog>
+      at constructor (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:367:19)
+      at JSXParserMixin.raise (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:6627:19)
+      at JSXParserMixin.unexpected (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:6647:16)
+      at JSXParserMixin.parseExprAtom (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:11442:16)
+      at JSXParserMixin.parseExprAtom (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:4794:20)
+      at JSXParserMixin.parseExprSubscripts (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:11076:23)
+      at JSXParserMixin.parseUpdate (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:11061:21)
+      at JSXParserMixin.parseMaybeUnary (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:11041:23)
+      at JSXParserMixin.parseMaybeUnaryOrPrivate (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:10894:61)
+      at JSXParserMixin.parseExprOps (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:10899:23)
+      at JSXParserMixin.parseMaybeConditional (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:10876:23)
+      at JSXParserMixin.parseMaybeAssign (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:10826:21)
+      at JSXParserMixin.parseExpressionBase (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:10779:23)
+      at /home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:10775:39
+      at JSXParserMixin.allowInAnd (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:12422:16)
+      at JSXParserMixin.parseExpression (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:10775:17)
+      at JSXParserMixin.parseStatementContent (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:12895:23)
+      at JSXParserMixin.parseStatementLike (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:12767:17)
+      at JSXParserMixin.parseModuleItem (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:12744:17)
+      at JSXParserMixin.parseBlockOrModuleBlockBody (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:13316:36)
+      at JSXParserMixin.parseBlockBody (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:13309:10)
+      at JSXParserMixin.parseProgram (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:12625:10)
+      at JSXParserMixin.parseTopLevel (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:12615:25)
+      at JSXParserMixin.parse (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:14492:10)
+      at parse (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:14526:38)
+      at parser (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/core/lib/parser/index.js:41:34)
+      at parser.next (<anonymous>)
+      at normalizeFile (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/core/lib/transformation/normalize-file.js:64:37)
+      at normalizeFile.next (<anonymous>)
+      at run (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/core/lib/transformation/index.js:22:50)
+      at run.next (<anonymous>)
+      at transform (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/core/lib/transform.js:22:33)
+      at transform.next (<anonymous>)
+      at step (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/gensync/index.js:261:32)
+      at /home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/gensync/index.js:273:13
+      at async.call.result.err.err (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/gensync/index.js:223:11)
+      at /home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/gensync/index.js:189:28
+      at /home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/core/lib/gensync-utils/async.js:67:7
+      at /home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/gensync/index.js:113:33
+      at step (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/gensync/index.js:287:14)
+      at /home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/gensync/index.js:273:13
+      at async.call.result.err.err (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/gensync/index.js:223:11)
+9:41:04 PM [vite] hmr update /src/components/BuyPackage.jsx
+9:41:04 PM [vite] Internal server error: /home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/src/components/BuyPackage.jsx: Unexpected token (1129:14)
+
+  1127 |                   Try Again
+  1128 |                 </Button>
+> 1129 |               )}
+       |               ^
+  1130 |             </DialogActions>
+  1131 |           </Dialog>
+  1132 |         </motion.div>
+  Plugin: vite:react-babel
+  File: /home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/src/components/BuyPackage.jsx:1129:14
+  1127|                    Try Again
+  1128|                  </Button>
+  1129|                )}
+     |                ^
+  1130|              </DialogActions>
+  1131|            </Dialog>
+      at constructor (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:367:19)
+      at JSXParserMixin.raise (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:6627:19)
+      at JSXParserMixin.unexpected (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:6647:16)
+      at JSXParserMixin.parseExprAtom (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:11442:16)
+      at JSXParserMixin.parseExprAtom (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:4794:20)
+      at JSXParserMixin.parseExprSubscripts (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:11076:23)
+      at JSXParserMixin.parseUpdate (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:11061:21)
+      at JSXParserMixin.parseMaybeUnary (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:11041:23)
+      at JSXParserMixin.parseMaybeUnaryOrPrivate (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:10894:61)
+      at JSXParserMixin.parseExprOps (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:10899:23)
+      at JSXParserMixin.parseMaybeConditional (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:10876:23)
+      at JSXParserMixin.parseMaybeAssign (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:10826:21)
+      at JSXParserMixin.parseExpressionBase (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:10779:23)
+      at /home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:10775:39
+      at JSXParserMixin.allowInAnd (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:12422:16)
+      at JSXParserMixin.parseExpression (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:10775:17)
+      at JSXParserMixin.parseStatementContent (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:12895:23)
+      at JSXParserMixin.parseStatementLike (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:12767:17)
+      at JSXParserMixin.parseModuleItem (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:12744:17)
+      at JSXParserMixin.parseBlockOrModuleBlockBody (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:13316:36)
+      at JSXParserMixin.parseBlockBody (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:13309:10)
+      at JSXParserMixin.parseProgram (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:12625:10)
+      at JSXParserMixin.parseTopLevel (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:12615:25)
+      at JSXParserMixin.parse (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:14492:10)
+      at parse (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:14526:38)
+      at parser (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/core/lib/parser/index.js:41:34)
+      at parser.next (<anonymous>)
+      at normalizeFile (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/core/lib/transformation/normalize-file.js:64:37)
+      at normalizeFile.next (<anonymous>)
+      at run (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/core/lib/transformation/index.js:22:50)
+      at run.next (<anonymous>)
+      at transform (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/core/lib/transform.js:22:33)
+      at transform.next (<anonymous>)
+      at step (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/gensync/index.js:261:32)
+      at /home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/gensync/index.js:273:13
+      at async.call.result.err.err (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/gensync/index.js:223:11)
+      at /home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/gensync/index.js:189:28
+      at /home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/core/lib/gensync-utils/async.js:67:7
+      at /home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/gensync/index.js:113:33
+      at step (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/gensync/index.js:287:14)
+      at /home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/gensync/index.js:273:13
+      at async.call.result.err.err (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/gensync/index.js:223:11)
+9:41:13 PM [vite] hmr update /src/components/BuyPackage.jsx
+9:41:13 PM [vite] Internal server error: /home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/src/components/BuyPackage.jsx: Unexpected token (1129:14)
+
+  1127 |                   Try Again
+  1128 |                 </Button>
+> 1129 |               )}
+       |               ^
+  1130 |             </DialogActions>
+  1131 |           </Dialog>
+  1132 |         </motion.div>
+  Plugin: vite:react-babel
+  File: /home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/src/components/BuyPackage.jsx:1129:14
+  1127|                    Try Again
+  1128|                  </Button>
+  1129|                )}
+     |                ^
+  1130|              </DialogActions>
+  1131|            </Dialog>
+      at constructor (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:367:19)
+      at JSXParserMixin.raise (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:6627:19)
+      at JSXParserMixin.unexpected (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:6647:16)
+      at JSXParserMixin.parseExprAtom (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:11442:16)
+      at JSXParserMixin.parseExprAtom (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:4794:20)
+      at JSXParserMixin.parseExprSubscripts (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:11076:23)
+      at JSXParserMixin.parseUpdate (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:11061:21)
+      at JSXParserMixin.parseMaybeUnary (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:11041:23)
+      at JSXParserMixin.parseMaybeUnaryOrPrivate (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:10894:61)
+      at JSXParserMixin.parseExprOps (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:10899:23)
+      at JSXParserMixin.parseMaybeConditional (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:10876:23)
+      at JSXParserMixin.parseMaybeAssign (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:10826:21)
+      at JSXParserMixin.parseExpressionBase (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:10779:23)
+      at /home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:10775:39
+      at JSXParserMixin.allowInAnd (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:12422:16)
+      at JSXParserMixin.parseExpression (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:10775:17)
+      at JSXParserMixin.parseStatementContent (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:12895:23)
+      at JSXParserMixin.parseStatementLike (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:12767:17)
+      at JSXParserMixin.parseModuleItem (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:12744:17)
+      at JSXParserMixin.parseBlockOrModuleBlockBody (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:13316:36)
+      at JSXParserMixin.parseBlockBody (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:13309:10)
+      at JSXParserMixin.parseProgram (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:12625:10)
+      at JSXParserMixin.parseTopLevel (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:12615:25)
+      at JSXParserMixin.parse (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:14492:10)
+      at parse (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:14526:38)
+      at parser (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/core/lib/parser/index.js:41:34)
+      at parser.next (<anonymous>)
+      at normalizeFile (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/core/lib/transformation/normalize-file.js:64:37)
+      at normalizeFile.next (<anonymous>)
+      at run (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/core/lib/transformation/index.js:22:50)
+      at run.next (<anonymous>)
+      at transform (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/core/lib/transform.js:22:33)
+      at transform.next (<anonymous>)
+      at step (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/gensync/index.js:261:32)
+      at /home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/gensync/index.js:273:13
+      at async.call.result.err.err (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/gensync/index.js:223:11)
+      at /home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/gensync/index.js:189:28
+      at /home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/core/lib/gensync-utils/async.js:67:7
+      at /home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/gensync/index.js:113:33
+      at step (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/gensync/index.js:287:14)
+      at /home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/gensync/index.js:273:13
+      at async.call.result.err.err (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/gensync/index.js:223:11)
+9:50:51 PM [vite] hmr update /src/components/BuyPackage.jsx
+9:50:52 PM [vite] Internal server error: /home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/src/components/BuyPackage.jsx: Unexpected token (1129:14)
+
+  1127 |                   Try Again
+  1128 |                 </Button>
+> 1129 |               )}
+       |               ^
+  1130 |             </DialogActions>
+  1131 |           </Dialog>
+  1132 |         </motion.div>
+  Plugin: vite:react-babel
+  File: /home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/src/components/BuyPackage.jsx:1129:14
+  1127|                    Try Again
+  1128|                  </Button>
+  1129|                )}
+     |                ^
+  1130|              </DialogActions>
+  1131|            </Dialog>
+      at constructor (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:367:19)
+      at JSXParserMixin.raise (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:6627:19)
+      at JSXParserMixin.unexpected (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:6647:16)
+      at JSXParserMixin.parseExprAtom (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:11442:16)
+      at JSXParserMixin.parseExprAtom (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:4794:20)
+      at JSXParserMixin.parseExprSubscripts (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:11076:23)
+      at JSXParserMixin.parseUpdate (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:11061:21)
+      at JSXParserMixin.parseMaybeUnary (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:11041:23)
+      at JSXParserMixin.parseMaybeUnaryOrPrivate (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:10894:61)
+      at JSXParserMixin.parseExprOps (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:10899:23)
+      at JSXParserMixin.parseMaybeConditional (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:10876:23)
+      at JSXParserMixin.parseMaybeAssign (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:10826:21)
+      at JSXParserMixin.parseExpressionBase (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:10779:23)
+      at /home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:10775:39
+      at JSXParserMixin.allowInAnd (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:12422:16)
+      at JSXParserMixin.parseExpression (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:10775:17)
+      at JSXParserMixin.parseStatementContent (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:12895:23)
+      at JSXParserMixin.parseStatementLike (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:12767:17)
+      at JSXParserMixin.parseModuleItem (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:12744:17)
+      at JSXParserMixin.parseBlockOrModuleBlockBody (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:13316:36)
+      at JSXParserMixin.parseBlockBody (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:13309:10)
+      at JSXParserMixin.parseProgram (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:12625:10)
+      at JSXParserMixin.parseTopLevel (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:12615:25)
+      at JSXParserMixin.parse (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:14492:10)
+      at parse (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/parser/lib/index.js:14526:38)
+      at parser (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/core/lib/parser/index.js:41:34)
+      at parser.next (<anonymous>)
+      at normalizeFile (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/core/lib/transformation/normalize-file.js:64:37)
+      at normalizeFile.next (<anonymous>)
+      at run (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/core/lib/transformation/index.js:22:50)
+      at run.next (<anonymous>)
+      at transform (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/core/lib/transform.js:22:33)
+      at transform.next (<anonymous>)
+      at step (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/gensync/index.js:261:32)
+      at /home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/gensync/index.js:273:13
+      at async.call.result.err.err (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/gensync/index.js:223:11)
+      at /home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/gensync/index.js:189:28
+      at /home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/@babel/core/lib/gensync-utils/async.js:67:7
+      at /home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/gensync/index.js:113:33
+      at step (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/gensync/index.js:287:14)
+      at /home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/gensync/index.js:273:13
+      at async.call.result.err.err (/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/node_modules/gensync/index.js:223:11)
+9:53:02 PM [vite] hmr update /src/components/BuyPackage.jsx
+9:53:02 PM [vite] hmr update /src/App.jsx
+9:55:09 PM [vite] hmr update /src/components/BuyPackage.jsx
+9:57:58 PM [vite] hmr update /src/components/BuyPackage.jsx
+10:01:45 PM [vite] hmr update /src/components/VoucherLogin.jsx, /src/components/BuyPackage.jsx
+10:02:09 PM [vite] hmr update /src/components/BuyPackage.jsx
+10:02:09 PM [vite] hmr update /src/components/BuyPackage.jsx
+10:02:09 PM [vite] hmr update /src/components/VoucherLogin.jsx, /src/components/BuyPackage.jsx
+10:39:08 PM [vite] hmr update /src/components/BuyPackage.jsx
+10:39:47 PM [vite] hmr update /src/components/BuyPackage.jsx
+10:40:53 PM [vite] hmr update /src/components/BuyPackage.jsx
+10:41:41 PM [vite] hmr update /src/components/BuyPackage.jsx
+10:42:23 PM [vite] hmr update /src/components/BuyPackage.jsx
+10:43:27 PM [vite] hmr update /src/components/BuyPackage.jsx
+10:44:30 PM [vite] hmr update /src/components/BuyPackage.jsx
+10:45:50 PM [vite] hmr update /src/components/BuyPackage.jsx
+10:45:57 PM [vite] hmr update /src/components/BuyPackage.jsx
+10:45:58 PM [vite] hmr update /src/components/BuyPackage.jsx
+10:51:01 PM [vite] hmr update /src/components/BuyPackage.jsx
+10:52:00 PM [vite] hmr update /src/components/BuyPackage.jsx
+10:52:40 PM [vite] hmr update /src/components/BuyPackage.jsx
+10:53:36 PM [vite] hmr update /src/components/BuyPackage.jsx
+10:53:36 PM [vite] hmr update /src/components/BuyPackage.jsx
+10:54:40 PM [vite] hmr update /src/components/BuyPackage.jsx
+10:55:00 PM [vite] hmr update /src/components/BuyPackage.jsx
+10:55:00 PM [vite] hmr update /src/components/BuyPackage.jsx
+10:55:14 PM [vite] hmr update /src/components/BuyPackage.jsx
+10:55:14 PM [vite] hmr update /src/components/BuyPackage.jsx
+10:55:15 PM [vite] hmr update /src/App.jsx
+10:55:15 PM [vite] hmr update /src/App.jsx
+11:03:24 PM [vite] hmr update /src/components/BuyPackage.jsx
+11:04:10 PM [vite] hmr update /src/components/BuyPackage.jsx
+11:04:53 PM [vite] hmr update /src/components/BuyPackage.jsx
+11:05:27 PM [vite] hmr update /src/components/BuyPackage.jsx
+11:05:28 PM [vite] hmr update /src/App.jsx
+11:06:14 PM [vite] hmr update /src/components/BuyPackage.jsx
+11:06:14 PM [vite] hmr update /src/App.jsx
+11:06:36 PM [vite] hmr update /src/components/BuyPackage.jsx
+11:07:26 PM [vite] hmr update /src/components/BuyPackage.jsx
+11:08:09 PM [vite] hmr update /src/components/BuyPackage.jsx
+11:08:51 PM [vite] hmr update /src/components/BuyPackage.jsx
+11:09:20 PM [vite] hmr update /src/components/BuyPackage.jsx
+11:09:20 PM [vite] hmr update /src/components/BuyPackage.jsx
+11:19:46 PM [vite] hmr update /src/components/BuyPackage.jsx
+11:23:00 PM [vite] hmr update /src/components/BuyPackage.jsx
+11:23:00 PM [vite] warning: This case clause will never be evaluated because it duplicates an earlier case clause
+434|                  break;
+435|                case 'ERROR':
+436|                case 'TIMEOUT':
+   |                     ^
+437|                  setPaymentStatus('failed');
+438|                  setPaymentMessage(statusData.message);
+
+  Plugin: vite:esbuild
+  File: /home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/src/components/BuyPackage.jsx
+11:23:45 PM [vite] hmr update /src/components/BuyPackage.jsx
+11:23:45 PM [vite] warning: This case clause will never be evaluated because it duplicates an earlier case clause
+434|                  break;
+435|                case 'ERROR':
+436|                case 'TIMEOUT':
+   |                     ^
+437|                  setPaymentStatus('failed');
+438|                  setPaymentMessage(statusData.message);
+
+  Plugin: vite:esbuild
+  File: /home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/src/components/BuyPackage.jsx
+11:24:34 PM [vite] hmr update /src/components/BuyPackage.jsx
+11:24:34 PM [vite] warning: This case clause will never be evaluated because it duplicates an earlier case clause
+434|                  break;
+435|                case 'ERROR':
+436|                case 'TIMEOUT':
+   |                     ^
+437|                  setPaymentStatus('failed');
+438|                  setPaymentMessage(statusData.message);
+
+  Plugin: vite:esbuild
+  File: /home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/src/components/BuyPackage.jsx
+12:21:33 AM [vite] hmr update /src/components/BuyPackage.jsx
+12:21:38 AM [vite] hmr update /src/components/BuyPackage.jsx
+12:21:39 AM [vite] warning: This case clause will never be evaluated because it duplicates an earlier case clause
+434|                  break;
+435|                case 'ERROR':
+436|                case 'TIMEOUT':
+   |                     ^
+437|                  setPaymentStatus('failed');
+438|                  setPaymentMessage(statusData.message);
+
+  Plugin: vite:esbuild
+  File: /home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/Frontend/customer_portal/src/components/BuyPackage.jsx

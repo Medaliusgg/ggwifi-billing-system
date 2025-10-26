@@ -1,0 +1,10 @@
+
+> ggwifi-admin-frontend@1.0.0 dev
+> vite
+
+
+  VITE v5.4.20  ready in 1888 ms
+
+  ➜  Local:   http://localhost:3000/
+  ➜  Network: http://192.168.0.74:3000/
+12:30:27 AM [vite] hmr update /src/pages/Settings.jsx

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   Box,
@@ -20,6 +20,8 @@ import {
   Chip,
   useTheme,
   useMediaQuery,
+  Tooltip,
+  Collapse,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -39,111 +41,106 @@ import {
   Logout,
   Person,
   AdminPanelSettings,
+  ExpandLess,
+  ExpandMore,
+  AttachMoney as MoneyIcon,
+  Store as StoreIcon,
+  Timeline as TimelineIcon,
+  Security as SecurityIcon,
+  Support as SupportIcon,
 } from '@mui/icons-material';
-import { useAuth } from '../../context/AuthContext';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import useAuthStore from '/src/store/authStore.js';
+import ggwifiTheme from '/src/theme/ggwifiTheme.js';
 
 const drawerWidth = 280;
-
-const menuItems = [
-  {
-    text: 'Dashboard',
-    icon: <DashboardIcon />,
-    path: '/dashboard',
-    badge: null,
-    category: 'main',
-  },
-  {
-    text: 'User Management',
-    icon: <PeopleIcon />,
-    path: '/users',
-    badge: null,
-    category: 'management',
-  },
-  {
-    text: 'Internet Packages',
-    icon: <InventoryIcon />,
-    path: '/packages',
-    badge: null,
-    category: 'management',
-  },
-  {
-    text: 'Hotspot Vouchers',
-    icon: <ReceiptIcon />,
-    path: '/vouchers',
-    badge: null,
-    category: 'management',
-  },
-  {
-    text: 'Payment Records',
-    icon: <ReceiptIcon />,
-    path: '/payments',
-    badge: null,
-    category: 'management',
-  },
-  {
-    text: 'Router Management',
-    icon: <RouterIcon />,
-    path: '/routers',
-    badge: null,
-    category: 'infrastructure',
-  },
-  {
-    text: 'Active Sessions',
-    icon: <WifiIcon />,
-    path: '/sessions',
-    badge: null,
-    category: 'infrastructure',
-  },
-  {
-    text: 'System Analytics',
-    icon: <AnalyticsIcon />,
-    path: '/analytics',
-    badge: null,
-    category: 'reports',
-  },
-  {
-    text: 'Installation Services',
-    icon: <BuildIcon />,
-    path: '/installations',
-    badge: null,
-    category: 'services',
-  },
-  {
-    text: 'Customer Feedback',
-    icon: <FeedbackIcon />,
-    path: '/feedback',
-    badge: null,
-    category: 'services',
-  },
-  {
-    text: 'Blog Management',
-    icon: <ArticleIcon />,
-    path: '/blog',
-    badge: null,
-    category: 'content',
-  },
-  {
-    text: 'System Settings',
-    icon: <SettingsIcon />,
-    path: '/settings',
-    badge: null,
-    category: 'admin',
-  },
-];
+const collapsedWidth = 72;
 
 const MainLayout = () => {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useAuth();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  
+  const { user, logout, hasPermission } = useAuthStore();
+
+  console.log('🔍 MainLayout rendered:', { user: user?.username, location: location.pathname });
+
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [desktopCollapsed, setDesktopCollapsed] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
+  const [expandedItems, setExpandedItems] = useState({});
+
+  // Navigation items with permissions
+  const navigationItems = [
+    {
+      text: 'Dashboard',
+      icon: <DashboardIcon />,
+      path: '/dashboard',
+      permission: 'dashboard',
+    },
+    {
+      text: 'User Management',
+      icon: <PeopleIcon />,
+      path: '/users',
+      permission: 'users',
+    },
+    {
+      text: 'Internet Packages',
+      icon: <InventoryIcon />,
+      path: '/packages',
+      permission: 'packages',
+    },
+    {
+      text: 'Voucher Management',
+      icon: <ReceiptIcon />,
+      path: '/vouchers',
+      permission: 'packages', // Using packages permission for vouchers
+    },
+    {
+      text: 'Router Management',
+      icon: <RouterIcon />,
+      path: '/routers',
+      permission: 'routers',
+    },
+    {
+      text: 'Customer Management',
+      icon: <StoreIcon />,
+      path: '/customers',
+      permission: 'customers',
+    },
+    {
+      text: 'Finance & Payments',
+      icon: <MoneyIcon />,
+      path: '/finance',
+      permission: 'finance',
+    },
+    {
+      text: 'Analytics & Reports',
+      icon: <AnalyticsIcon />,
+      path: '/analytics',
+      permission: 'reports',
+    },
+    {
+      text: 'Session Management',
+      icon: <TimelineIcon />,
+      path: '/sessions',
+      permission: 'dashboard', // Using dashboard permission for sessions
+    },
+    {
+      text: 'Settings',
+      icon: <SettingsIcon />,
+      path: '/settings',
+      permission: 'settings',
+    },
+  ];
 
   const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
+    // Global toggle: on mobile -> open temporary drawer; on desktop -> collapse/expand permanent drawer
+    if (isMobile) {
+      setMobileOpen(!mobileOpen);
+    } else {
+      setDesktopCollapsed(!desktopCollapsed);
+    }
   };
 
   const handleProfileMenuOpen = (event) => {
@@ -154,337 +151,386 @@ const MainLayout = () => {
     setAnchorEl(null);
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
     handleProfileMenuClose();
   };
 
+  const handleNavigation = (path) => {
+    navigate(path);
+    if (isMobile) setMobileOpen(false);
+  };
+
+  const toggleExpanded = (itemText) => {
+    setExpandedItems(prev => ({
+      ...prev,
+      [itemText]: !prev[itemText],
+    }));
+  };
+
+  // Filter navigation items based on permissions
+  const filteredNavigationItems = navigationItems.filter(item => 
+    hasPermission(item.permission)
+  );
+
+
   const drawer = (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      {/* Logo Section */}
+        <Box
+          sx={{
+            height: '100%',
+            background: ggwifiTheme.colors.contrast, // White background
+            color: ggwifiTheme.colors.neutral, // Black text
+            borderRight: `1px solid #E0E0E0`, // Light border
+          }}
+        >
+      {/* GG Wi-Fi Logo and Branding */}
       <Box
         sx={{
           p: 3,
           textAlign: 'center',
-          borderBottom: `1px solid ${theme.palette.divider}`,
-          background: 'linear-gradient(135deg, rgba(25, 118, 210, 0.05) 0%, rgba(21, 101, 192, 0.05) 100%)',
+          borderBottom: `1px solid ${ggwifiTheme.colors.neutral}`,
         }}
       >
-        <Box
-          sx={{
-            width: 64,
-            height: 64,
-            borderRadius: '16px',
-            background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            mx: 'auto',
-            mb: 2,
-            boxShadow: '0 8px 32px rgba(25, 118, 210, 0.3)',
-          }}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
         >
-          <AdminPanelSettings sx={{ fontSize: 32, color: 'white' }} />
-        </Box>
-        <Typography
-          variant="h6"
-          sx={{
-            fontWeight: 700,
-            color: '#1976d2',
-            mb: 0.5,
-          }}
-        >
-          GGNetworks
-        </Typography>
-        <Typography 
-          variant="caption" 
-          sx={{
-            color: 'text.secondary',
-            fontWeight: 500,
-            letterSpacing: 0.5,
-          }}
-        >
-          Administrative Portal
-        </Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mb: 2 }}>
+            <Avatar
+              sx={{
+                width: 60,
+                height: 60,
+                background: ggwifiTheme.gradients.primary,
+                color: ggwifiTheme.colors.secondary,
+                fontSize: '1.5rem',
+                fontWeight: 'bold',
+                boxShadow: ggwifiTheme.shadows.golden,
+              }}
+            >
+              GG
+            </Avatar>
+          </Box>
+          
+          <Typography
+            variant="h6"
+            sx={{
+              fontFamily: ggwifiTheme.typography.fontFamily.primary,
+              fontWeight: ggwifiTheme.typography.fontWeight.bold,
+              background: ggwifiTheme.gradients.primary,
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              mb: 0.5,
+              display: { xs: 'inline', md: desktopCollapsed ? 'none' : 'inline' },
+            }}
+          >
+            GG Wi-Fi
+          </Typography>
+          
+          <Typography
+            variant="caption"
+            sx={{
+              color: ggwifiTheme.colors.neutral,
+              fontStyle: 'italic',
+              fontSize: ggwifiTheme.typography.fontSize.xs,
+              display: { xs: 'inline', md: desktopCollapsed ? 'none' : 'inline' },
+            }}
+          >
+            The Signal That Cares
+          </Typography>
+        </motion.div>
       </Box>
 
       {/* Navigation Menu */}
-      <Box sx={{ flex: 1, overflow: 'auto' }}>
-        <List sx={{ px: 2, py: 1 }}>
-          {(() => {
-            const categories = {
-              main: 'Main',
-              management: 'Management',
-              infrastructure: 'Infrastructure',
-              reports: 'Reports & Analytics',
-              services: 'Services',
-              content: 'Content',
-              admin: 'Administration',
-            };
+      <List sx={{ px: 2, py: 1 }}>
+        {filteredNavigationItems.map((item, index) => (
+          <motion.div
+            key={item.text}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3, delay: index * 0.1 }}
+          >
+            <ListItem disablePadding sx={{ mb: 0.5 }}>
+            <ListItemButton
+                onClick={() => handleNavigation(item.path)}
+                sx={{
+                  borderRadius: ggwifiTheme.borderRadius.md,
+                  mb: 0.5,
+                  backgroundColor: location.pathname === item.path 
+                    ? `rgba(255, 199, 44, 0.15)` 
+                    : 'transparent',
+                  border: location.pathname === item.path 
+                    ? `1px solid #FFC72C` 
+                    : '1px solid transparent',
+                  transition: ggwifiTheme.transitions.normal,
+                justifyContent: { md: desktopCollapsed ? 'center' : 'flex-start' },
+                  '&:hover': {
+                    backgroundColor: `rgba(255, 199, 44, 0.1)`, // Golden yellow hover background
+                    borderColor: '#FFC72C', // Golden yellow border
+                    transform: { xs: 'translateX(4px)', md: desktopCollapsed ? 'none' : 'translateX(4px)' },
+                    '& .MuiListItemIcon-root': {
+                      color: '#FFC72C', // Golden yellow icon on hover
+                    },
+                    '& .MuiListItemText-primary': {
+                      color: '#FFC72C', // Golden yellow text on hover
+                    },
+                  },
+                }}
+              >
+                <ListItemIcon
+                  sx={{
+                    color: location.pathname === item.path 
+                      ? '#FFC72C' 
+                      : '#000000', // Black color for visibility
+                    minWidth: { xs: 40, md: desktopCollapsed ? 'auto' : 40 },
+                    justifyContent: 'center',
+                  }}
+                >
+                  {item.icon}
+                </ListItemIcon>
+                <ListItemText
+                  primary={item.text}
+                  sx={{
+                    '& .MuiListItemText-primary': {
+                      fontFamily: ggwifiTheme.typography.fontFamily.primary,
+                      fontWeight: location.pathname === item.path 
+                        ? ggwifiTheme.typography.fontWeight.semibold 
+                        : ggwifiTheme.typography.fontWeight.normal,
+                      color: location.pathname === item.path 
+                        ? '#FFC72C' 
+                        : '#000000', // Black color for visibility
+                      fontSize: ggwifiTheme.typography.fontSize.sm,
+                      display: { md: desktopCollapsed ? 'none' : 'inline' },
+                    },
+                  }}
+                />
+              </ListItemButton>
+            </ListItem>
+          </motion.div>
+        ))}
+      </List>
 
-            let currentCategory = '';
-            return menuItems.map((item, index) => {
-              const showCategory = currentCategory !== item.category;
-              if (showCategory) {
-                currentCategory = item.category;
-              }
-
-              return (
-                <React.Fragment key={item.text}>
-                  {showCategory && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <Box sx={{ px: 2, py: 1, mt: 2 }}>
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            fontWeight: 600,
-                            color: 'text.secondary',
-                            textTransform: 'uppercase',
-                            letterSpacing: 0.5,
-                            fontSize: '0.7rem',
-                          }}
-                        >
-                          {categories[item.category]}
-                        </Typography>
-                      </Box>
-                    </motion.div>
-                  )}
-                  <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.3, delay: index * 0.05 }}
-                  >
-                    <ListItem disablePadding sx={{ mb: 0.5 }}>
-                      <ListItemButton
-                        onClick={() => {
-                          navigate(item.path);
-                          if (isMobile) setMobileOpen(false);
-                        }}
-                        selected={location.pathname === item.path}
-                        sx={{
-                          borderRadius: 2,
-                          py: 1.5,
-                          '&.Mui-selected': {
-                            background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
-                            color: 'white',
-                            '&:hover': {
-                              background: 'linear-gradient(135deg, #1565c0 0%, #1976d2 100%)',
-                            },
-                            '& .MuiListItemIcon-root': {
-                              color: 'white',
-                            },
-                          },
-                          '&:hover': {
-                            background: 'rgba(25, 118, 210, 0.08)',
-                          },
-                        }}
-                      >
-                        <ListItemIcon
-                          sx={{
-                            minWidth: 40,
-                            color: location.pathname === item.path ? 'white' : 'text.secondary',
-                          }}
-                        >
-                          {item.icon}
-                        </ListItemIcon>
-                        <ListItemText
-                          primary={item.text}
-                          primaryTypographyProps={{
-                            fontWeight: location.pathname === item.path ? 600 : 500,
-                            fontSize: '0.9rem',
-                          }}
-                        />
-                        {item.badge && (
-                          <Badge badgeContent={item.badge} color="error" />
-                        )}
-                      </ListItemButton>
-                    </ListItem>
-                  </motion.div>
-                </React.Fragment>
-              );
-            });
-          })()}
-        </List>
-      </Box>
-
-      {/* User Info */}
-      <Box sx={{ 
-        p: 2, 
-        borderTop: `1px solid ${theme.palette.divider}`,
-        background: 'linear-gradient(135deg, rgba(25, 118, 210, 0.02) 0%, rgba(21, 101, 192, 0.02) 100%)',
-      }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <Avatar
+      {/* User Info Footer */}
+      <Box
+        sx={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          p: 2,
+          borderTop: `1px solid ${ggwifiTheme.colors.neutral}`,
+          background: `rgba(0, 0, 0, 0.5)`,
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+          <SecurityIcon sx={{ fontSize: 16, color: ggwifiTheme.colors.primary }} />
+          <Typography
+            variant="caption"
             sx={{
-              width: 44,
-              height: 44,
-              background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
-              mr: 2,
-              boxShadow: '0 4px 12px rgba(25, 118, 210, 0.3)',
+              color: ggwifiTheme.colors.neutral,
+              fontSize: ggwifiTheme.typography.fontSize.xs,
             }}
           >
-            <Person />
-          </Avatar>
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="subtitle2" fontWeight={600} color="text.primary">
-              {user?.fullName || 'Administrator'}
-            </Typography>
-            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
-              {user?.phoneNumber || 'admin@ggnetworks.co.tz'}
-            </Typography>
-          </Box>
+            Secure Connection
+          </Typography>
         </Box>
-        <Chip
-          label="System Administrator"
-          size="small"
-          color="primary"
-          sx={{ 
-            width: '100%',
-            fontWeight: 600,
-            background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
+        <Typography
+          variant="caption"
+          sx={{
+            color: ggwifiTheme.colors.neutral,
+            fontSize: ggwifiTheme.typography.fontSize.xs,
           }}
-        />
+        >
+          © 2025 GG Wi-Fi
+        </Typography>
       </Box>
     </Box>
   );
 
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box sx={{ display: 'flex', minHeight: '100vh' }}>
       {/* App Bar */}
       <AppBar
         position="fixed"
         sx={{
-          width: { md: `calc(100% - ${drawerWidth}px)` },
-          ml: { md: `${drawerWidth}px` },
-          background: 'rgba(255, 255, 255, 0.98)',
-          backdropFilter: 'blur(20px)',
-          borderBottom: `1px solid ${theme.palette.divider}`,
-          boxShadow: '0 2px 20px rgba(0, 0, 0, 0.08)',
-          color: 'text.primary',
+          width: { md: `calc(100% - ${(desktopCollapsed ? collapsedWidth : drawerWidth)}px)` },
+          ml: { md: `${desktopCollapsed ? collapsedWidth : drawerWidth}px` },
+          background: '#000000', // Black background
+          color: '#FFFFFF', // White text
+          boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+          borderBottom: `1px solid #FFC72C`, // Golden yellow border
         }}
       >
-        <Toolbar sx={{ minHeight: '64px !important' }}>
+        <Toolbar>
           <IconButton
             color="inherit"
             aria-label="open drawer"
             edge="start"
             onClick={handleDrawerToggle}
             sx={{ 
-              mr: 2, 
-              display: { md: 'none' },
-              color: 'text.primary',
+              mr: 2,
+              color: '#FFFFFF', // White icon
+              '&:hover': {
+                color: '#FFC72C', // Golden yellow on hover
+                backgroundColor: 'rgba(255, 199, 44, 0.1)',
+              }
             }}
           >
             <MenuIcon />
           </IconButton>
-          
-          <Box sx={{ flexGrow: 1 }}>
-            <Typography 
-              variant="h6" 
-              noWrap 
-              component="div" 
-              sx={{ 
-                fontWeight: 600,
-                color: 'text.primary',
-              }}
-            >
-              {menuItems.find(item => item.path === location.pathname)?.text || 'Dashboard'}
-            </Typography>
-            <Typography 
-              variant="caption" 
-              sx={{ 
-                color: 'text.secondary',
-                fontWeight: 500,
-              }}
-            >
-              {(() => {
-                const currentItem = menuItems.find(item => item.path === location.pathname);
-                const categories = {
-                  main: 'Main Dashboard',
-                  management: 'Business Management',
-                  infrastructure: 'Network Infrastructure',
-                  reports: 'Analytics & Reports',
-                  services: 'Customer Services',
-                  content: 'Content Management',
-                  admin: 'System Administration',
-                };
-                return currentItem ? categories[currentItem.category] : 'System Overview';
-              })()}
-            </Typography>
-          </Box>
 
-          {/* Header Actions */}
+          <Typography
+            variant="h6"
+            noWrap
+            component="div"
+            sx={{
+              flexGrow: 1,
+              fontFamily: ggwifiTheme.typography.fontFamily.primary,
+              fontWeight: ggwifiTheme.typography.fontWeight.semibold,
+              color: '#FFFFFF', // White text
+            }}
+          >
+            {navigationItems.find(item => item.path === location.pathname)?.text || 'Dashboard'}
+          </Typography>
+
+          {/* Notifications */}
+          <IconButton
+            size="large"
+            aria-label="show notifications"
+            sx={{ 
+              color: '#FFFFFF', // White icon
+              mr: 1,
+              '&:hover': {
+                color: '#FFC72C', // Golden yellow on hover
+                backgroundColor: 'rgba(255, 199, 44, 0.1)',
+              }
+            }}
+          >
+            <Badge badgeContent={4} color="error">
+              <Notifications />
+            </Badge>
+          </IconButton>
+
+          {/* User Profile Menu */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <IconButton 
-              color="inherit"
-              sx={{ color: 'text.primary' }}
-            >
-              <Badge badgeContent={4} color="error">
-                <Notifications />
-              </Badge>
-            </IconButton>
-            
+            <Chip
+              icon={<AdminPanelSettings />}
+              label={user?.role || 'User'}
+              size="small"
+              sx={{
+                backgroundColor: `rgba(245, 183, 0, 0.1)`,
+                color: ggwifiTheme.colors.primary,
+                border: `1px solid ${ggwifiTheme.colors.primary}`,
+                fontFamily: ggwifiTheme.typography.fontFamily.primary,
+                fontWeight: ggwifiTheme.typography.fontWeight.medium,
+              }}
+            />
             <IconButton
+              size="large"
+              aria-label="account of current user"
+              aria-controls="profile-menu"
+              aria-haspopup="true"
               onClick={handleProfileMenuOpen}
-              sx={{ ml: 1 }}
+              sx={{ 
+                color: '#FFFFFF', // White icon
+                '&:hover': {
+                  color: '#FFC72C', // Golden yellow on hover
+                  backgroundColor: 'rgba(255, 199, 44, 0.1)',
+                }
+              }}
             >
               <Avatar
                 sx={{
-                  width: 38,
-                  height: 38,
-                  background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
-                  boxShadow: '0 4px 12px rgba(25, 118, 210, 0.3)',
+                  width: 32,
+                  height: 32,
+                  background: ggwifiTheme.gradients.primary,
+                  color: ggwifiTheme.colors.secondary,
+                  fontSize: '0.875rem',
+                  fontWeight: 'bold',
                 }}
               >
-                <AccountCircle />
+                {user?.username?.charAt(0).toUpperCase() || 'U'}
               </Avatar>
             </IconButton>
           </Box>
+
+          {/* Profile Menu */}
+          <Menu
+            id="profile-menu"
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleProfileMenuClose}
+            sx={{
+              '& .MuiPaper-root': {
+                background: ggwifiTheme.gradients.card,
+                borderRadius: ggwifiTheme.borderRadius.lg,
+                border: `1px solid rgba(245, 183, 0, 0.2)`,
+                boxShadow: ggwifiTheme.shadows.golden,
+              },
+            }}
+          >
+            <MenuItem onClick={handleProfileMenuClose}>
+              <ListItemIcon>
+                <Person fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Profile</ListItemText>
+            </MenuItem>
+            <MenuItem onClick={handleProfileMenuClose}>
+              <ListItemIcon>
+                <SettingsIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Settings</ListItemText>
+            </MenuItem>
+            <Divider />
+            <MenuItem onClick={handleLogout}>
+              <ListItemIcon>
+                <Logout fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Logout</ListItemText>
+            </MenuItem>
+          </Menu>
         </Toolbar>
       </AppBar>
 
-      {/* Sidebar */}
+      {/* Drawer */}
       <Box
         component="nav"
-        sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }}
+        sx={{ width: { md: desktopCollapsed ? collapsedWidth : drawerWidth }, flexShrink: { md: 0 } }}
       >
-        {/* Mobile drawer */}
         <Drawer
           variant="temporary"
           open={mobileOpen}
           onClose={handleDrawerToggle}
           ModalProps={{
-            keepMounted: true, // Better open performance on mobile.
+            keepMounted: true,
           }}
-          sx={{
-            display: { xs: 'block', md: 'none' },
-            '& .MuiDrawer-paper': {
-              boxSizing: 'border-box',
-              width: drawerWidth,
-              background: 'rgba(255, 255, 255, 0.95)',
-              backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-            },
-          }}
+                sx={{
+                  display: { xs: 'block', md: 'none' },
+                  '& .MuiDrawer-paper': {
+                    boxSizing: 'border-box',
+                    width: drawerWidth,
+                    background: ggwifiTheme.colors.contrast, // White background
+                    borderRight: `1px solid #E0E0E0`, // Light border
+                  },
+                }}
         >
           {drawer}
         </Drawer>
-        
-        {/* Desktop drawer */}
         <Drawer
           variant="permanent"
           sx={{
             display: { xs: 'none', md: 'block' },
             '& .MuiDrawer-paper': {
               boxSizing: 'border-box',
-              width: drawerWidth,
-              background: 'rgba(255, 255, 255, 0.95)',
-              backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
+              width: desktopCollapsed ? collapsedWidth : drawerWidth,
+              background: ggwifiTheme.colors.contrast, // White background
+              borderRight: `1px solid #E0E0E0`, // Light border
             },
           }}
           open
@@ -499,51 +545,22 @@ const MainLayout = () => {
         sx={{
           flexGrow: 1,
           p: 3,
-          width: { md: `calc(100% - ${drawerWidth}px)` },
-          mt: { xs: 7, md: 8 },
+          width: { md: `calc(100% - ${(desktopCollapsed ? collapsedWidth : drawerWidth)}px)` },
+          mt: 8, // Account for AppBar height
+          background: ggwifiTheme.colors.contrast, // White background
+          minHeight: 'calc(100vh - 64px)',
         }}
       >
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.5 }}
         >
-          <Outlet />
+            <Outlet />
         </motion.div>
       </Box>
-
-      {/* Profile Menu */}
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleProfileMenuClose}
-        PaperProps={{
-          sx: {
-            mt: 1,
-            minWidth: 200,
-            background: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-          },
-        }}
-      >
-        <MenuItem onClick={() => { navigate('/settings'); handleProfileMenuClose(); }}>
-          <ListItemIcon>
-            <SettingsIcon />
-          </ListItemIcon>
-          Settings
-        </MenuItem>
-        <Divider />
-        <MenuItem onClick={handleLogout}>
-          <ListItemIcon>
-            <Logout />
-          </ListItemIcon>
-          Logout
-        </MenuItem>
-      </Menu>
     </Box>
   );
 };
 
-export default MainLayout; 
+export default MainLayout;

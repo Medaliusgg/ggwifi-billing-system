@@ -1,226 +1,607 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Card,
   CardContent,
-  Typography,
   TextField,
   Button,
+  Typography,
+  Alert,
   InputAdornment,
   IconButton,
-  Alert,
   CircularProgress,
+  useTheme,
+  useMediaQuery,
+  Divider,
+  Link,
+  Avatar,
+  ToggleButton,
+  ToggleButtonGroup,
+  Chip,
 } from '@mui/material';
 import {
-  Visibility as VisibilityIcon,
-  VisibilityOff as VisibilityOffIcon,
-  Lock as LockIcon,
-  Phone as PhoneIcon,
+  Visibility,
+  VisibilityOff,
+  Person,
+  Lock,
+  Login as LoginIcon,
   Security as SecurityIcon,
+  Wifi as WifiIcon,
+  AdminPanelSettings,
+  Badge,
+  Phone,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
-import { useForm } from 'react-hook-form';
-import { useAuth } from '../../../context/AuthContext';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useSnackbar } from 'notistack';
+import useAuthStore from '/src/store/authStore.js';
+import ggwifiTheme from '/src/theme/ggwifiTheme.js';
 
 const LoginForm = () => {
-  const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-  const { login } = useAuth();
-  const { enqueueSnackbar } = useSnackbar();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const navigate = useNavigate();
+  const location = useLocation();
+  const { enqueueSnackbar } = useSnackbar();
+  const { login, isLoading, error, clearError } = useAuthStore();
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm();
+  const [loginType, setLoginType] = useState('admin'); // 'admin' or 'staff'
+  const [formData, setFormData] = useState({
+    username: '',
+    phoneNumber: '',
+    staffId: '',
+    password: '',
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
-  const onSubmit = async (data) => {
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0, y: 50 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.6,
+        ease: 'easeOut',
+        staggerChildren: 0.1,
+      },
+    },
+  };
+
+  const cardVariants = {
+    hidden: { opacity: 0, scale: 0.9 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      transition: {
+        duration: 0.5,
+        ease: 'easeOut',
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.4,
+        ease: 'easeOut',
+      },
+    },
+  };
+
+  useEffect(() => {
+    clearError();
+  }, [clearError]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleLoginTypeChange = (event, newLoginType) => {
+    if (newLoginType !== null) {
+      setLoginType(newLoginType);
+      // Clear form data when switching login types
+      setFormData({
+        username: '',
+        phoneNumber: '',
+        staffId: '',
+        password: '',
+      });
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Validate based on login type
+    if (loginType === 'admin') {
+      if (!formData.username || !formData.phoneNumber || !formData.password) {
+        enqueueSnackbar('Please fill in all admin fields', { variant: 'error' });
+        return;
+      }
+    } else {
+      if (!formData.username || !formData.staffId || !formData.password) {
+        enqueueSnackbar('Please fill in all staff fields', { variant: 'error' });
+        return;
+      }
+    }
+
     try {
-      setIsLoading(true);
-      setError('');
+      console.log('🔍 Debug: Attempting login with credentials:', { 
+        loginType, 
+        username: formData.username, 
+        rememberMe 
+      });
       
-      // Login with phone number and password only
-      const result = await login(data.phoneNumber, data.password);
+      const credentials = {
+        username: formData.username,
+        password: formData.password,
+        rememberMe: rememberMe,
+        loginType: loginType
+      };
+
+      // Add type-specific fields based on login type
+      if (loginType === 'admin') {
+        credentials.phoneNumber = formData.phoneNumber;
+      } else {
+        credentials.staffId = formData.staffId;
+      }
+      
+      const result = await login(credentials);
+      console.log('🔍 Debug: Login result:', result);
       
       if (result.success) {
-        enqueueSnackbar('Login successful!', { variant: 'success' });
-        // Redirect to dashboard after successful login
-        navigate('/dashboard');
+        console.log('🔍 Debug: Login successful, navigating to dashboard');
+        console.log('🔍 Debug: Current auth state:', {
+          isAuthenticated: result.user ? true : false,
+          user: result.user?.username,
+          role: result.user?.role
+        });
+        
+        // Get the intended destination or default to dashboard
+        const from = location.state?.from?.pathname || '/dashboard';
+        console.log('🔍 Debug: Navigating to:', from);
+        
+        // Small delay to ensure state is updated
+        setTimeout(() => {
+          navigate(from, { replace: true });
+        }, 100);
+        
+        enqueueSnackbar(`Welcome back, ${loginType === 'admin' ? 'Admin' : 'Staff'}!`, { variant: 'success' });
       } else {
-        setError(result.message || 'Login failed');
-        enqueueSnackbar(result.message || 'Login failed', { variant: 'error' });
+        console.log('🔍 Debug: Login failed:', result.error);
+        enqueueSnackbar(result.error || 'Login failed', { variant: 'error' });
       }
-    } catch (error) {
-      console.error('Login error:', error);
-      setError('An unexpected error occurred');
-      enqueueSnackbar('An unexpected error occurred during login.', { variant: 'error' });
-    } finally {
-      setIsLoading(false);
+    } catch (err) {
+      console.error('🔍 Debug: Login error:', err);
+      enqueueSnackbar('Login failed. Please try again.', { variant: 'error' });
     }
+  };
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
   };
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      style={{ width: '100%' }}
     >
-      <Box
-        sx={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          p: 2,
-        }}
-      >
-        <Card
+      {/* GG Wi-Fi Logo and Branding */}
+      <motion.div variants={itemVariants} style={{ textAlign: 'center', marginBottom: 32 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mb: 2 }}>
+          <Avatar
+            sx={{
+              width: 80,
+              height: 80,
+              background: ggwifiTheme.gradients.primary,
+              color: ggwifiTheme.colors.secondary,
+              fontSize: '2rem',
+              fontWeight: 'bold',
+              boxShadow: ggwifiTheme.shadows.golden,
+            }}
+          >
+            GG
+          </Avatar>
+        </Box>
+        
+        <Typography
+          variant="h4"
           sx={{
-            maxWidth: 450,
-            width: '100%',
-            background: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
+            fontFamily: ggwifiTheme.typography.fontFamily.primary,
+            fontWeight: ggwifiTheme.typography.fontWeight.bold,
+            background: ggwifiTheme.gradients.primary,
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            mb: 1,
           }}
         >
+          GG Wi-Fi
+        </Typography>
+        
+        <Typography
+          variant="body2"
+          sx={{
+            color: ggwifiTheme.colors.neutral,
+            fontStyle: 'italic',
+            fontSize: ggwifiTheme.typography.fontSize.sm,
+          }}
+        >
+          The Signal That Cares
+        </Typography>
+      </motion.div>
+
+      {/* Login Type Selector */}
+      <motion.div variants={itemVariants} style={{ marginBottom: 24 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+          <ToggleButtonGroup
+            value={loginType}
+            exclusive
+            onChange={handleLoginTypeChange}
+            sx={{
+              background: 'rgba(245, 183, 0, 0.1)',
+              borderRadius: ggwifiTheme.borderRadius.md,
+              border: `1px solid rgba(245, 183, 0, 0.2)`,
+              '& .MuiToggleButton-root': {
+                borderRadius: ggwifiTheme.borderRadius.sm,
+                border: 'none',
+                color: ggwifiTheme.colors.neutral,
+                fontFamily: ggwifiTheme.typography.fontFamily.primary,
+                fontWeight: ggwifiTheme.typography.fontWeight.medium,
+                '&.Mui-selected': {
+                  background: ggwifiTheme.gradients.primary,
+                  color: ggwifiTheme.colors.secondary,
+                  '&:hover': {
+                    background: ggwifiTheme.gradients.primaryHover,
+                  },
+                },
+                '&:hover': {
+                  background: 'rgba(245, 183, 0, 0.1)',
+                },
+              },
+            }}
+          >
+            <ToggleButton value="admin">
+              <AdminPanelSettings sx={{ mr: 1 }} />
+              Admin Login
+            </ToggleButton>
+            <ToggleButton value="staff">
+              <Badge sx={{ mr: 1 }} />
+              Staff Login
+            </ToggleButton>
+          </ToggleButtonGroup>
+        </Box>
+        
+        <Box sx={{ textAlign: 'center' }}>
+          <Chip
+            icon={loginType === 'admin' ? <AdminPanelSettings /> : <Badge />}
+            label={loginType === 'admin' ? 'Administrator Access' : 'Staff Access'}
+            sx={{
+              backgroundColor: `rgba(245, 183, 0, 0.1)`,
+              color: ggwifiTheme.colors.primary,
+              border: `1px solid ${ggwifiTheme.colors.primary}`,
+              fontFamily: ggwifiTheme.typography.fontFamily.primary,
+              fontWeight: ggwifiTheme.typography.fontWeight.medium,
+            }}
+          />
+        </Box>
+      </motion.div>
+
+      {/* Login Card */}
+      <motion.div variants={cardVariants}>
+        <Card
+          sx={{
+            background: ggwifiTheme.gradients.card,
+            borderRadius: ggwifiTheme.borderRadius.lg,
+            boxShadow: ggwifiTheme.shadows.golden,
+            border: `1px solid rgba(245, 183, 0, 0.2)`,
+            position: 'relative',
+            overflow: 'hidden',
+          }}
+        >
+          {/* Card Header Accent */}
+          <Box
+            sx={{
+              height: 4,
+              background: ggwifiTheme.gradients.primary,
+              width: '100%',
+            }}
+          />
+          
           <CardContent sx={{ p: 4 }}>
-            {/* Header */}
-            <Box sx={{ textAlign: 'center', mb: 4 }}>
-              <Box
+            <motion.div variants={itemVariants}>
+              <Typography
+                variant="h5"
                 sx={{
-                  width: 80,
-                  height: 80,
-                  borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  mx: 'auto',
-                  mb: 2,
+                  fontFamily: ggwifiTheme.typography.fontFamily.primary,
+                  fontWeight: ggwifiTheme.typography.fontWeight.semibold,
+                  color: ggwifiTheme.colors.secondary,
+                  textAlign: 'center',
+                  mb: 3,
                 }}
               >
-                <SecurityIcon sx={{ color: 'white', fontSize: 40 }} />
-              </Box>
-              <Typography variant="h4" fontWeight={700} gutterBottom>
-                GGNetworks Admin Portal
+                {loginType === 'admin' ? 'Admin Portal Login' : 'Staff Portal Login'}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Administrator Access
-              </Typography>
-            </Box>
+            </motion.div>
 
-            {/* Error Alert */}
             {error && (
-              <Alert severity="error" sx={{ mb: 3 }}>
-                {error}
-              </Alert>
+              <motion.div
+                variants={itemVariants}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <Alert 
+                  severity="error" 
+                  sx={{ 
+                    mb: 2,
+                    borderRadius: ggwifiTheme.borderRadius.md,
+                    backgroundColor: 'rgba(244, 67, 54, 0.1)',
+                    border: '1px solid rgba(244, 67, 54, 0.2)',
+                  }}
+                >
+                  {error}
+                </Alert>
+              </motion.div>
             )}
 
-            {/* Login Form */}
-            <Box component="form" onSubmit={handleSubmit(onSubmit)}>
-              <TextField
-                fullWidth
-                label="Phone Number"
-                type="text"
-                variant="outlined"
-                margin="normal"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <PhoneIcon color="action" />
-                    </InputAdornment>
-                  ),
-                }}
-                {...register('phoneNumber', {
-                  required: 'Phone number is required',
-                  pattern: {
-                    value: /^[0-9+\-\s()]+$/,
-                    message: 'Please enter a valid phone number',
-                  },
-                })}
-                error={!!errors.phoneNumber}
-                helperText={errors.phoneNumber?.message}
-                disabled={isLoading}
-                placeholder="Enter phone number"
-              />
+            <form onSubmit={handleSubmit}>
+              {/* Username Field */}
+              <motion.div variants={itemVariants}>
+                <TextField
+                  fullWidth
+                  name="username"
+                  label="Username"
+                  value={formData.username}
+                  onChange={handleInputChange}
+                  disabled={isLoading}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Person sx={{ color: ggwifiTheme.colors.primary }} />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    mb: 2,
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: ggwifiTheme.borderRadius.md,
+                      backgroundColor: ggwifiTheme.colors.contrast,
+                      '& fieldset': {
+                        borderColor: ggwifiTheme.colors.neutral,
+                        borderWidth: 2,
+                      },
+                      '&:hover fieldset': {
+                        borderColor: ggwifiTheme.colors.primary,
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: ggwifiTheme.colors.primary,
+                        boxShadow: `0 0 0 3px rgba(245, 183, 0, 0.1)`,
+                      },
+                    },
+                    '& .MuiInputLabel-root': {
+                      color: ggwifiTheme.colors.neutral,
+                      '&.Mui-focused': {
+                        color: ggwifiTheme.colors.primary,
+                      },
+                    },
+                  }}
+                />
+              </motion.div>
 
-              <TextField
-                fullWidth
-                label="Password"
-                type={showPassword ? 'text' : 'password'}
-                variant="outlined"
-                margin="normal"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <LockIcon color="action" />
-                    </InputAdornment>
-                  ),
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={() => setShowPassword(!showPassword)}
-                        edge="end"
-                        disabled={isLoading}
-                      >
-                        {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-                {...register('password', {
-                  required: 'Password is required',
-                  minLength: {
-                    value: 8,
-                    message: 'Password must be at least 8 characters',
-                  },
-                })}
-                error={!!errors.password}
-                helperText={errors.password?.message}
-                disabled={isLoading}
-                placeholder="Enter password"
-              />
+              {/* Phone Number Field (Admin only) */}
+              {loginType === 'admin' && (
+                <motion.div variants={itemVariants}>
+                  <TextField
+                    fullWidth
+                    name="phoneNumber"
+                    label="Phone Number"
+                    value={formData.phoneNumber}
+                    onChange={handleInputChange}
+                    disabled={isLoading}
+                    placeholder="e.g., 0742844024"
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Phone sx={{ color: ggwifiTheme.colors.primary }} />
+                        </InputAdornment>
+                      ),
+                    }}
+                    sx={{
+                      mb: 2,
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: ggwifiTheme.borderRadius.md,
+                        backgroundColor: ggwifiTheme.colors.contrast,
+                        '& fieldset': {
+                          borderColor: ggwifiTheme.colors.neutral,
+                          borderWidth: 2,
+                        },
+                        '&:hover fieldset': {
+                          borderColor: ggwifiTheme.colors.primary,
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: ggwifiTheme.colors.primary,
+                          boxShadow: `0 0 0 3px rgba(245, 183, 0, 0.1)`,
+                        },
+                      },
+                      '& .MuiInputLabel-root': {
+                        color: ggwifiTheme.colors.neutral,
+                        '&.Mui-focused': {
+                          color: ggwifiTheme.colors.primary,
+                        },
+                      },
+                    }}
+                  />
+                </motion.div>
+              )}
 
-              <Button
-                type="submit"
-                fullWidth
-                variant="contained"
-                size="large"
-                sx={{
-                  mt: 3,
-                  mb: 2,
-                  py: 1.5,
-                  background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, #1565c0 0%, #1976d2 100%)',
-                  },
-                }}
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <CircularProgress size={24} color="inherit" />
-                ) : (
-                  'Sign In'
-                )}
-              </Button>
-            </Box>
+              {/* Staff ID Field (Staff only) */}
+              {loginType === 'staff' && (
+                <motion.div variants={itemVariants}>
+                  <TextField
+                    fullWidth
+                    name="staffId"
+                    label="Staff ID"
+                    value={formData.staffId}
+                    onChange={handleInputChange}
+                    disabled={isLoading}
+                    placeholder="e.g., STF001"
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Badge sx={{ color: ggwifiTheme.colors.primary }} />
+                        </InputAdornment>
+                      ),
+                    }}
+                    sx={{
+                      mb: 2,
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: ggwifiTheme.borderRadius.md,
+                        backgroundColor: ggwifiTheme.colors.contrast,
+                        '& fieldset': {
+                          borderColor: ggwifiTheme.colors.neutral,
+                          borderWidth: 2,
+                        },
+                        '&:hover fieldset': {
+                          borderColor: ggwifiTheme.colors.primary,
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: ggwifiTheme.colors.primary,
+                          boxShadow: `0 0 0 3px rgba(245, 183, 0, 0.1)`,
+                        },
+                      },
+                      '& .MuiInputLabel-root': {
+                        color: ggwifiTheme.colors.neutral,
+                        '&.Mui-focused': {
+                          color: ggwifiTheme.colors.primary,
+                        },
+                      },
+                    }}
+                  />
+                </motion.div>
+              )}
 
-            {/* Footer */}
-            <Box sx={{ mt: 4, textAlign: 'center' }}>
-              <Typography variant="caption" color="text.secondary">
-                © 2024 GGNetworks. All rights reserved.
-              </Typography>
-            </Box>
+              {/* Password Field */}
+              <motion.div variants={itemVariants}>
+                <TextField
+                  fullWidth
+                  name="password"
+                  label="Password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  disabled={isLoading}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Lock sx={{ color: ggwifiTheme.colors.primary }} />
+                      </InputAdornment>
+                    ),
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={togglePasswordVisibility}
+                          edge="end"
+                          sx={{ color: ggwifiTheme.colors.neutral }}
+                        >
+                          {showPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    mb: 3,
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: ggwifiTheme.borderRadius.md,
+                      backgroundColor: ggwifiTheme.colors.contrast,
+                      '& fieldset': {
+                        borderColor: ggwifiTheme.colors.neutral,
+                        borderWidth: 2,
+                      },
+                      '&:hover fieldset': {
+                        borderColor: ggwifiTheme.colors.primary,
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: ggwifiTheme.colors.primary,
+                        boxShadow: `0 0 0 3px rgba(245, 183, 0, 0.1)`,
+                      },
+                    },
+                    '& .MuiInputLabel-root': {
+                      color: ggwifiTheme.colors.neutral,
+                      '&.Mui-focused': {
+                        color: ggwifiTheme.colors.primary,
+                      },
+                    },
+                  }}
+                />
+              </motion.div>
+
+              <motion.div variants={itemVariants}>
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  disabled={isLoading}
+                  startIcon={isLoading ? <CircularProgress size={20} /> : <LoginIcon />}
+                  sx={{
+                    background: ggwifiTheme.gradients.primary,
+                    color: ggwifiTheme.colors.secondary,
+                    borderRadius: ggwifiTheme.borderRadius.full,
+                    padding: `${ggwifiTheme.spacing.md} ${ggwifiTheme.spacing.xl}`,
+                    fontSize: ggwifiTheme.typography.fontSize.base,
+                    fontWeight: ggwifiTheme.typography.fontWeight.semibold,
+                    boxShadow: ggwifiTheme.shadows.golden,
+                    textTransform: 'none',
+                    '&:hover': {
+                      background: ggwifiTheme.gradients.primaryHover,
+                      boxShadow: ggwifiTheme.shadows.goldenHover,
+                      transform: 'translateY(-2px)',
+                    },
+                    '&:active': {
+                      transform: 'translateY(0)',
+                    },
+                    '&:disabled': {
+                      background: ggwifiTheme.colors.neutral,
+                      color: ggwifiTheme.colors.contrast,
+                      boxShadow: 'none',
+                    },
+                  }}
+                >
+                  {isLoading ? 'Signing In...' : `Sign In as ${loginType === 'admin' ? 'Admin' : 'Staff'}`}
+                </Button>
+              </motion.div>
+            </form>
+
+            <motion.div variants={itemVariants}>
+              <Box sx={{ textAlign: 'center', mt: 3 }}>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: ggwifiTheme.colors.neutral,
+                    fontSize: ggwifiTheme.typography.fontSize.sm,
+                  }}
+                >
+                  Secure connection powered by{' '}
+                  <SecurityIcon sx={{ fontSize: 16, verticalAlign: 'middle', mx: 0.5 }} />
+                  GG Wi-Fi
+                </Typography>
+              </Box>
+            </motion.div>
           </CardContent>
         </Card>
-      </Box>
+      </motion.div>
     </motion.div>
   );
 };
 
-export default LoginForm; 
+export default LoginForm;

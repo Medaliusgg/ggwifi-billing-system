@@ -1,33 +1,33 @@
-// GGNetworks Simplified 5-Color System
-// Clean, consistent, and emotionally engaging
+// GG Wi-Fi Brand Color System
+// Golden Yellow, Black, White, Blue Accents
 
 export const colors = {
-  // 1. PRIMARY - Electric Blue (#3AB3F0)
+  // 1. PRIMARY - Golden Yellow (#FFC72C)
   primary: {
-    50: '#E8F4FD',
-    100: '#C7E7FA',
-    200: '#A3D8F7',
-    300: '#7CC9F4',
-    400: '#5BBEF2',
-    500: '#3AB3F0', // Main brand blue
-    600: '#34A2E0',
-    700: '#2C8FCC',
-    800: '#247DB8',
-    900: '#1A5A8A',
+    50: '#FFFDF7',
+    100: '#FFF8E1',
+    200: '#FFF3C4',
+    300: '#FFEC9E',
+    400: '#FFE578',
+    500: '#FFC72C', // Main brand golden yellow
+    600: '#FFB300',
+    700: '#FFA000',
+    800: '#FF8F00',
+    900: '#FF6F00',
   },
 
-  // 2. SECONDARY - Vibrant Coral (#FF6B6B)
+  // 2. SECONDARY - Blue Accent (#0072CE)
   secondary: {
-    50: '#FFF0F0',
-    100: '#FFE0E0',
-    200: '#FFC7C7',
-    300: '#FFA8A8',
-    400: '#FF8A8A',
-    500: '#FF6B6B', // Vibrant coral
-    600: '#FF5252',
-    700: '#FF3838',
-    800: '#FF1E1E',
-    900: '#E60000',
+    50: '#E3F2FD',
+    100: '#BBDEFB',
+    200: '#90CAF9',
+    300: '#64B5F6',
+    400: '#42A5F5',
+    500: '#0072CE', // Blue accent
+    600: '#1976D2',
+    700: '#1565C0',
+    800: '#0D47A1',
+    900: '#0A3D91',
   },
 
   // 3. SUCCESS - Emerald Green (#1ABC9C)
@@ -44,14 +44,14 @@ export const colors = {
     900: '#0B4A3F',
   },
 
-  // 4. WARNING - Golden Amber (#F39C12)
+  // 4. WARNING - Golden Yellow (#FFC72C)
   warning: {
-    50: '#FFF8E1',
-    100: '#FFECB3',
-    200: '#FFE082',
-    300: '#FFD54F',
-    400: '#FFCA28',
-    500: '#F39C12', // Golden amber
+    50: '#FFFDF7',
+    100: '#FFF8E1',
+    200: '#FFF3C4',
+    300: '#FFEC9E',
+    400: '#FFE578',
+    500: '#FFC72C', // Golden yellow for warnings
     600: '#FFB300',
     700: '#FFA000',
     800: '#FF8F00',
@@ -72,72 +72,84 @@ export const colors = {
     900: '#B71C1C',
   },
 
-  // Background Colors - Dark Theme
+  // Background Colors - Light Theme with GG Wi-Fi Branding
   background: {
-    primary: '#0F1419', // Deep space blue
-    secondary: '#1A2332', // Rich navy
-    card: '#2C3E50', // Dark card background
-    modal: '#1A2332', // Dark modal background
-    surface: '#34495E', // Slate gray
-  },
-
-  // Text Colors - High Contrast
-  text: {
     primary: '#FFFFFF', // Pure white
-    secondary: '#E8E8E8', // Light gray
-    tertiary: '#B0B0B0', // Medium gray
-    muted: '#808080', // Dark gray
-    inverse: '#0F1419', // Dark text for light backgrounds
+    secondary: '#F8F9FA', // Light gray
+    card: '#FFFFFF', // White card background
+    modal: '#FFFFFF', // White modal background
+    surface: '#F5F5F5', // Light surface
+    dark: '#000000', // Black for contrast
   },
 
-  // Gradients - Using only the 5 main colors
+  // Text Colors - GG Wi-Fi Brand Colors
+  text: {
+    primary: '#000000', // Black for main text
+    secondary: '#333333', // Dark gray
+    tertiary: '#666666', // Medium gray
+    muted: '#999999', // Light gray
+    inverse: '#FFFFFF', // White text for dark backgrounds
+    golden: '#FFC72C', // Golden yellow text
+    blue: '#0072CE', // Blue accent text
+  },
+
+  // Gradients - GG Wi-Fi Brand Gradients
   gradients: {
-    primary: 'linear-gradient(135deg, #3AB3F0 0%, #2C8FCC 100%)', // Blue gradient
-    secondary: 'linear-gradient(135deg, #FF6B6B 0%, #E74C3C 100%)', // Coral to Red
+    primary: 'linear-gradient(135deg, #FFC72C 0%, #FFB300 100%)', // Golden yellow gradient
+    secondary: 'linear-gradient(135deg, #0072CE 0%, #0056A3 100%)', // Blue gradient
     success: 'linear-gradient(135deg, #1ABC9C 0%, #17A689 100%)', // Green gradient
-    warning: 'linear-gradient(135deg, #F39C12 0%, #E67E22 100%)', // Gold gradient
+    warning: 'linear-gradient(135deg, #FFC72C 0%, #FFA000 100%)', // Golden gradient
     error: 'linear-gradient(135deg, #E74C3C 0%, #C0392B 100%)', // Red gradient
     
-    // Background gradients
-    backgroundPrimary: 'linear-gradient(135deg, #0F1419 0%, #1A2332 50%, #2C3E50 100%)',
-    backgroundSecondary: 'linear-gradient(135deg, #1A2332 0%, #2C3E50 50%, #34495E 100%)',
-    cardBackground: 'linear-gradient(135deg, #2C3E50 0%, #34495E 50%, #3A4A5C 100%)',
-    modalBackground: 'linear-gradient(135deg, #1A2332 0%, #2C3E50 50%, #34495E 100%)',
+    // Background gradients - Light theme
+    backgroundPrimary: 'linear-gradient(135deg, #FFFFFF 0%, #F8F9FA 100%)',
+    backgroundSecondary: 'linear-gradient(135deg, #F8F9FA 0%, #F5F5F5 100%)',
+    cardBackground: 'linear-gradient(135deg, #FFFFFF 0%, #F8F9FA 100%)',
+    modalBackground: 'linear-gradient(135deg, #FFFFFF 0%, #F8F9FA 100%)',
+    goldenAccent: 'linear-gradient(135deg, #FFC72C 0%, #FFB300 100%)',
+    blueAccent: 'linear-gradient(135deg, #0072CE 0%, #0056A3 100%)',
+    
+    // Modern gradients
+    hero: 'linear-gradient(135deg, #FFC72C 0%, #FFB300 50%, #0072CE 100%)',
+    glass: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+    darkGlass: 'linear-gradient(135deg, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.05) 100%)',
+    premium: 'linear-gradient(135deg, #FFC72C 0%, #FFB300 25%, #0072CE 75%, #0056A3 100%)',
   },
 
-  // Special Effects - Enhanced Visual Impact
+  // Special Effects - GG Wi-Fi Brand Effects
   effects: {
     glow: {
-      primary: '0 0 30px rgba(58, 179, 240, 0.4)',
-      secondary: '0 0 30px rgba(255, 107, 107, 0.4)',
+      primary: '0 0 30px rgba(255, 199, 44, 0.4)',
+      secondary: '0 0 30px rgba(0, 114, 206, 0.4)',
       success: '0 0 30px rgba(26, 188, 156, 0.4)',
-      warning: '0 0 30px rgba(243, 156, 18, 0.4)',
+      warning: '0 0 30px rgba(255, 199, 44, 0.4)',
       error: '0 0 30px rgba(231, 76, 60, 0.4)',
     },
     shadow: {
-      light: '0 4px 12px rgba(0, 0, 0, 0.15)',
-      medium: '0 8px 24px rgba(0, 0, 0, 0.2)',
-      heavy: '0 12px 36px rgba(0, 0, 0, 0.25)',
-      colored: '0 8px 32px rgba(58, 179, 240, 0.3)',
-      glow: '0 0 20px rgba(58, 179, 240, 0.3)',
+      light: '0 4px 12px rgba(0, 0, 0, 0.1)',
+      medium: '0 8px 24px rgba(0, 0, 0, 0.15)',
+      heavy: '0 12px 36px rgba(0, 0, 0, 0.2)',
+      golden: '0 8px 32px rgba(255, 199, 44, 0.3)',
+      blue: '0 8px 32px rgba(0, 114, 206, 0.3)',
+      glow: '0 0 20px rgba(255, 199, 44, 0.3)',
     },
     glass: {
-      primary: 'rgba(44, 62, 80, 0.8)',
-      secondary: 'rgba(26, 35, 50, 0.9)',
-      modal: 'rgba(15, 20, 25, 0.95)',
+      primary: 'rgba(255, 255, 255, 0.9)',
+      secondary: 'rgba(248, 249, 250, 0.95)',
+      modal: 'rgba(255, 255, 255, 0.98)',
     },
   },
 
-  // Status Colors - Using the 5 main colors
+  // Status Colors - GG Wi-Fi Brand Colors
   status: {
     online: '#1ABC9C', // Success green
     offline: '#E74C3C', // Error red
-    pending: '#F39C12', // Warning gold
-    processing: '#3AB3F0', // Primary blue
+    pending: '#FFC72C', // Golden yellow
+    processing: '#0072CE', // Blue accent
     success: '#1ABC9C', // Success green
     error: '#E74C3C', // Error red
-    warning: '#F39C12', // Warning gold
-    info: '#3AB3F0', // Primary blue
+    warning: '#FFC72C', // Golden yellow
+    info: '#0072CE', // Blue accent
   },
 };
 

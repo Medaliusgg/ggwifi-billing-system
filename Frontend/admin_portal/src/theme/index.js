@@ -1,40 +1,46 @@
 import { createTheme } from '@mui/material/styles';
 
-// GGNetworks Brand Colors - Professional Academic Theme
+// GG Wi-Fi Brand Colors - Official Brand Palette
 const primaryColors = {
-  main: '#1976d2',
-  light: '#42a5f5',
-  dark: '#1565c0',
+  main: '#FFC72C', // Golden Yellow - Primary Brand Color (Call-to-action buttons, key highlights)
+  light: '#FFD700', // Bright Golden Yellow - Highlight Variant
+  dark: '#E6B800', // Darker Golden Yellow
 };
 
 const secondaryColors = {
-  main: '#2e7d32',
-  light: '#4caf50',
-  dark: '#1b5e20',
+  main: '#0072CE', // Blue - Secondary Accent Color (Subtle accents, links, minor highlights)
+  light: '#4A9EFF', // Light Blue
+  dark: '#0056A3', // Dark Blue
+};
+
+const accentColors = {
+  main: '#000000', // Black - Main text, headings, overlays
+  light: '#333333', // Dark Gray
+  dark: '#000000', // Pure Black
 };
 
 const successColors = {
-  main: '#2e7d32',
-  light: '#4caf50',
-  dark: '#1b5e20',
+  main: '#4CAF50', // Green
+  light: '#81C784',
+  dark: '#388E3C',
 };
 
 const errorColors = {
-  main: '#d32f2f',
-  light: '#ef5350',
-  dark: '#c62828',
+  main: '#F44336', // Red
+  light: '#E57373',
+  dark: '#D32F2F',
 };
 
 const warningColors = {
-  main: '#ed6c02',
-  light: '#ff9800',
-  dark: '#e65100',
+  main: '#FF9800', // Orange
+  light: '#FFB74D',
+  dark: '#F57C00',
 };
 
 const infoColors = {
-  main: '#0288d1',
-  light: '#03a9f4',
-  dark: '#01579b',
+  main: '#2196F3', // Blue
+  light: '#64B5F6',
+  dark: '#1976D2',
 };
 
 const greyColors = {
@@ -61,12 +67,12 @@ const theme = createTheme({
     info: infoColors,
     grey: greyColors,
     background: {
-      default: '#fafbfc',
-      paper: '#ffffff',
+      default: '#FFFFFF', // Pure White - Clean layout areas
+      paper: '#FFFFFF', // Pure White - Clean layout areas
     },
     text: {
-      primary: '#1a202c',
-      secondary: '#4a5568',
+      primary: '#000000', // Black - Main text, headings, overlays
+      secondary: '#333333', // Dark Gray for secondary text
     },
   },
   typography: {
@@ -147,13 +153,17 @@ const theme = createTheme({
         },
         contained: {
           '&.MuiButton-containedPrimary': {
-            background: `linear-gradient(135deg, ${primaryColors.main} 0%, ${primaryColors.dark} 100%)`,
+            background: `linear-gradient(135deg, ${primaryColors.main} 0%, ${primaryColors.light} 100%)`,
+            color: '#000000', // Black text on golden background
+            fontWeight: 700,
             '&:hover': {
-              background: `linear-gradient(135deg, ${primaryColors.dark} 0%, ${primaryColors.main} 100%)`,
+              background: `linear-gradient(135deg, ${primaryColors.light} 0%, ${primaryColors.main} 100%)`,
+              boxShadow: `0 8px 32px ${primaryColors.main}40`,
             },
           },
           '&.MuiButton-containedSecondary': {
             background: `linear-gradient(135deg, ${secondaryColors.main} 0%, ${secondaryColors.dark} 100%)`,
+            color: '#FFFFFF', // White text on gray background
             '&:hover': {
               background: `linear-gradient(135deg, ${secondaryColors.dark} 0%, ${secondaryColors.main} 100%)`,
             },
@@ -184,6 +194,28 @@ const theme = createTheme({
         root: {
           '& .MuiOutlinedInput-root': {
             borderRadius: 8,
+            '&.Mui-focused': {
+              '& .MuiOutlinedInput-notchedOutline': {
+                borderColor: '#F5B700', // GG Wi-Fi Golden Yellow focus
+                borderWidth: '2px',
+              },
+            },
+            '&:hover': {
+              '& .MuiOutlinedInput-notchedOutline': {
+                borderColor: '#FFCB00', // Bright Amber hover
+              },
+            },
+            '& .MuiOutlinedInput-input': {
+              caretColor: '#F5B700 !important', // GG Wi-Fi golden cursor
+              '&::selection': {
+                backgroundColor: '#F5B70040 !important', // Golden selection
+              },
+            },
+          },
+          '& .MuiInputLabel-root': {
+            '&.Mui-focused': {
+              color: '#F5B700', // GG Wi-Fi Golden Yellow label focus
+            },
           },
         },
       },
@@ -199,18 +231,20 @@ const theme = createTheme({
     MuiAppBar: {
       styleOverrides: {
         root: {
-          background: 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(20px)',
-          borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+          background: '#FFFFFF', // Pure White background
+          color: '#2E2E2E', // Warm Gray text
+          borderBottom: '2px solid #F5B700', // GG Wi-Fi Golden Yellow accent
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
         },
       },
     },
     MuiDrawer: {
       styleOverrides: {
         paper: {
-          background: 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(20px)',
-          borderRight: '1px solid rgba(0, 0, 0, 0.1)',
+          background: '#FFFFFF', // Pure White sidebar
+          color: '#2E2E2E', // Warm Gray text
+          borderRight: '2px solid #F5B700', // GG Wi-Fi Golden Yellow accent
+          boxShadow: '2px 0 8px rgba(0, 0, 0, 0.1)',
         },
       },
     },

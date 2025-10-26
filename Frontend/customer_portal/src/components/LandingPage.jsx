@@ -86,28 +86,10 @@ const LandingPage = ({ onNavigateToVoucher, onNavigateToPackages, currentLanguag
       <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
         {/* Hero Section */}
         <Box sx={{ 
-          pt: { xs: 8, md: 12 }, 
+          pt: { xs: 4, md: 6 }, 
           pb: { xs: 6, md: 8 },
           textAlign: 'center',
         }}>
-          {/* Logo and Branding */}
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.8 }}
-          >
-            <Box sx={{ mb: 4 }}>
-              <img 
-                src="/logo.svg" 
-                alt="GGNetworks Logo" 
-                style={{ 
-                  height: isMobile ? '60px' : '80px',
-                  width: 'auto',
-                  filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2))'
-                }} 
-              />
-            </Box>
-          </motion.div>
 
           {/* Main Heading */}
           <motion.div
@@ -212,6 +194,7 @@ const LandingPage = ({ onNavigateToVoucher, onNavigateToPackages, currentLanguag
                       variant="contained"
                       size="medium"
                       fullWidth
+                      onClick={onNavigateToVoucher}
                       sx={{
                         background: theme.custom.gradients.primary,
                         borderRadius: 2,

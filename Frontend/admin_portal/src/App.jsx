@@ -1,43 +1,25 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { useAuthStore } from '@/store/authStore';
-import ProtectedRoute from '@/components/ProtectedRoute';
-import DashboardLayout from '@/layouts/DashboardLayout';
-import AuthLayout from '@/layouts/AuthLayout';
+import useAuthStore from './store/authStore';
+import ProtectedRoute from './components/ProtectedRoute';
+import MainLayout from './components/Layout/MainLayout';
+import AuthLayout from './layouts/AuthLayout';
 
 // Pages
-import Login from '@/pages/Login';
-import Dashboard from '@/pages/Dashboard';
-import BackendTest from '@/pages/BackendTest';
+import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
+import Users from './pages/Users';
+import CustomerManagement from './pages/Customers';
+import InternetPackageManagement from './pages/Packages';
+import VoucherManagement from './pages/Vouchers';
+import RouterManagement from './pages/Routers';
+import FinancialManagement from './pages/Finance';
+import PaymentManagement from './pages/Payments';
+import AnalyticsReports from './pages/Analytics';
+import BackendTest from './pages/BackendTest';
+import SettingsConfiguration from './pages/Settings';
+import SessionManagement from './pages/Sessions';
 
 // Placeholder pages for other routes
-const Customers = () => (
-  <div className="text-gg-text-primary">
-    <h1>Customers Page</h1>
-    <p>Customer management will be implemented here.</p>
-  </div>
-);
-
-const Routers = () => (
-  <div className="text-gg-text-primary">
-    <h1>Routers Page</h1>
-    <p>Router management will be implemented here.</p>
-  </div>
-);
-
-const Packages = () => (
-  <div className="text-gg-text-primary">
-    <h1>Packages Page</h1>
-    <p>Package management will be implemented here.</p>
-  </div>
-);
-
-const Vouchers = () => (
-  <div className="text-gg-text-primary">
-    <h1>Vouchers Page</h1>
-    <p>Voucher management will be implemented here.</p>
-  </div>
-);
-
 const Finance = () => (
   <div className="text-gg-text-primary">
     <h1>Finance Page</h1>
@@ -52,12 +34,6 @@ const Loyalty = () => (
   </div>
 );
 
-const Settings = () => (
-  <div className="text-gg-text-primary">
-    <h1>Settings Page</h1>
-    <p>System settings will be implemented here.</p>
-  </div>
-);
 
 const Unauthorized = () => (
   <div className="min-h-screen bg-gg-black flex items-center justify-center">
@@ -101,111 +77,155 @@ function App() {
         path="/"
         element={
           <ProtectedRoute>
-            <DashboardLayout>
-              <Navigate to="/dashboard" replace />
-            </DashboardLayout>
+            <MainLayout />
           </ProtectedRoute>
         }
-      />
+      >
+        <Route index element={<Navigate to="/dashboard" replace />} />
+      </Route>
 
       <Route
         path="/dashboard"
         element={
           <ProtectedRoute>
-            <DashboardLayout>
-              <Dashboard />
-            </DashboardLayout>
+            <MainLayout />
           </ProtectedRoute>
         }
-      />
+      >
+        <Route index element={<Dashboard />} />
+      </Route>
+
+      <Route
+        path="/users"
+        element={
+          <ProtectedRoute>
+            <MainLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<Users />} />
+      </Route>
 
       <Route
         path="/customers"
         element={
           <ProtectedRoute>
-            <DashboardLayout>
-              <Customers />
-            </DashboardLayout>
+            <MainLayout />
           </ProtectedRoute>
         }
-      />
+      >
+        <Route index element={<CustomerManagement />} />
+      </Route>
 
       <Route
         path="/routers"
         element={
           <ProtectedRoute>
-            <DashboardLayout>
-              <Routers />
-            </DashboardLayout>
+            <MainLayout />
           </ProtectedRoute>
         }
-      />
+      >
+        <Route index element={<RouterManagement />} />
+      </Route>
 
       <Route
         path="/packages"
         element={
           <ProtectedRoute>
-            <DashboardLayout>
-              <Packages />
-            </DashboardLayout>
+            <MainLayout />
           </ProtectedRoute>
         }
-      />
+      >
+        <Route index element={<InternetPackageManagement />} />
+      </Route>
 
       <Route
         path="/vouchers"
         element={
           <ProtectedRoute>
-            <DashboardLayout>
-              <Vouchers />
-            </DashboardLayout>
+            <MainLayout />
           </ProtectedRoute>
         }
-      />
+      >
+        <Route index element={<VoucherManagement />} />
+      </Route>
 
       <Route
         path="/finance"
         element={
           <ProtectedRoute>
-            <DashboardLayout>
-              <Finance />
-            </DashboardLayout>
+            <MainLayout />
           </ProtectedRoute>
         }
-      />
+      >
+        <Route index element={<FinancialManagement />} />
+      </Route>
+
+      <Route
+        path="/payments"
+        element={
+          <ProtectedRoute>
+            <MainLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<PaymentManagement />} />
+      </Route>
+
+      <Route
+        path="/analytics"
+        element={
+          <ProtectedRoute>
+            <MainLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<AnalyticsReports />} />
+      </Route>
 
       <Route
         path="/loyalty"
         element={
           <ProtectedRoute>
-            <DashboardLayout>
-              <Loyalty />
-            </DashboardLayout>
+            <MainLayout />
           </ProtectedRoute>
         }
-      />
+      >
+        <Route index element={<Loyalty />} />
+      </Route>
 
       <Route
         path="/settings"
         element={
           <ProtectedRoute>
-            <DashboardLayout>
-              <Settings />
-            </DashboardLayout>
+            <MainLayout />
           </ProtectedRoute>
         }
-      />
+      >
+        <Route index element={<SettingsConfiguration />} />
+      </Route>
+
+      <Route
+        path="/sessions"
+        element={
+          <ProtectedRoute>
+            <MainLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<SessionManagement />} />
+      </Route>
 
       <Route
         path="/backend-test"
         element={
           <ProtectedRoute>
-            <DashboardLayout>
-              <BackendTest />
-            </DashboardLayout>
+            <MainLayout />
           </ProtectedRoute>
         }
-      />
+      >
+        <Route index element={<BackendTest />} />
+      </Route>
 
       {/* Error Routes */}
       <Route path="/unauthorized" element={<Unauthorized />} />
