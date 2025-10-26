@@ -1,48 +1,275 @@
-name: Deploy Backend to VPS
+name: 🚀 Deploy Backend to VPS
 
 on:
   push:
     branches: [ main ]
     paths:
       - 'backend/**'
-      - '.github/workflows/deploy-backend.yml'
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+        - production
+        - staging
+
+env:
+  VPS_HOST: ${{ secrets.VPS_HOST }}
+  VPS_USER: ${{ secrets.VPS_USER }}
+  VPS_PORT: ${{ secrets.VPS_PORT }}
+  VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+  DB_USERNAME: ${{ secrets.DB_USERNAME }}
+  DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+  ZENOPAY_API_KEY: ${{ secrets.ZENOPAY_API_KEY }}
+  SMS_API_KEY: ${{ secrets.SMS_API_KEY }}
+  JWT_SECRET: ${{ secrets.JWT_SECRET }}
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout code
+    - name: 📥 Checkout code
       uses: actions/checkout@v4
       
-    - name: Deploy to VPS
-      uses: appleboy/ssh-action@v1.0.0
+    - name: ☕ Setup Java 17
+      uses: actions/setup-java@v4
       with:
-        host: ${{ secrets.VPS_HOST }}
-        username: ${{ secrets.VPS_USERNAME }}
-        password: ${{ secrets.VPS_PASSWORD }}
-        port: ${{ secrets.VPS_PORT }}
-        script: |
-          cd /opt/ggwifi-billing-system/backend
+        java-version: '17'
+        distribution: 'temurin'
+        
+    - name: 🔨 Cache Maven dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        restore-keys: ${{ runner.os }}-m2
+        
+    - name: 🏗️ Build backend
+      working-directory: ./backend
+      run: |
+        mvn clean install -DskipTests
+        echo "✅ Backend built successfully"
+        
+    - name: 📦 Prepare deployment package
+      working-directory: ./backend
+      run: |
+        mkdir -p deployment-package
+        cp target/ggnetworks-backend-1.0.0.jar deployment-package/
+        cp application-production.yml deployment-package/
+        cp deploy-to-vps.sh deployment-package/
+        cp setup-database-vps.sh deployment-package/
+        cp test-all-apis.sh deployment-package/
+        cp DEPLOYMENT_GUIDE.md deployment-package/
+        cp DEPLOYMENT_READY.md deployment-package/
+        cp mikrotik-*.rsc deployment-package/ || true
+        echo "✅ Deployment package prepared"
+        
+    - name: 🔐 Setup SSH
+      run: |
+        mkdir -p ~/.ssh
+        echo "$VPS_SSH_KEY" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -p $VPS_PORT $VPS_HOST >> ~/.ssh/known_hosts
+        echo "✅ SSH setup completed"
+        
+    - name: 🚀 Deploy to VPS
+      run: |
+        echo "🚀 Starting deployment to VPS..."
+        
+        # Create deployment directory on VPS
+        ssh -p $VPS_PORT $VPS_USER@$VPS_HOST "mkdir -p /opt/ggnetworks/{logs,config,backup}"
+        
+        # Upload deployment package
+        scp -P $VPS_PORT -r backend/deployment-package/* $VPS_USER@$VPS_HOST:/opt/ggnetworks/
+        
+        # Stop existing service
+        ssh -p $VPS_PORT $VPS_USER@$VPS_HOST "systemctl stop ggnetworks-backend || true"
+        
+        # Backup existing JAR
+        ssh -p $VPS_PORT $VPS_USER@$VPS_HOST "if [ -f /opt/ggnetworks/ggnetworks-backend.jar ]; then cp /opt/ggnetworks/ggnetworks-backend.jar /opt/ggnetworks/backup/ggnetworks-backend-$(date +%Y%m%d-%H%M%S).jar; fi"
+        
+        # Rename JAR file
+        ssh -p $VPS_PORT $VPS_USER@$VPS_HOST "mv /opt/ggnetworks/ggnetworks-backend-1.0.0.jar /opt/ggnetworks/ggnetworks-backend.jar"
+        
+        # Update production configuration with secrets
+        ssh -p $VPS_PORT $VPS_USER@$VPS_HOST "cat > /opt/ggnetworks/config/application-production.yml << 'EOF'
+        server:
+          port: 8080
+          servlet:
+            context-path: /
+
+        spring:
+          application:
+            name: ggnetworks-backend
           
-          # Stop current Spring Boot application
-          sudo pkill -f java || true
+          profiles:
+            active: production
+            
+          datasource:
+            url: jdbc:mysql://localhost:3306/ggnetworks?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+            username: $DB_USERNAME
+            password: $DB_PASSWORD
+            driver-class-name: com.mysql.cj.jdbc.Driver
+            hikari:
+              maximum-pool-size: 20
+              minimum-idle: 5
+              connection-timeout: 30000
+              idle-timeout: 600000
+              max-lifetime: 1800000
+              
+          jpa:
+            hibernate:
+              ddl-auto: validate
+            show-sql: false
+            properties:
+              hibernate:
+                dialect: org.hibernate.dialect.MySQL8Dialect
+                format_sql: false
+                
+          flyway:
+            enabled: true
+            baseline-on-migrate: true
+            locations: classpath:db/migration
+            
+          security:
+            user:
+              name: admin
+              password: admin123
+
+        logging:
+          level:
+            com.ggnetworks: INFO
+            org.springframework.security: WARN
+            org.hibernate: WARN
+          pattern:
+            console: \"%d{yyyy-MM-dd HH:mm:ss} - %msg%n\"
+            file: \"%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n\"
+          file:
+            name: logs/ggnetworks-backend.log
+            max-size: 10MB
+            max-history: 30
+
+        # ZenoPay Configuration
+        zenopay:
+          api-url: https://api.zenopay.com
+          api-key: $ZENOPAY_API_KEY
+          webhook-url: http://$VPS_HOST:8080/api/customer-portal/webhook
           
-          # Pull latest changes
-          git pull origin main
+        # SMS Configuration
+        sms:
+          api-url: https://api.nextsms.co.tz
+          api-key: $SMS_API_KEY
+          sender-id: GGNETWORKS
           
-          # Rebuild application
-          mvn clean package -DskipTests
+        # FreeRADIUS Configuration
+        freeradius:
+          host: localhost
+          port: 1812
+          secret: testing123
           
-          # Start Spring Boot application in background
-          nohup java -jar target/ggnetworks-backend-1.0.0.jar > /var/log/ggwifi-backend.log 2>&1 &
+        # MikroTik Configuration
+        mikrotik:
+          default-host: 192.168.1.1
+          default-port: 8728
+          default-username: admin
+          default-password: admin
           
-          # Wait a moment and check if it's running
-          sleep 10
-          if pgrep -f "ggnetworks-backend" > /dev/null; then
-            echo "✅ Backend deployed successfully!"
-          else
-            echo "❌ Backend deployment failed!"
-            exit 1
-          fi
+        # JWT Configuration
+        jwt:
+          secret: $JWT_SECRET
+          expiration: 86400000
+          refresh-expiration: 604800000
+        EOF"
+        
+        # Create systemd service file
+        ssh -p $VPS_PORT $VPS_USER@$VPS_HOST "cat > /etc/systemd/system/ggnetworks-backend.service << 'EOF'
+        [Unit]
+        Description=GG-WIFI Backend Service
+        After=network.target mysql.service
+
+        [Service]
+        Type=simple
+        User=root
+        WorkingDirectory=/opt/ggnetworks
+        ExecStart=/usr/bin/java -jar /opt/ggnetworks/ggnetworks-backend.jar --spring.config.location=file:/opt/ggnetworks/config/application-production.yml
+        Restart=always
+        RestartSec=10
+        StandardOutput=journal
+        StandardError=journal
+        SyslogIdentifier=ggnetworks-backend
+
+        [Install]
+        WantedBy=multi-user.target
+        EOF"
+        
+        # Reload systemd and start service
+        ssh -p $VPS_PORT $VPS_USER@$VPS_HOST "systemctl daemon-reload && systemctl enable ggnetworks-backend && systemctl start ggnetworks-backend"
+        
+        echo "✅ Deployment completed"
+        
+    - name: ⏳ Wait for service to start
+      run: |
+        echo "⏳ Waiting for service to start..."
+        sleep 15
+        
+    - name: 🧪 Test deployment
+      run: |
+        echo "🧪 Testing deployment..."
+        
+        # Test health endpoint
+        if curl -f -s http://$VPS_HOST:8080/actuator/health > /dev/null; then
+          echo "✅ Health check passed"
+        else
+          echo "❌ Health check failed"
+          exit 1
+        fi
+        
+        # Test admin login
+        admin_response=$(curl -s -X POST http://$VPS_HOST:8080/api/auth/admin-login \
+          -H "Content-Type: application/json" \
+          -d '{"username":"admin","phoneNumber":"0676591880","password":"admin123"}')
+        
+        if echo "$admin_response" | grep -q "token"; then
+          echo "✅ Admin login test passed"
+        else
+          echo "❌ Admin login test failed"
+          echo "Response: $admin_response"
+          exit 1
+        fi
+        
+        echo "✅ All tests passed"
+        
+    - name: 📊 Deployment summary
+      run: |
+        echo "🎉 Deployment Summary"
+        echo "==================="
+        echo "✅ Backend deployed successfully"
+        echo "✅ Service is running"
+        echo "✅ Health check passed"
+        echo "✅ Admin login working"
+        echo ""
+        echo "🔗 API Endpoints:"
+        echo "Health Check: http://$VPS_HOST:8080/actuator/health"
+        echo "API Base: http://$VPS_HOST:8080/api"
+        echo "Admin Login: http://$VPS_HOST:8080/api/auth/admin-login"
+        echo ""
+        echo "📋 Next Steps:"
+        echo "1. Test all API endpoints with: ./test-all-apis.sh"
+        echo "2. Configure real API keys in production"
+        echo "3. Deploy frontend applications"
+        echo "4. Setup Nginx reverse proxy"
+        
+    - name: 🚨 Notify on failure
+      if: failure()
+      run: |
+        echo "❌ Deployment failed!"
+        echo "Check the logs above for details"
+        echo "Manual deployment steps:"
+        echo "1. SSH to VPS: ssh -p $VPS_PORT $VPS_USER@$VPS_HOST"
+        echo "2. Check service status: systemctl status ggnetworks-backend"
+        echo "3. Check logs: journalctl -u ggnetworks-backend -f"
+        echo "4. Restart service: systemctl restart ggnetworks-backend"
