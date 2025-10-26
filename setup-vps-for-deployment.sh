@@ -16,7 +16,7 @@ echo -e "${BLUE}🚀 VPS Setup Script for GG-WIFI Backend${NC}"
 echo "=============================================="
 
 # Configuration
-VPS_IP=""
+VPS_IP="139.84.241.182"
 VPS_USER="root"
 VPS_PORT="22"
 
