@@ -24,7 +24,7 @@ env:
   DB_USERNAME: ${{ secrets.DB_USERNAME }}
   DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
   ZENOPAY_API_KEY: ${{ secrets.ZENOPAY_API_KEY }}
-  SMS_API_KEY: ${{ secrets.SMS_API_KEY }}
+  SMS_AUTH_TOKEN: ${{ secrets.SMS_AUTH_TOKEN }}
   JWT_SECRET: ${{ secrets.JWT_SECRET }}
 
 jobs:
@@ -162,7 +162,7 @@ jobs:
         # SMS Configuration
         sms:
           api-url: https://api.nextsms.co.tz
-          api-key: $SMS_API_KEY
+          auth-token: $SMS_AUTH_TOKEN
           sender-id: GGNETWORKS
           
         # FreeRADIUS Configuration
