@@ -1,328 +1,321 @@
 package com.ggnetworks.service;
-import com.ggnetworks.entity.PackageType;
 
-import com.ggnetworks.entity.Package;
-import com.ggnetworks.repository.PackageRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import com.ggnetworks.entity.InternetPackage;
+import com.ggnetworks.repository.InternetPackageRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.time.DayOfWeek;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.Comparator;
 
-@Slf4j
 @Service
-@RequiredArgsConstructor
 public class PackageService {
 
-    private final PackageRepository packageRepository;
-
-    // ==================== CUSTOMER PORTAL METHODS ====================
+    @Autowired
+    private InternetPackageRepository packageRepository;
 
     /**
-     * Get hotspot packages for customer portal
-     * Customer portal retrieves packages created by admin
+     * Get all packages for admin management
      */
-    public List<Package> getHotspotPackages() {
-        try {
-            log.info("Fetching hotspot packages for customer portal");
-            return packageRepository.findByTypeAndActive(PackageType.HOTSPOT);
-        } catch (Exception e) {
-            log.error("Failed to get hotspot packages", e);
-            return List.of();
+    public List<InternetPackage> getAllPackages() {
+        return packageRepository.findAll();
+    }
+
+    /**
+     * Get packages with pagination and filtering
+     */
+    public Map<String, Object> getPackagesWithPagination(int page, int size, String search, String type, String status) {
+        List<InternetPackage> allPackages = packageRepository.findAll();
+        
+        // Apply filters
+        List<InternetPackage> filteredPackages = allPackages.stream()
+            .filter(pkg -> search == null || pkg.getName().toLowerCase().contains(search.toLowerCase()) ||
+                          pkg.getDescription() != null && pkg.getDescription().toLowerCase().contains(search.toLowerCase()))
+            .filter(pkg -> type == null || pkg.getPackageType().toString().equals(type))
+            .filter(pkg -> status == null || pkg.getStatus().toString().equals(status))
+            .collect(Collectors.toList());
+
+        // Apply pagination
+        int startIndex = page * size;
+        int endIndex = Math.min(startIndex + size, filteredPackages.size());
+        List<InternetPackage> paginatedPackages = filteredPackages.subList(startIndex, endIndex);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("packages", paginatedPackages);
+        result.put("totalElements", filteredPackages.size());
+        result.put("totalPages", (int) Math.ceil((double) filteredPackages.size() / size));
+        result.put("currentPage", page);
+        result.put("size", size);
+
+        return result;
+    }
+
+    /**
+     * Get packages available for customers (with time-based filtering)
+     */
+    public List<InternetPackage> getAvailablePackagesForCustomers() {
+        List<InternetPackage> activePackages = packageRepository.findByIsActiveTrue();
+        
+        // For now, return all active packages until migration is applied
+        // TODO: Re-enable time-based filtering after migration
+        return activePackages;
+        
+        // Uncomment after migration:
+        // return activePackages.stream()
+        //     .filter(this::isPackageCurrentlyAvailable)
+        //     .collect(Collectors.toList());
+    }
+
+    /**
+     * Check if a package is currently available based on time-based offer rules
+     */
+    public boolean isPackageCurrentlyAvailable(InternetPackage pkg) {
+        // If not a time-based offer, always available
+        if (!Boolean.TRUE.equals(pkg.getIsTimeBasedOffer()) || pkg.getOfferType() == null) {
+            return true;
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        DayOfWeek currentDay = now.getDayOfWeek();
+        LocalTime currentTime = now.toLocalTime();
+
+        switch (pkg.getOfferType()) {
+            case UNIVERSAL:
+                return true;
+                
+            case DAILY_SPECIFIC:
+                return isAvailableOnCurrentDay(pkg, currentDay, currentTime);
+                
+            case WEEKEND_ONLY:
+                return (currentDay == DayOfWeek.SATURDAY || currentDay == DayOfWeek.SUNDAY) &&
+                       isWithinTimeRange(pkg, currentTime);
+                       
+            case WEEKDAY_ONLY:
+                return (currentDay != DayOfWeek.SATURDAY && currentDay != DayOfWeek.SUNDAY) &&
+                       isWithinTimeRange(pkg, currentTime);
+                       
+            case TIME_RESTRICTED:
+                return isWithinTimeRange(pkg, currentTime);
+                
+            case LIMITED_TIME:
+                // For limited time offers, you could add start/end date fields
+                return true; // Implement based on your needs
+                
+            default:
+                return true;
         }
     }
 
     /**
-     * Get hotspot packages with pagination for customer portal
+     * Check if package is available on current day
      */
-    public Page<Package> getHotspotPackages(Pageable pageable) {
-        try {
-            log.info("Fetching hotspot packages with pagination for customer portal");
-            return packageRepository.findByType(PackageType.HOTSPOT, pageable);
-        } catch (Exception e) {
-            log.error("Failed to get hotspot packages with pagination", e);
-            return Page.empty(pageable);
+    private boolean isAvailableOnCurrentDay(InternetPackage pkg, DayOfWeek currentDay, LocalTime currentTime) {
+        if (pkg.getAvailableDays() == null || pkg.getAvailableDays().isEmpty()) {
+            return false;
         }
-    }
 
-    /**
-     * Get popular hotspot packages for customer portal
-     */
-    public List<Package> getPopularHotspotPackages() {
         try {
-            log.info("Fetching popular hotspot packages for customer portal");
-            return packageRepository.findPopularPackagesByType(PackageType.HOTSPOT);
-        } catch (Exception e) {
-            log.error("Failed to get popular hotspot packages", e);
-            return List.of();
-        }
-    }
-
-    /**
-     * Get package by ID for customer portal
-     */
-    public Package getPackageById(Long packageId) {
-        try {
-            log.info("Fetching package details for ID: {}", packageId);
-            Optional<Package> packageOpt = packageRepository.findById(packageId);
-            return packageOpt.orElse(null);
-        } catch (Exception e) {
-            log.error("Failed to get package by ID: {}", packageId, e);
-            return null;
-        }
-    }
-
-    // ==================== ADMIN PORTAL METHODS ====================
-
-    /**
-     * Get PPPoE packages for admin portal
-     */
-    public List<Package> getPppoePackages() {
-        try {
-            log.info("Fetching PPPoE packages for admin portal");
-            return packageRepository.findByTypeAndActive(PackageType.PPPOE);
-        } catch (Exception e) {
-            log.error("Failed to get PPPoE packages", e);
-            return List.of();
-        }
-    }
-
-    /**
-     * Get packages by type for admin portal
-     */
-    public List<Package> getPackagesByType(PackageType type) {
-        try {
-            log.info("Fetching packages by type: {} for admin portal", type);
-            return packageRepository.findByTypeAndActive(type);
-        } catch (Exception e) {
-            log.error("Failed to get packages by type: {}", type, e);
-            return List.of();
-        }
-    }
-
-    /**
-     * Get all active packages for admin portal
-     */
-    public List<Package> getActivePackages() {
-        try {
-            log.info("Fetching all active packages for admin portal");
-            return packageRepository.findAllActive();
-        } catch (Exception e) {
-            log.error("Failed to get active packages", e);
-            return List.of();
-        }
-    }
-
-    /**
-     * Get PPPoE packages with pagination for admin portal
-     */
-    public Page<Package> getPppoePackages(Pageable pageable) {
-        try {
-            log.info("Fetching PPPoE packages with pagination for admin portal");
-            return packageRepository.findByType(PackageType.PPPOE, pageable);
-        } catch (Exception e) {
-            log.error("Failed to get PPPoE packages with pagination", e);
-            return Page.empty(pageable);
-        }
-    }
-
-    /**
-     * Get popular PPPoE packages for admin portal
-     */
-    public List<Package> getPopularPppoePackages() {
-        try {
-            log.info("Fetching popular PPPoE packages for admin portal");
-            return packageRepository.findPopularPackagesByType(PackageType.PPPOE);
-        } catch (Exception e) {
-            log.error("Failed to get popular PPPoE packages", e);
-            return List.of();
-        }
-    }
-
-    // ==================== PACKAGE MANAGEMENT ====================
-
-    /**
-     * Create new package (Admin only)
-     */
-    @Transactional
-    public Package createPackage(Package packageRequest) {
-        try {
-            log.info("Creating new package: {}", packageRequest.getName());
+            // Parse available days JSON array
+            String availableDays = pkg.getAvailableDays();
+            List<String> days = Arrays.asList(availableDays.replaceAll("[\\[\\]\"]", "").split(","));
             
-            Package newPackage = new Package();
-            newPackage.setName(packageRequest.getName());
-            newPackage.setType(packageRequest.getType());
-            newPackage.setPrice(packageRequest.getPrice());
-            newPackage.setDurationDays(packageRequest.getDurationDays());
-            newPackage.setBandwidthLimitMb(packageRequest.getBandwidthLimitMb());
-            newPackage.setDescription(packageRequest.getDescription());
-            newPackage.setIsPopular(packageRequest.getIsPopular());
-            newPackage.setIsActive(true);
-
-            Package savedPackage = packageRepository.save(newPackage);
-            log.info("Successfully created package: {} with ID: {}", savedPackage.getName(), savedPackage.getId());
+            String currentDayName = currentDay.toString();
+            boolean isDayAvailable = days.contains(currentDayName);
             
-            return savedPackage;
+            return isDayAvailable && isWithinTimeRange(pkg, currentTime);
         } catch (Exception e) {
-            log.error("Failed to create package: {}", packageRequest.getName(), e);
-            throw new RuntimeException("Failed to create package", e);
-        }
-    }
-
-    /**
-     * Update existing package (Admin only)
-     */
-    @Transactional
-    public Package updatePackage(Long packageId, Package packageRequest) {
-        try {
-            log.info("Updating package with ID: {}", packageId);
-            
-            Optional<Package> packageOpt = packageRepository.findById(packageId);
-            if (packageOpt.isEmpty()) {
-                throw new IllegalArgumentException("Package not found with ID: " + packageId);
-            }
-
-            Package existingPackage = packageOpt.get();
-            existingPackage.setName(packageRequest.getName());
-            existingPackage.setType(packageRequest.getType());
-            existingPackage.setPrice(packageRequest.getPrice());
-            existingPackage.setDurationDays(packageRequest.getDurationDays());
-            existingPackage.setBandwidthLimitMb(packageRequest.getBandwidthLimitMb());
-            existingPackage.setDescription(packageRequest.getDescription());
-            existingPackage.setIsPopular(packageRequest.getIsPopular());
-            existingPackage.setIsActive(packageRequest.getIsActive());
-
-            Package updatedPackage = packageRepository.save(existingPackage);
-            log.info("Successfully updated package: {} with ID: {}", updatedPackage.getName(), updatedPackage.getId());
-            
-            return updatedPackage;
-        } catch (Exception e) {
-            log.error("Failed to update package with ID: {}", packageId, e);
-            throw new RuntimeException("Failed to update package", e);
-        }
-    }
-
-    /**
-     * Delete package (Admin only) - Soft delete by setting active to false
-     */
-    @Transactional
-    public void deletePackage(Long packageId) {
-        try {
-            log.info("Deleting package with ID: {}", packageId);
-            
-            Optional<Package> packageOpt = packageRepository.findById(packageId);
-            if (packageOpt.isEmpty()) {
-                throw new IllegalArgumentException("Package not found with ID: " + packageId);
-            }
-
-            Package packageToDelete = packageOpt.get();
-            packageToDelete.setIsActive(false);
-            packageRepository.save(packageToDelete);
-            
-            log.info("Successfully deleted package: {} with ID: {}", packageToDelete.getName(), packageToDelete.getId());
-        } catch (Exception e) {
-            log.error("Failed to delete package with ID: {}", packageId, e);
-            throw new RuntimeException("Failed to delete package", e);
-        }
-    }
-
-    // ==================== STATISTICS AND ANALYTICS ====================
-
-    /**
-     * Get count of active packages
-     */
-    public long getActivePackagesCount() {
-        try {
-            long hotspotCount = packageRepository.countActiveByType(PackageType.HOTSPOT);
-            long pppoeCount = packageRepository.countActiveByType(PackageType.PPPOE);
-            return hotspotCount + pppoeCount;
-        } catch (Exception e) {
-            log.error("Failed to get active packages count", e);
-            return 0;
-        }
-    }
-
-    /**
-     * Get package statistics for admin dashboard
-     */
-    public Map<String, Object> getPackageStatistics() {
-        try {
-            log.info("Fetching package statistics for admin dashboard");
-            
-            long totalPackages = packageRepository.count();
-            long activePackages = packageRepository.countByIsActiveTrue();
-            long hotspotPackages = packageRepository.countByType(PackageType.HOTSPOT);
-            long pppoePackages = packageRepository.countByType(PackageType.PPPOE);
-            long popularPackages = 0; // Placeholder - will be implemented when repository method is available
-            
-            Map<String, Object> stats = new HashMap<>();
-            stats.put("totalPackages", totalPackages);
-            stats.put("activePackages", activePackages);
-            stats.put("hotspotPackages", hotspotPackages);
-            stats.put("pppoePackages", pppoePackages);
-            stats.put("popularPackages", popularPackages);
-            
-            log.info("Package statistics: {}", stats);
-            return stats;
-        } catch (Exception e) {
-            log.error("Failed to get package statistics", e);
-            return new HashMap<>();
-        }
-    }
-
-    /**
-     * Get package analytics for customer portal
-     */
-    public Map<String, Object> getPackageAnalytics() {
-        try {
-            log.info("Fetching package analytics for customer portal");
-            
-            List<Package> hotspotPackages = getHotspotPackages();
-            List<Package> popularPackages = getPopularHotspotPackages();
-            
-            Map<String, Object> analytics = new HashMap<>();
-            analytics.put("totalHotspotPackages", hotspotPackages.size());
-            analytics.put("popularPackages", popularPackages.size());
-            analytics.put("packages", hotspotPackages);
-            
-            return analytics;
-        } catch (Exception e) {
-            log.error("Failed to get package analytics", e);
-            return new HashMap<>();
-        }
-    }
-
-    // ==================== VALIDATION METHODS ====================
-
-    /**
-     * Validate package exists and is active
-     */
-    public boolean isPackageValid(Long packageId) {
-        try {
-            Optional<Package> packageOpt = packageRepository.findById(packageId);
-            return packageOpt.isPresent() && packageOpt.get().getIsActive();
-        } catch (Exception e) {
-            log.error("Failed to validate package with ID: {}", packageId, e);
+            System.err.println("Error parsing available days for package " + pkg.getId() + ": " + e.getMessage());
             return false;
         }
     }
 
     /**
-     * Get package price for payment processing
+     * Check if current time is within offer time range
      */
-    public Double getPackagePrice(Long packageId) {
+    private boolean isWithinTimeRange(InternetPackage pkg, LocalTime currentTime) {
+        if (pkg.getOfferStartTime() == null || pkg.getOfferEndTime() == null) {
+            return true; // No time restrictions
+        }
+
         try {
-            Optional<Package> packageOpt = packageRepository.findById(packageId);
-            return packageOpt.map(pkg -> pkg.getPrice().doubleValue()).orElse(null);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
+            LocalTime startTime = LocalTime.parse(pkg.getOfferStartTime(), formatter);
+            LocalTime endTime = LocalTime.parse(pkg.getOfferEndTime(), formatter);
+            
+            return !currentTime.isBefore(startTime) && !currentTime.isAfter(endTime);
         } catch (Exception e) {
-            log.error("Failed to get package price for ID: {}", packageId, e);
-            return null;
+            System.err.println("Error parsing time range for package " + pkg.getId() + ": " + e.getMessage());
+            return true; // Default to available if parsing fails
         }
     }
-} 
+
+    /**
+     * Create a new package
+     */
+    public InternetPackage createPackage(InternetPackage packageData) {
+        // Set default values
+        if (packageData.getIsActive() == null) {
+            packageData.setIsActive(true);
+        }
+        if (packageData.getIsTimeBasedOffer() == null) {
+            packageData.setIsTimeBasedOffer(false);
+        }
+        if (packageData.getStatus() == null) {
+            packageData.setStatus(InternetPackage.PackageStatus.ACTIVE);
+        }
+
+        return packageRepository.save(packageData);
+    }
+
+    /**
+     * Update an existing package
+     */
+    public InternetPackage updatePackage(Long id, InternetPackage packageData) {
+        InternetPackage existingPackage = packageRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Package not found with id: " + id));
+
+        // Update fields
+        existingPackage.setName(packageData.getName());
+        existingPackage.setDescription(packageData.getDescription());
+        existingPackage.setPackageType(packageData.getPackageType());
+        existingPackage.setPrice(packageData.getPrice());
+        existingPackage.setDurationDays(packageData.getDurationDays());
+        existingPackage.setDataLimitMb(packageData.getDataLimitMb());
+        existingPackage.setIsUnlimitedData(packageData.getIsUnlimitedData());
+        existingPackage.setUploadSpeedMbps(packageData.getUploadSpeedMbps());
+        existingPackage.setDownloadSpeedMbps(packageData.getDownloadSpeedMbps());
+        existingPackage.setIsActive(packageData.getIsActive());
+        existingPackage.setIsPopular(packageData.getIsPopular());
+        existingPackage.setIsFeatured(packageData.getIsFeatured());
+        existingPackage.setCategory(packageData.getCategory());
+        existingPackage.setStatus(packageData.getStatus());
+        existingPackage.setTargetAudience(packageData.getTargetAudience());
+        existingPackage.setBillingCycle(packageData.getBillingCycle());
+        existingPackage.setSpeedTier(packageData.getSpeedTier());
+
+        // Update time-based offer fields
+        existingPackage.setIsTimeBasedOffer(packageData.getIsTimeBasedOffer());
+        existingPackage.setOfferType(packageData.getOfferType());
+        existingPackage.setAvailableDays(packageData.getAvailableDays());
+        existingPackage.setOfferStartTime(packageData.getOfferStartTime());
+        existingPackage.setOfferEndTime(packageData.getOfferEndTime());
+        existingPackage.setOfferDescription(packageData.getOfferDescription());
+        existingPackage.setOriginalPrice(packageData.getOriginalPrice());
+        existingPackage.setDiscountPercentage(packageData.getDiscountPercentage());
+
+        return packageRepository.save(existingPackage);
+    }
+
+    /**
+     * Delete a package
+     */
+    public void deletePackage(Long id) {
+        if (!packageRepository.existsById(id)) {
+            throw new RuntimeException("Package not found with id: " + id);
+        }
+        packageRepository.deleteById(id);
+    }
+
+    /**
+     * Get package by ID
+     */
+    public InternetPackage getPackageById(Long id) {
+        return packageRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Package not found with id: " + id));
+    }
+
+    /**
+     * Get packages by type
+     */
+    public List<InternetPackage> getPackagesByType(InternetPackage.PackageType type) {
+        return packageRepository.findByPackageTypeAndIsActiveTrue(type);
+    }
+
+    /**
+     * Get popular packages
+     */
+    public List<InternetPackage> getPopularPackages() {
+        return packageRepository.findByIsPopularTrueAndIsActiveTrue();
+    }
+
+    /**
+     * Get time-based offer packages
+     */
+    public List<InternetPackage> getTimeBasedOfferPackages() {
+        return packageRepository.findAll().stream()
+            .filter(pkg -> Boolean.TRUE.equals(pkg.getIsTimeBasedOffer()))
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * Get packages available today
+     */
+    public List<InternetPackage> getPackagesAvailableToday() {
+        return packageRepository.findByIsActiveTrue().stream()
+            .filter(this::isPackageCurrentlyAvailable)
+            .collect(Collectors.toList());
+    }
+    
+    /**
+     * Get packages with pagination (for admin)
+     */
+    public Map<String, Object> getPackagesWithPagination(int page, int size, String sortBy, String sortDir) {
+        List<InternetPackage> allPackages = packageRepository.findAll();
+        
+        // Apply sorting
+        Comparator<InternetPackage> comparator = getComparator(sortBy, sortDir);
+        allPackages.sort(comparator);
+        
+        // Apply pagination
+        int startIndex = page * size;
+        int endIndex = Math.min(startIndex + size, allPackages.size());
+        List<InternetPackage> paginatedPackages = allPackages.subList(startIndex, endIndex);
+        
+        Map<String, Object> result = new HashMap<>();
+        result.put("packages", paginatedPackages);
+        result.put("totalElements", allPackages.size());
+        result.put("totalPages", (int) Math.ceil((double) allPackages.size() / size));
+        result.put("currentPage", page);
+        result.put("size", size);
+        
+        return result;
+    }
+    
+    /**
+     * Search packages by name or description
+     */
+    public List<InternetPackage> searchPackages(String query) {
+        return packageRepository.findAll().stream()
+            .filter(pkg -> pkg.getName().toLowerCase().contains(query.toLowerCase()) ||
+                          (pkg.getDescription() != null && pkg.getDescription().toLowerCase().contains(query.toLowerCase())))
+            .collect(Collectors.toList());
+    }
+    
+    /**
+     * Get comparator for sorting
+     */
+    private Comparator<InternetPackage> getComparator(String sortBy, String sortDir) {
+        Comparator<InternetPackage> comparator;
+        
+        switch (sortBy.toLowerCase()) {
+            case "name":
+                comparator = Comparator.comparing(InternetPackage::getName);
+                break;
+            case "price":
+                comparator = Comparator.comparing(InternetPackage::getPrice);
+                break;
+            case "duration":
+                comparator = Comparator.comparing(InternetPackage::getDurationDays);
+                break;
+            default:
+                comparator = Comparator.comparing(InternetPackage::getId);
+        }
+        
+        return "desc".equalsIgnoreCase(sortDir) ? comparator.reversed() : comparator;
+    }
+}

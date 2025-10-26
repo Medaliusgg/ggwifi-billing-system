@@ -1,93 +1,192 @@
 package com.ggnetworks.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-@Data
-@EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(name = "payments")
-public class Payment extends BaseEntity {
+public class Payment {
 
-    @NotNull(message = "User is required")
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "application_id")
-    private InternetApplicationForm application;
+    @Column(name = "payment_id", unique = true, nullable = false)
+    private String paymentId;
 
-    @NotNull(message = "Amount is required")
-    @DecimalMin(value = "0.0", inclusive = false, message = "Amount must be greater than 0")
+    @Column(name = "invoice_id", nullable = false)
+    private Long invoiceId;
+
+    @Column(name = "customer_id", nullable = false)
+    private Long customerId;
+
     @Column(name = "amount", nullable = false, precision = 10, scale = 2)
     private BigDecimal amount;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "payment_type", nullable = false)
-    private PaymentType paymentType;
+    @Column(name = "currency", nullable = false)
+    private String currency = "TZS";
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
-    private PaymentStatus status = PaymentStatus.PENDING;
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
 
-    @Enumerated(EnumType.STRING)
+    @Column(name = "created_by")
+    private String createdBy;
+
     @Column(name = "payment_method", nullable = false)
+    @Enumerated(EnumType.STRING)
     private PaymentMethod paymentMethod;
 
-    @Column(name = "transaction_id", unique = true, length = 100)
-    private String transactionId;
+    @Column(name = "payment_gateway", nullable = false)
+    private String paymentGateway;
+
+    @Column(name = "gateway_transaction_id")
+    private String gatewayTransactionId;
+
+    @Column(name = "gateway_reference")
+    private String gatewayReference;
+
+    @Column(name = "status", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private PaymentStatus status = PaymentStatus.PENDING;
 
     @Column(name = "gateway_response", columnDefinition = "TEXT")
     private String gatewayResponse;
 
-    @Column(name = "paid_at")
-    private LocalDateTime paidAt;
+    @Column(name = "failure_reason")
+    private String failureReason;
 
-    public enum PaymentType {
-        INSTALLATION_FEE, MONTHLY_PLAN, VOUCHER_PURCHASE
+    @Column(name = "phone_number")
+    private String phoneNumber;
+
+    @Column(name = "processed_at")
+    private LocalDateTime processedAt;
+
+    @Column(name = "confirmed_at")
+    private LocalDateTime confirmedAt;
+
+    @Column(name = "refunded_at")
+    private LocalDateTime refundedAt;
+
+    @Column(name = "refund_amount", precision = 10, scale = 2)
+    private BigDecimal refundAmount = BigDecimal.ZERO;
+
+    @Column(name = "fee_amount", precision = 10, scale = 2)
+    private BigDecimal feeAmount = BigDecimal.ZERO;
+
+    @Column(name = "net_amount", precision = 10, scale = 2)
+    private BigDecimal netAmount;
+
+    @Column(name = "notes")
+    private String notes;
+
+    @CreationTimestamp
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    // Enums
+    public enum PaymentMethod {
+        MPESA, TIGO_PESA, AIRTEL_MONEY, HALOPESA, BANK_TRANSFER, CREDIT_CARD, CASH, VOUCHER
     }
 
     public enum PaymentStatus {
-        PENDING, COMPLETED, FAILED, CANCELLED
+        PENDING, PROCESSING, SUCCESSFUL, COMPLETED, FAILED, CANCELLED, REFUNDED, EXPIRED
     }
 
-    public enum PaymentMethod {
-        MOBILE_MONEY, BANK_TRANSFER, CASH
+    // Constructors
+    public Payment() {}
+
+    public Payment(String paymentId, Long invoiceId, Long customerId, BigDecimal amount, 
+                   PaymentMethod paymentMethod, String paymentGateway) {
+        this.paymentId = paymentId;
+        this.invoiceId = invoiceId;
+        this.customerId = customerId;
+        this.amount = amount;
+        this.paymentMethod = paymentMethod;
+        this.paymentGateway = paymentGateway;
+        this.netAmount = amount;
     }
 
-    public boolean isPending() {
-        return status == PaymentStatus.PENDING;
-    }
+    // Getters and Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public boolean isCompleted() {
-        return status == PaymentStatus.COMPLETED;
-    }
+    public String getPaymentId() { return paymentId; }
+    public void setPaymentId(String paymentId) { this.paymentId = paymentId; }
 
-    public boolean isFailed() {
-        return status == PaymentStatus.FAILED;
-    }
+    public Long getInvoiceId() { return invoiceId; }
+    public void setInvoiceId(Long invoiceId) { this.invoiceId = invoiceId; }
 
-    public void markAsCompleted(String transactionId, String gatewayResponse) {
-        this.status = PaymentStatus.COMPLETED;
-        this.transactionId = transactionId;
-        this.gatewayResponse = gatewayResponse;
-        this.paidAt = LocalDateTime.now();
-    }
+    public Long getCustomerId() { return customerId; }
+    public void setCustomerId(Long customerId) { this.customerId = customerId; }
 
-    public void markAsFailed(String gatewayResponse) {
-        this.status = PaymentStatus.FAILED;
-        this.gatewayResponse = gatewayResponse;
-    }
+    public BigDecimal getAmount() { return amount; }
+    public void setAmount(BigDecimal amount) { this.amount = amount; }
 
-    public void markAsCancelled() {
-        this.status = PaymentStatus.CANCELLED;
-    }
-} 
+    public String getCurrency() { return currency; }
+    public void setCurrency(String currency) { this.currency = currency; }
+
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+
+    public String getCreatedBy() { return createdBy; }
+    public void setCreatedBy(String createdBy) { this.createdBy = createdBy; }
+
+    public PaymentMethod getPaymentMethod() { return paymentMethod; }
+    public void setPaymentMethod(PaymentMethod paymentMethod) { this.paymentMethod = paymentMethod; }
+
+    public String getPaymentGateway() { return paymentGateway; }
+    public void setPaymentGateway(String paymentGateway) { this.paymentGateway = paymentGateway; }
+
+    public String getGatewayTransactionId() { return gatewayTransactionId; }
+    public void setGatewayTransactionId(String gatewayTransactionId) { this.gatewayTransactionId = gatewayTransactionId; }
+
+    public String getGatewayReference() { return gatewayReference; }
+    public void setGatewayReference(String gatewayReference) { this.gatewayReference = gatewayReference; }
+
+    public PaymentStatus getStatus() { return status; }
+    public void setStatus(PaymentStatus status) { this.status = status; }
+
+    public String getGatewayResponse() { return gatewayResponse; }
+    public void setGatewayResponse(String gatewayResponse) { this.gatewayResponse = gatewayResponse; }
+
+    public String getFailureReason() { return failureReason; }
+    public void setFailureReason(String failureReason) { this.failureReason = failureReason; }
+
+    public String getPhoneNumber() { return phoneNumber; }
+    public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
+
+    public LocalDateTime getProcessedAt() { return processedAt; }
+    public void setProcessedAt(LocalDateTime processedAt) { this.processedAt = processedAt; }
+
+    public LocalDateTime getConfirmedAt() { return confirmedAt; }
+    public void setConfirmedAt(LocalDateTime confirmedAt) { this.confirmedAt = confirmedAt; }
+
+    public LocalDateTime getRefundedAt() { return refundedAt; }
+    public void setRefundedAt(LocalDateTime refundedAt) { this.refundedAt = refundedAt; }
+
+    public BigDecimal getRefundAmount() { return refundAmount; }
+    public void setRefundAmount(BigDecimal refundAmount) { this.refundAmount = refundAmount; }
+
+    public BigDecimal getFeeAmount() { return feeAmount; }
+    public void setFeeAmount(BigDecimal feeAmount) { this.feeAmount = feeAmount; }
+
+    public BigDecimal getNetAmount() { return netAmount; }
+    public void setNetAmount(BigDecimal netAmount) { this.netAmount = netAmount; }
+
+    public String getNotes() { return notes; }
+    public void setNotes(String notes) { this.notes = notes; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+}

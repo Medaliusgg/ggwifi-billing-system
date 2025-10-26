@@ -2,243 +2,228 @@ package com.ggnetworks.service;
 
 import com.ggnetworks.entity.User;
 import com.ggnetworks.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 import java.util.Optional;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 
-@Slf4j
 @Service
-@RequiredArgsConstructor
+@Transactional
 public class UserService {
-
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-
-    public User getUserById(Long userId) {
-        Optional<User> userOpt = userRepository.findByIdAndDeletedAtIsNull(userId);
+    
+    @Autowired
+    private UserRepository userRepository;
+    
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+    
+    /**
+     * Find user by username
+     */
+    public User findByUsername(String username) {
+        Optional<User> userOpt = userRepository.findByUsername(username);
         return userOpt.orElse(null);
     }
-
-    public User getUserByPhoneNumber(String phoneNumber) {
-        Optional<User> userOpt = userRepository.findByPhoneNumberAndDeletedAtIsNull(phoneNumber);
+    
+    /**
+     * Find user by email
+     */
+    public User findByEmail(String email) {
+        Optional<User> userOpt = userRepository.findByEmail(email);
         return userOpt.orElse(null);
     }
-
-    public Page<User> getAllUsers(Pageable pageable, String role, String status) {
-        if (role != null && status != null) {
-            return userRepository.findByRoleAndStatusAndDeletedAtIsNull(
-                    User.UserRole.valueOf(role.toUpperCase()), 
-                    User.UserStatus.valueOf(status.toUpperCase()), 
-                    pageable);
-        } else if (role != null) {
-            return userRepository.findByRoleAndDeletedAtIsNull(User.UserRole.valueOf(role.toUpperCase()), pageable);
-        } else if (status != null) {
-            return userRepository.findByStatusAndDeletedAtIsNull(User.UserStatus.valueOf(status.toUpperCase()), pageable);
-        } else {
-            return userRepository.findAllByDeletedAtIsNull(pageable);
-        }
+    
+    /**
+     * Find user by phone number
+     */
+    public User findByPhoneNumber(String phoneNumber) {
+        Optional<User> userOpt = userRepository.findByPhoneNumber(phoneNumber);
+        return userOpt.orElse(null);
     }
-
-    public User getOrCreateUser(String phoneNumber, String fullName, User.UserRole role) {
-        Optional<User> existingUser = userRepository.findByPhoneNumberAndDeletedAtIsNull(phoneNumber);
+    
+    /**
+     * Create new user
+     */
+    public User createUser(User user) {
+        // Encrypt password
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         
-        if (existingUser.isPresent()) {
-            return existingUser.get();
+        // Set default values
+        if (user.getIsActive() == null) {
+            user.setIsActive(true);
         }
-
-        // Create new user
-        User newUser = new User();
-        newUser.setPhoneNumber(phoneNumber);
-        newUser.setFullName(fullName);
-        newUser.setRole(role);
-        newUser.setStatus(User.UserStatus.ACTIVE);
-        newUser.setPassword(passwordEncoder.encode("default123")); // Default password
-
-        return userRepository.save(newUser);
-    }
-
-    @Transactional
-    public User updateUserStatus(Long userId, String status) {
-        try {
-            Optional<User> userOpt = userRepository.findByIdAndDeletedAtIsNull(userId);
-            if (userOpt.isEmpty()) {
-                throw new IllegalArgumentException("User not found");
-            }
-
-            User user = userOpt.get();
-            User.UserStatus userStatus;
-            try {
-                userStatus = User.UserStatus.valueOf(status.toUpperCase());
-            } catch (IllegalArgumentException e) {
-                throw new IllegalArgumentException("Invalid status: " + status);
-            }
-
-            user.setStatus(userStatus);
-            user.setUpdatedAt(LocalDateTime.now());
-            return userRepository.save(user);
-        } catch (Exception e) {
-            log.error("Failed to update user status", e);
-            throw new RuntimeException("Failed to update user status", e);
+        if (user.getStatus() == null) {
+            user.setStatus(User.UserStatus.ACTIVE);
         }
+        
+        return userRepository.save(user);
     }
-
-    @Transactional
-    public User updateUserProfile(String phoneNumber, String fullName) {
-        try {
-            Optional<User> userOpt = userRepository.findByPhoneNumberAndDeletedAtIsNull(phoneNumber);
-            if (userOpt.isEmpty()) {
-                throw new IllegalArgumentException("User not found");
-            }
-
-            User user = userOpt.get();
-            user.setFullName(fullName);
-            user.setUpdatedAt(LocalDateTime.now());
-
-            return userRepository.save(user);
-        } catch (Exception e) {
-            log.error("Failed to update user profile", e);
-            throw new RuntimeException("Failed to update user profile", e);
-        }
+    
+    /**
+     * Update user
+     */
+    public User updateUser(User user) {
+        return userRepository.save(user);
     }
-
-    @Transactional
-    public User createUser(User userRequest) {
-        try {
-            // Check if user already exists
-            if (userRepository.existsByPhoneNumberAndDeletedAtIsNull(userRequest.getPhoneNumber())) {
-                throw new IllegalArgumentException("User with this phone number already exists");
-            }
-
-            User newUser = new User();
-            newUser.setPhoneNumber(userRequest.getPhoneNumber());
-            newUser.setFullName(userRequest.getFullName());
-            newUser.setRole(userRequest.getRole());
-            newUser.setStatus(User.UserStatus.ACTIVE);
-            newUser.setPassword(passwordEncoder.encode(userRequest.getPassword()));
-
-            return userRepository.save(newUser);
-        } catch (Exception e) {
-            log.error("Failed to create user", e);
-            throw new RuntimeException("Failed to create user", e);
-        }
-    }
-
-    @Transactional
-    public User updateUser(Long userId, User userRequest) {
-        try {
-            Optional<User> userOpt = userRepository.findByIdAndDeletedAtIsNull(userId);
-            if (userOpt.isEmpty()) {
-                throw new IllegalArgumentException("User not found");
-            }
-
-            User existingUser = userOpt.get();
-            existingUser.setFullName(userRequest.getFullName());
-            existingUser.setRole(userRequest.getRole());
-            existingUser.setStatus(userRequest.getStatus());
-            existingUser.setUpdatedAt(LocalDateTime.now());
-
-            // Update password if provided
-            if (userRequest.getPassword() != null && !userRequest.getPassword().trim().isEmpty()) {
-                existingUser.setPassword(passwordEncoder.encode(userRequest.getPassword()));
-            }
-
-            return userRepository.save(existingUser);
-        } catch (Exception e) {
-            log.error("Failed to update user", e);
-            throw new RuntimeException("Failed to update user", e);
-        }
-    }
-
-    @Transactional
+    
+    /**
+     * Delete user
+     */
     public void deleteUser(Long userId) {
-        try {
-            Optional<User> userOpt = userRepository.findByIdAndDeletedAtIsNull(userId);
-            if (userOpt.isEmpty()) {
-                throw new IllegalArgumentException("User not found");
-            }
-
+        userRepository.deleteById(userId);
+    }
+    
+    /**
+     * Get all users
+     */
+    public List<User> findAllUsers() {
+        return userRepository.findAll();
+    }
+    
+    /**
+     * Get users by role
+     */
+    public List<User> findUsersByRole(User.UserRole role) {
+        return userRepository.findByRole(role);
+    }
+    
+    /**
+     * Get active users
+     */
+    public List<User> findActiveUsers() {
+        return userRepository.findByIsActiveTrue();
+    }
+    
+    /**
+     * Get users by department
+     */
+    public List<User> findUsersByDepartment(String department) {
+        return userRepository.findByDepartment(department);
+    }
+    
+    /**
+     * Count total users
+     */
+    public long countUsers() {
+        return userRepository.count();
+    }
+    
+    /**
+     * Count active users
+     */
+    public long countActiveUsers() {
+        return userRepository.countByIsActiveTrue();
+    }
+    
+    /**
+     * Count users by role
+     */
+    public long countUsersByRole(User.UserRole role) {
+        return userRepository.countByRole(role);
+    }
+    
+    /**
+     * Check if username exists
+     */
+    public boolean existsByUsername(String username) {
+        return userRepository.findByUsername(username).isPresent();
+    }
+    
+    /**
+     * Check if email exists
+     */
+    public boolean existsByEmail(String email) {
+        return userRepository.findByEmail(email).isPresent();
+    }
+    
+    /**
+     * Check if phone number exists
+     */
+    public boolean existsByPhoneNumber(String phoneNumber) {
+        return userRepository.findByPhoneNumber(phoneNumber).isPresent();
+    }
+    
+    /**
+     * Activate user
+     */
+    public User activateUser(Long userId) {
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isPresent()) {
             User user = userOpt.get();
-            user.setDeletedAt(LocalDateTime.now());
-            userRepository.save(user);
-        } catch (Exception e) {
-            log.error("Failed to delete user", e);
-            throw new RuntimeException("Failed to delete user", e);
+            user.setIsActive(true);
+            user.setStatus(User.UserStatus.ACTIVE);
+            return userRepository.save(user);
         }
+        return null;
     }
-
-    public Map<String, Object> getUserStatistics() {
-        try {
-            long totalUsers = userRepository.countByDeletedAtIsNull();
-            long activeUsers = userRepository.countByStatusAndDeletedAtIsNull(User.UserStatus.ACTIVE);
-            long inactiveUsers = userRepository.countByStatusAndDeletedAtIsNull(User.UserStatus.INACTIVE);
-            
-            long adminUsers = userRepository.countByRoleAndDeletedAtIsNull(User.UserRole.ADMIN);
-            long hotspotUsers = userRepository.countByRoleAndDeletedAtIsNull(User.UserRole.HOTSPOT_USER);
-            long pppoeUsers = userRepository.countByRoleAndDeletedAtIsNull(User.UserRole.PPPOE_USER);
-
-            Map<String, Object> stats = new HashMap<>();
-            stats.put("totalUsers", totalUsers);
-            stats.put("activeUsers", activeUsers);
-            stats.put("inactiveUsers", inactiveUsers);
-            stats.put("adminUsers", adminUsers);
-            stats.put("hotspotUsers", hotspotUsers);
-            stats.put("pppoeUsers", pppoeUsers);
-            stats.put("activeRate", totalUsers > 0 ? (double) activeUsers / totalUsers * 100 : 0);
-
-            return stats;
-        } catch (Exception e) {
-            log.error("Failed to get user statistics", e);
-            return new HashMap<>();
-        }
-    }
-
-    public boolean validateUserCredentials(String phoneNumber, String password) {
-        try {
-            Optional<User> userOpt = userRepository.findByPhoneNumberAndDeletedAtIsNull(phoneNumber);
-            if (userOpt.isEmpty()) {
-                return false;
-            }
-
+    
+    /**
+     * Deactivate user
+     */
+    public User deactivateUser(Long userId) {
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isPresent()) {
             User user = userOpt.get();
-            return passwordEncoder.matches(password, user.getPassword());
-        } catch (Exception e) {
-            log.error("Failed to validate user credentials", e);
-            return false;
+            user.setIsActive(false);
+            user.setStatus(User.UserStatus.INACTIVE);
+            return userRepository.save(user);
         }
+        return null;
     }
-
-    public UserDetails loadUserByUsername(String phoneNumber) {
-        try {
-            Optional<User> userOpt = userRepository.findByPhoneNumberAndDeletedAtIsNull(phoneNumber);
-            if (userOpt.isEmpty()) {
-                return null;
-            }
-
+    
+    /**
+     * Suspend user
+     */
+    public User suspendUser(Long userId) {
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isPresent()) {
             User user = userOpt.get();
-            return org.springframework.security.core.userdetails.User.builder()
-                    .username(user.getPhoneNumber())
-                    .password(user.getPassword())
-                    .authorities(Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().name())))
-                    .accountExpired(false)
-                    .accountLocked(user.getStatus() == User.UserStatus.INACTIVE)
-                    .credentialsExpired(false)
-                    .disabled(user.getStatus() == User.UserStatus.INACTIVE)
-                    .build();
-        } catch (Exception e) {
-            log.error("Failed to load user by username", e);
-            return null;
+            user.setIsActive(false);
+            user.setStatus(User.UserStatus.SUSPENDED);
+            return userRepository.save(user);
         }
+        return null;
     }
-} 
+    
+    /**
+     * Change user password
+     */
+    public User changePassword(Long userId, String newPassword) {
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            user.setPassword(passwordEncoder.encode(newPassword));
+            return userRepository.save(user);
+        }
+        return null;
+    }
+    
+    /**
+     * Verify user email
+     */
+    public User verifyEmail(Long userId) {
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            user.setIsEmailVerified(true);
+            return userRepository.save(user);
+        }
+        return null;
+    }
+    
+    /**
+     * Verify user phone
+     */
+    public User verifyPhone(Long userId) {
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            user.setIsPhoneVerified(true);
+            return userRepository.save(user);
+        }
+        return null;
+    }
+}

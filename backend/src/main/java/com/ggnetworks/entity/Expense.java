@@ -1,52 +1,54 @@
 package com.ggnetworks.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-@Data
-@EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(name = "expenses")
-public class Expense extends BaseEntity {
+public class Expense {
 
-    @NotBlank(message = "Expense title is required")
-    @Column(name = "expense_title", nullable = false)
-    private String expenseTitle;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    @Column(name = "description")
+    @Column(name = "expense_id", unique = true, nullable = false)
+    private String expenseId;
+
+    @Column(name = "title", nullable = false)
+    private String title;
+
+    @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
-    @NotNull(message = "Expense amount is required")
-    @DecimalMin(value = "0.0", inclusive = false, message = "Expense amount must be greater than 0")
-    @Column(name = "amount", nullable = false, precision = 15, scale = 2)
+    @Column(name = "amount", nullable = false, precision = 10, scale = 2)
     private BigDecimal amount;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "budget_id")
-    private Budget budget;
+    @Column(name = "currency", nullable = false)
+    private String currency = "TZS";
 
+    @Column(name = "category", nullable = false)
     @Enumerated(EnumType.STRING)
-    @Column(name = "expense_type", nullable = false)
-    private ExpenseType expenseType;
+    private ExpenseCategory category;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "expense_category", nullable = false)
-    private ExpenseCategory expenseCategory;
+    @Column(name = "subcategory")
+    private String subcategory;
 
+    @Column(name = "payment_method")
     @Enumerated(EnumType.STRING)
-    @Column(name = "payment_method", nullable = false)
     private PaymentMethod paymentMethod;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
-    private ExpenseStatus status = ExpenseStatus.PENDING;
+    @Column(name = "vendor")
+    private String vendor;
+
+    @Column(name = "invoice_number")
+    private String invoiceNumber;
+
+    @Column(name = "receipt_number")
+    private String receiptNumber;
 
     @Column(name = "expense_date", nullable = false)
     private LocalDateTime expenseDate;
@@ -54,39 +56,9 @@ public class Expense extends BaseEntity {
     @Column(name = "due_date")
     private LocalDateTime dueDate;
 
-    @Column(name = "paid_date")
-    private LocalDateTime paidDate;
-
-    @Column(name = "receipt_number")
-    private String receiptNumber;
-
-    @Column(name = "vendor_name")
-    private String vendorName;
-
-    @Column(name = "vendor_contact")
-    private String vendorContact;
-
-    @Column(name = "invoice_number")
-    private String invoiceNumber;
-
-    @Column(name = "tax_amount", precision = 15, scale = 2)
-    private BigDecimal taxAmount = BigDecimal.ZERO;
-
-    @Column(name = "discount_amount", precision = 15, scale = 2)
-    private BigDecimal discountAmount = BigDecimal.ZERO;
-
-    @Column(name = "total_amount", precision = 15, scale = 2)
-    private BigDecimal totalAmount;
-
-    @Column(name = "is_recurring")
-    private Boolean isRecurring = false;
-
+    @Column(name = "status", nullable = false)
     @Enumerated(EnumType.STRING)
-    @Column(name = "recurrence_type")
-    private RecurrenceType recurrenceType;
-
-    @Column(name = "approval_required")
-    private Boolean approvalRequired = false;
+    private ExpenseStatus status = ExpenseStatus.PENDING;
 
     @Column(name = "approved_by")
     private String approvedBy;
@@ -94,134 +66,162 @@ public class Expense extends BaseEntity {
     @Column(name = "approved_at")
     private LocalDateTime approvedAt;
 
+    @Column(name = "rejected_by")
+    private String rejectedBy;
+
+    @Column(name = "rejected_at")
+    private LocalDateTime rejectedAt;
+
     @Column(name = "rejection_reason")
     private String rejectionReason;
 
-    @Column(name = "notes")
+    @Column(name = "recurring")
+    private Boolean isRecurring = false;
+
+    @Column(name = "recurring_frequency")
+    private String recurringFrequency;
+
+    @Column(name = "next_due_date")
+    private LocalDateTime nextDueDate;
+
+    @Column(name = "tags")
+    private String tags;
+
+    @Column(name = "attachments")
+    private String attachments;
+
+    @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
 
-    // Expense Type Enum
-    public enum ExpenseType {
-        OPERATIONAL,      // Day-to-day operations
-        CAPITAL,          // Long-term investments
-        MARKETING,        // Advertising and promotions
-        MAINTENANCE,      // Equipment and infrastructure
-        SALARY,           // Employee compensation
-        UTILITIES,        // Electricity, water, internet
-        RENT,             // Office/equipment rental
-        INSURANCE,        // Business insurance
-        TAXES,            // Tax payments
-        TRAVEL,           // Business travel
-        OFFICE_SUPPLIES,  // Office supplies
-        SOFTWARE,         // Software licenses
-        HARDWARE,         // Computer equipment
-        TRAINING,         // Employee training
-        LEGAL,            // Legal services
-        CONSULTING,       // Consulting services
-        OTHER             // Miscellaneous
-    }
+    @Column(name = "created_by")
+    private String createdBy;
 
-    // Expense Category Enum
+    @Column(name = "updated_by")
+    private String updatedBy;
+
+    @CreationTimestamp
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    // Enums
     public enum ExpenseCategory {
-        FIXED,            // Fixed monthly expenses
-        VARIABLE,         // Variable expenses
-        ONE_TIME,         // One-time expenses
-        EMERGENCY,        // Emergency expenses
-        INVESTMENT,       // Investment expenses
-        MAINTENANCE,      // Maintenance expenses
-        UPGRADE,          // Upgrade expenses
-        REPAIR,           // Repair expenses
-        REPLACEMENT       // Replacement expenses
+        OPERATIONAL, EQUIPMENT, MAINTENANCE, UTILITIES, RENT, SALARIES, 
+        MARKETING, TRANSPORT, COMMUNICATION, INSURANCE, TAXES, LEGAL,
+        PROFESSIONAL_SERVICES, TRAINING, SOFTWARE, HARDWARE, OTHER
     }
 
-    // Payment Method Enum
     public enum PaymentMethod {
-        CASH,
-        BANK_TRANSFER,
-        CHECK,
-        CREDIT_CARD,
-        DEBIT_CARD,
-        MOBILE_MONEY,
-        PAYPAL,
-        WIRE_TRANSFER,
-        OTHER
+        CASH, BANK_TRANSFER, CREDIT_CARD, MPESA, TIGO_PESA, AIRTEL_MONEY, 
+        HALOPESA, CHECK, VOUCHER, OTHER
     }
 
-    // Expense Status Enum
     public enum ExpenseStatus {
-        PENDING,          // Awaiting approval
-        APPROVED,         // Approved for payment
-        PAID,             // Payment completed
-        REJECTED,         // Rejected
-        CANCELLED,        // Cancelled
-        OVERDUE           // Past due date
+        PENDING, APPROVED, REJECTED, PAID, OVERDUE, CANCELLED
     }
 
-    // Recurrence Type Enum
-    public enum RecurrenceType {
-        DAILY,
-        WEEKLY,
-        MONTHLY,
-        QUARTERLY,
-        YEARLY,
-        NONE
+    // Constructors
+    public Expense() {}
+
+    public Expense(String expenseId, String title, BigDecimal amount, ExpenseCategory category) {
+        this.expenseId = expenseId;
+        this.title = title;
+        this.amount = amount;
+        this.category = category;
+        this.expenseDate = LocalDateTime.now();
     }
 
-    @PrePersist
-    @PreUpdate
-    protected void onUpdate() {
-        super.onUpdate();
-        if (amount != null && taxAmount != null && discountAmount != null) {
-            totalAmount = amount.add(taxAmount).subtract(discountAmount);
-        }
-    }
+    // Getters and Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    /**
-     * Calculate total amount including tax and discounts
-     */
-    public BigDecimal getTotalAmount() {
-        if (totalAmount != null) {
-            return totalAmount;
-        }
-        if (amount != null) {
-            BigDecimal total = amount;
-            if (taxAmount != null) {
-                total = total.add(taxAmount);
-            }
-            if (discountAmount != null) {
-                total = total.subtract(discountAmount);
-            }
-            return total;
-        }
-        return BigDecimal.ZERO;
-    }
+    public String getExpenseId() { return expenseId; }
+    public void setExpenseId(String expenseId) { this.expenseId = expenseId; }
 
-    /**
-     * Check if expense is overdue
-     */
-    public boolean isOverdue() {
-        return dueDate != null && LocalDateTime.now().isAfter(dueDate) && 
-               status != ExpenseStatus.PAID && status != ExpenseStatus.CANCELLED;
-    }
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
 
-    /**
-     * Check if expense is paid
-     */
-    public boolean isPaid() {
-        return status == ExpenseStatus.PAID;
-    }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
-    /**
-     * Check if expense requires approval
-     */
-    public boolean requiresApproval() {
-        return approvalRequired && status == ExpenseStatus.PENDING;
-    }
+    public BigDecimal getAmount() { return amount; }
+    public void setAmount(BigDecimal amount) { this.amount = amount; }
 
-    /**
-     * Check if expense is approved
-     */
-    public boolean isApproved() {
-        return status == ExpenseStatus.APPROVED || status == ExpenseStatus.PAID;
-    }
-} 
+    public String getCurrency() { return currency; }
+    public void setCurrency(String currency) { this.currency = currency; }
+
+    public ExpenseCategory getCategory() { return category; }
+    public void setCategory(ExpenseCategory category) { this.category = category; }
+
+    public String getSubcategory() { return subcategory; }
+    public void setSubcategory(String subcategory) { this.subcategory = subcategory; }
+
+    public PaymentMethod getPaymentMethod() { return paymentMethod; }
+    public void setPaymentMethod(PaymentMethod paymentMethod) { this.paymentMethod = paymentMethod; }
+
+    public String getVendor() { return vendor; }
+    public void setVendor(String vendor) { this.vendor = vendor; }
+
+    public String getInvoiceNumber() { return invoiceNumber; }
+    public void setInvoiceNumber(String invoiceNumber) { this.invoiceNumber = invoiceNumber; }
+
+    public String getReceiptNumber() { return receiptNumber; }
+    public void setReceiptNumber(String receiptNumber) { this.receiptNumber = receiptNumber; }
+
+    public LocalDateTime getExpenseDate() { return expenseDate; }
+    public void setExpenseDate(LocalDateTime expenseDate) { this.expenseDate = expenseDate; }
+
+    public LocalDateTime getDueDate() { return dueDate; }
+    public void setDueDate(LocalDateTime dueDate) { this.dueDate = dueDate; }
+
+    public ExpenseStatus getStatus() { return status; }
+    public void setStatus(ExpenseStatus status) { this.status = status; }
+
+    public String getApprovedBy() { return approvedBy; }
+    public void setApprovedBy(String approvedBy) { this.approvedBy = approvedBy; }
+
+    public LocalDateTime getApprovedAt() { return approvedAt; }
+    public void setApprovedAt(LocalDateTime approvedAt) { this.approvedAt = approvedAt; }
+
+    public String getRejectedBy() { return rejectedBy; }
+    public void setRejectedBy(String rejectedBy) { this.rejectedBy = rejectedBy; }
+
+    public LocalDateTime getRejectedAt() { return rejectedAt; }
+    public void setRejectedAt(LocalDateTime rejectedAt) { this.rejectedAt = rejectedAt; }
+
+    public String getRejectionReason() { return rejectionReason; }
+    public void setRejectionReason(String rejectionReason) { this.rejectionReason = rejectionReason; }
+
+    public Boolean getIsRecurring() { return isRecurring; }
+    public void setIsRecurring(Boolean isRecurring) { this.isRecurring = isRecurring; }
+
+    public String getRecurringFrequency() { return recurringFrequency; }
+    public void setRecurringFrequency(String recurringFrequency) { this.recurringFrequency = recurringFrequency; }
+
+    public LocalDateTime getNextDueDate() { return nextDueDate; }
+    public void setNextDueDate(LocalDateTime nextDueDate) { this.nextDueDate = nextDueDate; }
+
+    public String getTags() { return tags; }
+    public void setTags(String tags) { this.tags = tags; }
+
+    public String getAttachments() { return attachments; }
+    public void setAttachments(String attachments) { this.attachments = attachments; }
+
+    public String getNotes() { return notes; }
+    public void setNotes(String notes) { this.notes = notes; }
+
+    public String getCreatedBy() { return createdBy; }
+    public void setCreatedBy(String createdBy) { this.createdBy = createdBy; }
+
+    public String getUpdatedBy() { return updatedBy; }
+    public void setUpdatedBy(String updatedBy) { this.updatedBy = updatedBy; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+}

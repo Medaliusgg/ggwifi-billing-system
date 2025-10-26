@@ -1,456 +1,311 @@
-# GGNetworks Deployment Guide
+# 🚀 GG-WIFI Backend Deployment Guide for Vultr VPS
 
-## Overview
+This guide will help you deploy the GG-WIFI backend to your Vultr VPS and test all API endpoints.
 
-This guide provides step-by-step instructions for deploying the complete GGNetworks system with FreeRADIUS integration, MikroTik router configuration, and SMS marketing capabilities.
+## 📋 Prerequisites
 
-## Prerequisites
+- Vultr VPS with Ubuntu 20.04+ or CentOS 8+
+- SSH access to your VPS
+- Java 17+ installed on VPS
+- MySQL 8.0+ installed on VPS
+- Maven 3.6+ installed locally
 
-- Ubuntu 20.04+ server
-- MySQL 8.0+ installed and configured
-- Java 17+ installed
-- Maven 3.6+ installed
-- Network access to MikroTik routers
-- SMS gateway API credentials (e.g., Africa's Talking)
+## 🛠️ Step 1: Prepare Your VPS
 
-## System Architecture
-
-```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   GGNetworks    │◄──►│   FreeRADIUS    │◄──►│   MikroTik      │
-│   Backend       │    │   Server        │    │   Routers       │
-│   (Spring Boot) │    │   (MySQL)       │    │   (Hotspot/     │
-└─────────────────┘    └─────────────────┘    │   PPPoE)        │
-         │                       │            └─────────────────┘
-         │                       │
-         ▼                       ▼
-┌─────────────────┐    ┌─────────────────┐
-│   SMS Gateway   │    │   Customer      │
-│   (Marketing)   │    │   Portals       │
-└─────────────────┘    └─────────────────┘
-```
-
-## Step 1: Database Setup
-
-### 1.1 Create Database and User
-
+### Connect to your VPS
 ```bash
-# Access MySQL as root
-sudo mysql -u root -p
-
-# Create database and user
-CREATE DATABASE ggnetworks;
-CREATE USER 'ggnetworks'@'localhost' IDENTIFIED BY 'ggnetworks_password';
-GRANT ALL PRIVILEGES ON ggnetworks.* TO 'ggnetworks'@'localhost';
-FLUSH PRIVILEGES;
-EXIT;
+ssh root@your-vps-ip
 ```
 
-### 1.2 Import FreeRADIUS Schema
-
+### Update system packages
 ```bash
-# Import FreeRADIUS SQL configuration
-mysql -u root -p ggnetworks < freeradius-sql-config.sql
+apt update && apt upgrade -y
 ```
 
-### 1.3 Run Database Migrations
-
+### Install Java 17
 ```bash
-# Navigate to backend directory
-cd backend
-
-# Run Flyway migrations
-mvn flyway:migrate
+apt install -y openjdk-17-jdk
+java -version
 ```
 
-## Step 2: FreeRADIUS Setup
-
-### 2.1 Install FreeRADIUS
-
+### Install MySQL 8.0
 ```bash
-# Run the FreeRADIUS setup script
-sudo chmod +x setup-freeradius.sh
-sudo ./setup-freeradius.sh
+apt install -y mysql-server mysql-client
+systemctl start mysql
+systemctl enable mysql
 ```
 
-### 2.2 Verify FreeRADIUS Installation
+### Install additional tools
+```bash
+apt install -y curl wget unzip jq
+```
 
+## 🗄️ Step 2: Setup Database
+
+### Run the database setup script
+```bash
+# Upload the script to your VPS
+scp setup-database-vps.sh root@your-vps-ip:/root/
+ssh root@your-vps-ip "chmod +x setup-database-vps.sh && ./setup-database-vps.sh"
+```
+
+### Verify database setup
+```bash
+mysql -u ggnetworks -psecure_password ggnetworks -e "SHOW TABLES;"
+```
+
+## 🚀 Step 3: Deploy Backend
+
+### Update deployment script with your VPS IP
+```bash
+# Edit the deployment script
+nano deploy-to-vps.sh
+
+# Update this line with your VPS IP:
+VPS_IP="your-vps-ip-address"
+```
+
+### Run deployment script
+```bash
+./deploy-to-vps.sh
+```
+
+### Verify deployment
 ```bash
 # Check service status
-sudo systemctl status freeradius
+ssh root@your-vps-ip "systemctl status ggnetworks-backend"
 
-# Test configuration
-sudo freeradius -C
-
-# Test authentication
-sudo /usr/local/bin/test-radius.sh
+# Check logs
+ssh root@your-vps-ip "journalctl -u ggnetworks-backend -f"
 ```
 
-### 2.3 Configure Firewall
+## 🧪 Step 4: Test All APIs
 
+### Update testing script with your VPS IP
 ```bash
-# Allow RADIUS ports
-sudo ufw allow 1812/udp comment "RADIUS Authentication"
-sudo ufw allow 1813/udp comment "RADIUS Accounting"
+# Edit the testing script
+nano test-all-apis.sh
+
+# Update this line with your VPS IP:
+BASE_URL="http://your-vps-ip:8080"
 ```
 
-## Step 3: Backend Application Setup
-
-### 3.1 Configure Environment Variables
-
+### Run comprehensive API tests
 ```bash
-# Create environment file
-cat > .env << 'EOF'
-# Database Configuration
-DB_HOST=localhost
-DB_PORT=3306
-DB_NAME=ggnetworks
-DB_USERNAME=ggnetworks
-DB_PASSWORD=ggnetworks_password
-
-# JWT Configuration
-JWT_SECRET=your-super-secret-jwt-key-here
-JWT_EXPIRATION=86400000
-
-# RADIUS Configuration
-RADIUS_HOST=localhost
-RADIUS_PORT=1812
-RADIUS_SECRET=testing123
-RADIUS_ACCOUNTING_PORT=1813
-
-# SMS Configuration
-SMS_API_BASE_URL=https://api.africastalking.com/version1/messaging
-SMS_API_KEY=your_sms_api_key
-SMS_API_SECRET=your_sms_api_secret
-SMS_SENDER_ID=GGNetworks
-
-# SELCOM Payment Configuration
-SELCOM_BASE_URL=https://paypoint.selcommobile.com
-SELCOM_MERCHANT_ID=your_merchant_id
-SELCOM_MERCHANT_KEY=your_merchant_key
-SELCOM_API_KEY=your_api_key
-SELCOM_API_SECRET=your_api_secret
-
-# Server Configuration
-SERVER_PORT=8080
-EOF
+./test-all-apis.sh
 ```
 
-### 3.2 Build and Run Backend
+## 🔧 Step 5: Configure Production Environment
 
+### Update system configuration
 ```bash
-# Build the application
-mvn clean package -DskipTests
+# Connect to your VPS
+ssh root@your-vps-ip
 
-# Run the application
-java -jar target/ggnetworks-backend-1.0.0.jar
+# Update MySQL with real API keys
+mysql -u ggnetworks -psecure_password ggnetworks -e "
+UPDATE system_configurations SET config_value = 'your-real-zenopay-api-key' WHERE config_key = 'ZENOPAY_API_KEY';
+UPDATE system_configurations SET config_value = 'your-real-sms-api-key' WHERE config_key = 'SMS_API_KEY';
+UPDATE system_configurations SET config_value = 'http://your-vps-ip:8080/api/customer-portal/webhook' WHERE config_key = 'ZENOPAY_WEBHOOK_URL';
+"
 ```
 
-### 3.3 Verify Backend
-
+### Update production configuration
 ```bash
-# Test health endpoint
-curl http://localhost:8080/api/v1/health
+# Edit production config
+nano /opt/ggnetworks/config/application-production.yml
 
-# Test FreeRADIUS integration
-curl http://localhost:8080/api/v1/radius/status
+# Update with real values:
+# - ZenoPay API key
+# - SMS API key
+# - FreeRADIUS configuration
+# - MikroTik router details
+# - JWT secret
 ```
 
-## Step 4: MikroTik Router Configuration
-
-### 4.1 Upload Configuration to Router
-
+### Restart service
 ```bash
-# Copy configuration file to router
-scp mikrotik-radius-config.rsc admin@192.168.1.1:/tmp/
-
-# SSH to router and import configuration
-ssh admin@192.168.1.1
-/import file-name=mikrotik-radius-config.rsc
+systemctl restart ggnetworks-backend
 ```
 
-### 4.2 Verify Router Configuration
+## 🔒 Step 6: Security Configuration
 
+### Configure firewall
 ```bash
-# Check RADIUS configuration
-/radius print
-
-# Check hotspot configuration
-/ip hotspot profile print
-
-# Check PPPoE configuration
-/ppp profile print
+# Allow SSH, HTTP, HTTPS, and backend port
+ufw allow 22
+ufw allow 80
+ufw allow 443
+ufw allow 8080
+ufw enable
 ```
 
-### 4.3 Test Router Integration
-
+### Secure MySQL
 ```bash
-# Test hotspot authentication
-# Connect to hotspot network and try voucher authentication
-
-# Test PPPoE authentication
-# Configure PPPoE client and test connection
+# Run MySQL secure installation
+mysql_secure_installation
 ```
 
-## Step 5: SMS Marketing Setup
-
-### 5.1 Configure SMS Gateway
-
+### Update default passwords
 ```bash
-# Run SMS setup script
-sudo chmod +x sms-marketing-setup.sh
-sudo ./sms-marketing-setup.sh
+# Change admin password
+mysql -u ggnetworks -psecure_password ggnetworks -e "
+UPDATE users SET password = '\$2a\$10\$new_hashed_password' WHERE username = 'admin';
+"
 ```
 
-### 5.2 Update SMS Credentials
+## 📊 Step 7: Monitoring and Logs
 
+### Check service status
 ```bash
-# Edit SMS configuration
-sudo nano /etc/ggnetworks/sms/config.json
-
-# Update with your SMS gateway credentials
-{
-  "sms_gateway": {
-    "api_key": "your_actual_api_key",
-    "api_secret": "your_actual_api_secret"
-  }
-}
+systemctl status ggnetworks-backend
 ```
 
-### 5.3 Test SMS Functionality
-
+### View logs
 ```bash
-# Test single SMS
-sudo /usr/local/bin/ggnetworks-sms.sh send +255123456789 "Test message"
+# Real-time logs
+journalctl -u ggnetworks-backend -f
 
-# Test campaign
-sudo /usr/local/bin/ggnetworks-sms.sh campaign "Test Campaign" hotspot_users "Welcome to GGNetworks!"
+# Recent logs
+journalctl -u ggnetworks-backend --since "1 hour ago"
 
-# Monitor SMS activity
-sudo /usr/local/bin/monitor-sms.sh
+# Application logs
+tail -f /opt/ggnetworks/logs/ggnetworks-backend.log
 ```
 
-## Step 6: Integration Testing
-
-### 6.1 Run Complete Integration Test
-
+### Monitor system resources
 ```bash
-# Run integration test suite
-chmod +x test-integration.sh
-./test-integration.sh
+# CPU and memory usage
+htop
+
+# Disk usage
+df -h
+
+# Network connections
+netstat -tlnp
 ```
 
-### 6.2 Manual Testing Checklist
+## 🧪 Step 8: API Testing Checklist
 
-- [ ] Backend API responds correctly
-- [ ] FreeRADIUS authentication works
-- [ ] Voucher generation and validation
-- [ ] PPPoE user authentication
-- [ ] SMS sending and delivery
-- [ ] Phone number collection
-- [ ] MikroTik router integration
-- [ ] Database connectivity
-- [ ] Log monitoring
+### ✅ Authentication APIs
+- [ ] Admin login
+- [ ] Token validation
+- [ ] Logout
 
-## Step 7: Production Deployment
+### ✅ User Management APIs
+- [ ] Get all users
+- [ ] Create user
+- [ ] Update user
+- [ ] Delete user
+- [ ] User statistics
 
-### 7.1 Security Hardening
+### ✅ Package Management APIs
+- [ ] Get all packages
+- [ ] Create package
+- [ ] Update package
+- [ ] Delete package
+- [ ] Get active packages
 
+### ✅ Customer Portal APIs
+- [ ] Get customer packages
+- [ ] Initiate payment
+- [ ] Process webhook
+- [ ] Generate voucher
+
+### ✅ Router Management APIs
+- [ ] Get all routers
+- [ ] Add router
+- [ ] Update router
+- [ ] Delete router
+- [ ] Router statistics
+
+### ✅ FreeRADIUS APIs
+- [ ] Health check
+- [ ] Add RADIUS user
+- [ ] Remove RADIUS user
+- [ ] Get active sessions
+- [ ] RADIUS statistics
+
+### ✅ Transaction APIs
+- [ ] Get all transactions
+- [ ] Get transaction statistics
+- [ ] Search transactions
+
+### ✅ Payment APIs
+- [ ] Get all payments
+- [ ] Get payment statistics
+- [ ] Process payment
+
+### ✅ Voucher APIs
+- [ ] Get all vouchers
+- [ ] Generate voucher
+- [ ] Validate voucher
+- [ ] Voucher statistics
+
+### ✅ Customer APIs
+- [ ] Get all customers
+- [ ] Get customer by ID
+- [ ] Customer statistics
+
+### ✅ Invoice APIs
+- [ ] Get all invoices
+- [ ] Generate invoice
+- [ ] Invoice statistics
+
+## 🚨 Troubleshooting
+
+### Backend won't start
 ```bash
-# Change default passwords
-sudo mysql -u root -p -e "ALTER USER 'freeradius'@'localhost' IDENTIFIED BY 'strong_password';"
-sudo mysql -u root -p -e "ALTER USER 'ggnetworks'@'localhost' IDENTIFIED BY 'strong_password';"
+# Check logs
+journalctl -u ggnetworks-backend -n 50
 
-# Update RADIUS secret
-sudo sed -i 's/testing123/your_strong_radius_secret/g' /etc/freeradius/3.0/clients.conf
-sudo systemctl restart freeradius
+# Check Java version
+java -version
 
-# Secure file permissions
-sudo chmod 600 /etc/ggnetworks/sms/config.json
-sudo chown root:root /etc/ggnetworks/sms/config.json
+# Check port availability
+netstat -tlnp | grep 8080
 ```
 
-### 7.2 SSL/TLS Configuration
-
+### Database connection issues
 ```bash
-# Install SSL certificate
-sudo apt install certbot
+# Check MySQL status
+systemctl status mysql
 
-# Generate certificate for your domain
-sudo certbot certonly --standalone -d admin.ggnetworks.co.tz
-sudo certbot certonly --standalone -d connect.ggnetworks.co.tz
+# Test connection
+mysql -u ggnetworks -psecure_password ggnetworks -e "SELECT 1;"
 
-# Configure HTTPS for backend
-# Add SSL configuration to application.yml
+# Check MySQL logs
+tail -f /var/log/mysql/error.log
 ```
 
-### 7.3 Monitoring Setup
-
+### API endpoints not responding
 ```bash
-# Set up log rotation
-sudo logrotate -f /etc/logrotate.d/ggnetworks
+# Check if service is running
+systemctl status ggnetworks-backend
 
-# Create monitoring dashboard
-# Configure monitoring tools (Prometheus, Grafana, etc.)
+# Check if port is open
+curl -I http://localhost:8080/actuator/health
 
-# Set up alerts
-# Configure email/SMS alerts for critical events
+# Check firewall
+ufw status
 ```
 
-### 7.4 Backup Configuration
+## 📞 Support
 
-```bash
-# Create backup script
-cat > /usr/local/bin/backup-ggnetworks.sh << 'EOF'
-#!/bin/bash
-BACKUP_DIR="/var/backups/ggnetworks"
-DATE=$(date +%Y%m%d_%H%M%S)
+If you encounter any issues:
 
-mkdir -p $BACKUP_DIR
+1. Check the logs: `journalctl -u ggnetworks-backend -f`
+2. Verify database connection: `mysql -u ggnetworks -psecure_password ggnetworks`
+3. Test API endpoints: `./test-all-apis.sh`
+4. Check system resources: `htop`
 
-# Backup database
-mysqldump -u ggnetworks -pggnetworks_password ggnetworks > $BACKUP_DIR/database_$DATE.sql
+## 🎉 Success!
 
-# Backup configuration files
-tar -czf $BACKUP_DIR/config_$DATE.tar.gz /etc/ggnetworks /etc/freeradius/3.0
+Once all tests pass, your GG-WIFI backend is successfully deployed and ready for production use!
 
-# Backup logs
-tar -czf $BACKUP_DIR/logs_$DATE.tar.gz /var/log/ggnetworks /var/log/freeradius
-
-# Clean old backups (keep 30 days)
-find $BACKUP_DIR -name "*.sql" -mtime +30 -delete
-find $BACKUP_DIR -name "*.tar.gz" -mtime +30 -delete
-EOF
-
-chmod +x /usr/local/bin/backup-ggnetworks.sh
-
-# Add to crontab
-echo "0 2 * * * /usr/local/bin/backup-ggnetworks.sh" | sudo crontab -
-```
-
-## Step 8: Frontend Deployment
-
-### 8.1 Build Frontend Applications
-
-```bash
-# Admin Portal
-cd Frontend/admin_portal
-npm install
-npm run build
-
-# Customer Portal
-cd ../customer_portal
-npm install
-npm run build
-
-# Main Portal
-cd ../main_portal
-npm install
-npm run build
-```
-
-### 8.2 Deploy to Web Server
-
-```bash
-# Install Nginx
-sudo apt install nginx
-
-# Configure Nginx for each portal
-sudo nano /etc/nginx/sites-available/admin.ggnetworks.co.tz
-sudo nano /etc/nginx/sites-available/connect.ggnetworks.co.tz
-sudo nano /etc/nginx/sites-available/ggnetworks.co.tz
-
-# Enable sites
-sudo ln -s /etc/nginx/sites-available/admin.ggnetworks.co.tz /etc/nginx/sites-enabled/
-sudo ln -s /etc/nginx/sites-available/connect.ggnetworks.co.tz /etc/nginx/sites-enabled/
-sudo ln -s /etc/nginx/sites-available/ggnetworks.co.tz /etc/nginx/sites-enabled/
-
-# Test and reload Nginx
-sudo nginx -t
-sudo systemctl reload nginx
-```
-
-## Troubleshooting
-
-### Common Issues
-
-1. **FreeRADIUS Authentication Fails**
-   - Check database connectivity
-   - Verify user credentials in radcheck table
-   - Check FreeRADIUS logs: `sudo tail -f /var/log/freeradius/radius.log`
-
-2. **Backend API Errors**
-   - Check application logs: `tail -f logs/ggnetworks-backend.log`
-   - Verify database connection
-   - Check JWT configuration
-
-3. **SMS Not Sending**
-   - Verify API credentials
-   - Check SMS gateway status
-   - Review SMS logs: `tail -f /var/log/ggnetworks/sms/sms.log`
-
-4. **MikroTik Integration Issues**
-   - Verify RADIUS server IP and secret
-   - Check firewall rules
-   - Test RADIUS connectivity from router
-
-### Useful Commands
-
-```bash
-# Check service status
-sudo systemctl status freeradius
-sudo systemctl status ggnetworks-backend
-
-# View logs
-sudo journalctl -u freeradius -f
-sudo journalctl -u ggnetworks-backend -f
-
-# Test RADIUS authentication
-radtest voucher_GG12345678 GG12345678 localhost 0 testing123
-
-# Monitor active sessions
-mysql -u ggnetworks -pggnetworks_password ggnetworks -e "SELECT * FROM radacct WHERE acctstoptime IS NULL;"
-
-# Check phone number collection
-mysql -u ggnetworks -pggnetworks_password ggnetworks -e "SELECT COUNT(*) FROM users WHERE phone_number IS NOT NULL;"
-```
-
-## Support and Maintenance
-
-### Regular Maintenance Tasks
-
-1. **Daily**
-   - Check service status
-   - Review error logs
-   - Monitor active sessions
-
-2. **Weekly**
-   - Review SMS delivery reports
-   - Check database performance
-   - Update security patches
-
-3. **Monthly**
-   - Review system performance
-   - Update SSL certificates
-   - Review backup integrity
-
-### Contact Information
-
-- Technical Support: support@ggnetworks.co.tz
-- Emergency Contact: +255123456789
-- Documentation: https://docs.ggnetworks.co.tz
-
-## Conclusion
-
-This deployment guide covers the complete setup of the GGNetworks system. After following these steps, you should have a fully functional system with:
-
-- ✅ FreeRADIUS authentication server
-- ✅ MikroTik router integration
-- ✅ SMS marketing capabilities
-- ✅ Phone number collection
-- ✅ Complete backend API
-- ✅ Frontend portals
-- ✅ Monitoring and backup systems
-
-For additional support or customization, please refer to the individual component documentation or contact the development team.
-
+### Next Steps:
+1. Deploy the Admin Portal frontend
+2. Deploy the Customer Portal frontend
+3. Configure Nginx reverse proxy
+4. Setup SSL certificates
+5. Configure monitoring and alerts

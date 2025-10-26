@@ -1,50 +1,48 @@
 package com.ggnetworks.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-@Data
-@EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(name = "budgets")
-public class Budget extends BaseEntity {
+public class Budget {
 
-    @NotBlank(message = "Budget name is required")
-    @Column(name = "budget_name", nullable = false)
-    private String budgetName;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    @Column(name = "description")
+    @Column(name = "budget_id", unique = true, nullable = false)
+    private String budgetId;
+
+    @Column(name = "name", nullable = false)
+    private String name;
+
+    @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
-    @NotNull(message = "Budget amount is required")
-    @DecimalMin(value = "0.0", inclusive = false, message = "Budget amount must be greater than 0")
-    @Column(name = "budget_amount", nullable = false, precision = 15, scale = 2)
+    @Column(name = "budget_amount", nullable = false, precision = 10, scale = 2)
     private BigDecimal budgetAmount;
 
-    @Column(name = "spent_amount", precision = 15, scale = 2)
+    @Column(name = "spent_amount", precision = 10, scale = 2)
     private BigDecimal spentAmount = BigDecimal.ZERO;
 
-    @Column(name = "remaining_amount", precision = 15, scale = 2)
+    @Column(name = "remaining_amount", precision = 10, scale = 2)
     private BigDecimal remainingAmount;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "budget_type", nullable = false)
-    private BudgetType budgetType;
+    @Column(name = "currency", nullable = false)
+    private String currency = "TZS";
 
+    @Column(name = "category", nullable = false)
     @Enumerated(EnumType.STRING)
-    @Column(name = "budget_category", nullable = false)
-    private BudgetCategory budgetCategory;
+    private BudgetCategory category;
 
+    @Column(name = "budget_period", nullable = false)
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
-    private BudgetStatus status = BudgetStatus.ACTIVE;
+    private BudgetPeriod budgetPeriod;
 
     @Column(name = "start_date", nullable = false)
     private LocalDateTime startDate;
@@ -52,105 +50,116 @@ public class Budget extends BaseEntity {
     @Column(name = "end_date", nullable = false)
     private LocalDateTime endDate;
 
-    @Column(name = "is_recurring")
-    private Boolean isRecurring = false;
-
+    @Column(name = "status", nullable = false)
     @Enumerated(EnumType.STRING)
-    @Column(name = "recurrence_type")
-    private RecurrenceType recurrenceType;
+    private BudgetStatus status = BudgetStatus.ACTIVE;
 
-    @Column(name = "alert_threshold_percentage")
-    private Integer alertThresholdPercentage = 80;
+    @Column(name = "alert_threshold")
+    private Integer alertThreshold = 80; // Percentage
 
-    @Column(name = "notes")
-    private String notes;
+    @Column(name = "is_active")
+    private Boolean isActive = true;
 
-    // Budget Type Enum
-    public enum BudgetType {
-        OPERATIONAL,      // Day-to-day operations
-        CAPITAL,          // Long-term investments
-        MARKETING,        // Advertising and promotions
-        MAINTENANCE,      // Equipment and infrastructure
-        SALARY,           // Employee compensation
-        UTILITIES,        // Electricity, water, internet
-        RENT,             // Office/equipment rental
-        INSURANCE,        // Business insurance
-        TAXES,            // Tax payments
-        EMERGENCY,        // Emergency funds
-        PROFIT_SHARING,   // Profit distribution
-        INVESTMENT,       // Business investments
-        SAVINGS,          // Business savings
-        OTHER             // Miscellaneous
-    }
+    @Column(name = "created_by")
+    private String createdBy;
 
-    // Budget Category Enum
+    @Column(name = "updated_by")
+    private String updatedBy;
+
+    @CreationTimestamp
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    // Enums
     public enum BudgetCategory {
-        INCOME,           // Revenue streams
-        EXPENSE,          // Cost categories
-        PROFIT,           // Profit allocation
-        SAVINGS,          // Savings allocation
-        INVESTMENT        // Investment allocation
+        OPERATIONAL, EQUIPMENT, MAINTENANCE, UTILITIES, RENT, SALARIES, 
+        MARKETING, TRANSPORT, COMMUNICATION, INSURANCE, TAXES, LEGAL,
+        PROFESSIONAL_SERVICES, TRAINING, SOFTWARE, HARDWARE, CAPITAL_EXPENDITURE,
+        EMERGENCY, GENERAL, OTHER
     }
 
-    // Budget Status Enum
+    public enum BudgetPeriod {
+        MONTHLY, QUARTERLY, YEARLY, CUSTOM
+    }
+
     public enum BudgetStatus {
-        ACTIVE,           // Currently active
-        COMPLETED,        // Budget period completed
-        OVERSPENT,        // Exceeded budget limit
-        SUSPENDED,        // Temporarily suspended
-        CANCELLED         // Cancelled budget
+        ACTIVE, INACTIVE, COMPLETED, EXCEEDED, CANCELLED
     }
 
-    // Recurrence Type Enum
-    public enum RecurrenceType {
-        DAILY,
-        WEEKLY,
-        MONTHLY,
-        QUARTERLY,
-        YEARLY,
-        NONE
+    // Constructors
+    public Budget() {}
+
+    public Budget(String budgetId, String name, BigDecimal budgetAmount, BudgetCategory category, 
+                  BudgetPeriod budgetPeriod, LocalDateTime startDate, LocalDateTime endDate) {
+        this.budgetId = budgetId;
+        this.name = name;
+        this.budgetAmount = budgetAmount;
+        this.category = category;
+        this.budgetPeriod = budgetPeriod;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.remainingAmount = budgetAmount;
     }
 
-    @PrePersist
-    @PreUpdate
-    protected void onUpdate() {
-        super.onUpdate();
-        if (budgetAmount != null && spentAmount != null) {
-            remainingAmount = budgetAmount.subtract(spentAmount);
-        }
-    }
+    // Getters and Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    /**
-     * Calculate budget utilization percentage
-     */
-    public BigDecimal getUtilizationPercentage() {
-        if (budgetAmount == null || budgetAmount.compareTo(BigDecimal.ZERO) == 0) {
-            return BigDecimal.ZERO;
-        }
-        return spentAmount.multiply(BigDecimal.valueOf(100)).divide(budgetAmount, 2, BigDecimal.ROUND_HALF_UP);
-    }
+    public String getBudgetId() { return budgetId; }
+    public void setBudgetId(String budgetId) { this.budgetId = budgetId; }
 
-    /**
-     * Check if budget is over threshold
-     */
-    public boolean isOverThreshold() {
-        return getUtilizationPercentage().compareTo(BigDecimal.valueOf(alertThresholdPercentage)) >= 0;
-    }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
 
-    /**
-     * Check if budget is overspent
-     */
-    public boolean isOverspent() {
-        return remainingAmount != null && remainingAmount.compareTo(BigDecimal.ZERO) < 0;
-    }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
-    /**
-     * Check if budget is active
-     */
-    public boolean isActive() {
-        LocalDateTime now = LocalDateTime.now();
-        return status == BudgetStatus.ACTIVE && 
-               startDate != null && endDate != null &&
-               now.isAfter(startDate) && now.isBefore(endDate);
-    }
-} 
+    public BigDecimal getBudgetAmount() { return budgetAmount; }
+    public void setBudgetAmount(BigDecimal budgetAmount) { this.budgetAmount = budgetAmount; }
+
+    public BigDecimal getSpentAmount() { return spentAmount; }
+    public void setSpentAmount(BigDecimal spentAmount) { this.spentAmount = spentAmount; }
+
+    public BigDecimal getRemainingAmount() { return remainingAmount; }
+    public void setRemainingAmount(BigDecimal remainingAmount) { this.remainingAmount = remainingAmount; }
+
+    public String getCurrency() { return currency; }
+    public void setCurrency(String currency) { this.currency = currency; }
+
+    public BudgetCategory getCategory() { return category; }
+    public void setCategory(BudgetCategory category) { this.category = category; }
+
+    public BudgetPeriod getBudgetPeriod() { return budgetPeriod; }
+    public void setBudgetPeriod(BudgetPeriod budgetPeriod) { this.budgetPeriod = budgetPeriod; }
+
+    public LocalDateTime getStartDate() { return startDate; }
+    public void setStartDate(LocalDateTime startDate) { this.startDate = startDate; }
+
+    public LocalDateTime getEndDate() { return endDate; }
+    public void setEndDate(LocalDateTime endDate) { this.endDate = endDate; }
+
+    public BudgetStatus getStatus() { return status; }
+    public void setStatus(BudgetStatus status) { this.status = status; }
+
+    public Integer getAlertThreshold() { return alertThreshold; }
+    public void setAlertThreshold(Integer alertThreshold) { this.alertThreshold = alertThreshold; }
+
+    public Boolean getIsActive() { return isActive; }
+    public void setIsActive(Boolean isActive) { this.isActive = isActive; }
+
+    public String getCreatedBy() { return createdBy; }
+    public void setCreatedBy(String createdBy) { this.createdBy = createdBy; }
+
+    public String getUpdatedBy() { return updatedBy; }
+    public void setUpdatedBy(String updatedBy) { this.updatedBy = updatedBy; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+}

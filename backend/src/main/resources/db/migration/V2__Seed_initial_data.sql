@@ -2,8 +2,24 @@
 -- This migration populates the database with essential initial data
 
 -- Insert admin user (password: Kolombo@123% - hashed with BCrypt)
-INSERT INTO users (phone_number, password, full_name, role, status) 
-VALUES ('0742844024', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDa', 'GGNetworks Admin', 'ADMIN', 'ACTIVE');
+INSERT INTO users (phone_number, password, first_name, last_name, role, status) 
+VALUES ('0742844024', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDa', 'GGNetworks', 'Admin', 'ADMIN', 'ACTIVE');
+
+-- Insert sample staff users with different credentials for testing
+INSERT INTO users (phone_number, password, first_name, last_name, role, status, staff_id, username) VALUES
+('0742844025', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDa', 'John', 'Technician', 'TECHNICIAN', 'ACTIVE', 'STF001', 'john.tech'),
+('0742844026', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDa', 'Sarah', 'Finance', 'FINANCE', 'ACTIVE', 'STF002', 'sarah.finance'),
+('0742844027', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDa', 'Mike', 'Marketing', 'MARKETING', 'ACTIVE', 'STF003', 'mike.marketing'),
+('0742844030', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDa', 'Hassan', 'Engineer', 'TECHNICIAN', 'ACTIVE', 'STF004', 'hassan.engineer'),
+('0742844031', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDa', 'Aisha', 'Accountant', 'FINANCE', 'ACTIVE', 'STF005', 'aisha.accountant'),
+('0742844032', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDa', 'Omar', 'Sales Rep', 'SALES', 'ACTIVE', 'STF006', 'omar.sales');
+
+-- Insert admin users with different credentials for testing
+INSERT INTO users (phone_number, password, first_name, last_name, role, status, username, email) VALUES
+('0742844024', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDa', 'GGNetworks', 'Admin', 'ADMIN', 'ACTIVE', 'admin', 'admin@ggwifi.co.tz'),
+('0742844001', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDa', 'System', 'Administrator', 'ADMIN', 'ACTIVE', 'newadmin', 'newadmin@ggwifi.co.tz'),
+('0742844028', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDa', 'Ahmed', 'Manager', 'ADMIN', 'ACTIVE', 'ahmed.manager', 'ahmed@ggwifi.co.tz'),
+('0742844029', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDa', 'Fatma', 'Director', 'SUPER_ADMIN', 'ACTIVE', 'fatma.director', 'fatma@ggwifi.co.tz');
 
 -- Insert sample packages for Hotspot
 INSERT INTO packages (name, type, price, duration_days, bandwidth_limit_mb, description, is_popular, is_active) VALUES

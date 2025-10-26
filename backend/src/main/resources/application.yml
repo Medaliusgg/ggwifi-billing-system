@@ -2,11 +2,11 @@ spring:
   application:
     name: ggwifi-backend
   
-  # Database Configuration - Using H2 for testing
+  # Database Configuration - MySQL with FreeRADIUS tables
   datasource:
-    url: jdbc:mysql://localhost:3306/ggwifi?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-    username: root
-    password: kolombo@123%
+    url: jdbc:mysql://localhost:3306/ggnetworks_radius?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true
+    username: ${DB_USERNAME:ggnetworks}
+    password: ${DB_PASSWORD:ggnetworks123}
     driver-class-name: com.mysql.cj.jdbc.Driver
     
     hikari:
@@ -16,32 +16,24 @@ spring:
       idle-timeout: 600000
       max-lifetime: 1800000
 
-  # JPA Configuration
+  # JPA Configuration - ENABLED
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: none
     show-sql: true
+    open-in-view: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
-        show-sql: ${SHOW_SQL:false}
-        format-sql: true
-        jdbc:
-          batch_size: 20
-        order_inserts: true
-        order_updates: true
-    open-in-view: false
+        format_sql: true
+        use_sql_comments: true
 
-  # Flyway Migration - Enabled for MySQL
+  # Flyway Migration - DISABLED temporarily
   flyway:
-    enabled: true
+    enabled: false
     locations: classpath:db/migration
-    baseline-on-migrate: true
-    validate-on-migrate: true
-    out-of-order: false
-    table: flyway_schema_history
 
-  # Redis Configuration - Disabled for now
+  # Redis Configuration - DISABLED for testing
   data:
     redis:
       enabled: false
@@ -101,7 +93,7 @@ rate-limit:
     requests: ${RATE_LIMIT_GENERAL_REQUESTS:100}
     window: ${RATE_LIMIT_GENERAL_WINDOW:60} # 1 minute
 
-# Backend Configuration - Make backend optional
+# Backend Configuration - ALL FEATURES ENABLED
 backend:
   enabled: ${BACKEND_ENABLED:true}
   database-enabled: ${BACKEND_DATABASE_ENABLED:true}
@@ -115,21 +107,21 @@ backend:
   marketing-enabled: ${BACKEND_MARKETING_ENABLED:true}
   analytics-enabled: ${BACKEND_ANALYTICS_ENABLED:true}
   
-  # Fallback modes
-  use-mock-data: ${BACKEND_USE_MOCK_DATA:true}
-  use-local-storage: ${BACKEND_USE_LOCAL_STORAGE:true}
-  use-file-config: ${BACKEND_USE_FILE_CONFIG:true}
+  # Production mode - NO MOCK DATA
+  use-mock-data: ${BACKEND_USE_MOCK_DATA:false}
+  use-local-storage: ${BACKEND_USE_LOCAL_STORAGE:false}
+  use-file-config: ${BACKEND_USE_FILE_CONFIG:false}
   
-  # Mock data configuration
+  # Mock data configuration - DISABLED
   mock-data:
-    enabled: ${BACKEND_MOCK_DATA_ENABLED:true}
+    enabled: ${BACKEND_MOCK_DATA_ENABLED:false}
     data-path: ${BACKEND_MOCK_DATA_PATH:mock-data/}
-    auto-generate: ${BACKEND_MOCK_AUTO_GENERATE:true}
-    default-package-count: ${BACKEND_MOCK_PACKAGE_COUNT:10}
-    default-voucher-count: ${BACKEND_MOCK_VOUCHER_COUNT:50}
-    default-user-count: ${BACKEND_MOCK_USER_COUNT:100}
+    auto-generate: ${BACKEND_MOCK_AUTO_GENERATE:false}
+    default-package-count: ${BACKEND_MOCK_PACKAGE_COUNT:0}
+    default-voucher-count: ${BACKEND_MOCK_VOUCHER_COUNT:0}
+    default-user-count: ${BACKEND_MOCK_USER_COUNT:0}
   
-  # Feature toggles
+  # Feature toggles - ALL ENABLED
   features:
     user-management: ${BACKEND_FEATURE_USER_MANAGEMENT:true}
     package-management: ${BACKEND_FEATURE_PACKAGE_MANAGEMENT:true}
@@ -184,6 +176,10 @@ mikrotik:
       port: ${MIKROTIK_PORT:8728}
       location: "Main Office"
       enabled: true
+      wireguard:
+        enabled: ${MIKROTIK_WIREGUARD_ENABLED:true}
+        interface: "wg1"
+        vpn-ip: "10.0.0.2"
     - name: "Branch Router"
       ip: ${MIKROTIK_BRANCH_IP:192.168.2.1}
       username: ${MIKROTIK_USERNAME:admin}
@@ -191,33 +187,38 @@ mikrotik:
       port: ${MIKROTIK_PORT:8728}
       location: "Branch Office"
       enabled: true
+      wireguard:
+        enabled: ${MIKROTIK_WIREGUARD_ENABLED:true}
+        interface: "wg1"
+        vpn-ip: "10.0.0.3"
   api:
     timeout: ${MIKROTIK_API_TIMEOUT:10000} # 10 seconds
     retries: ${MIKROTIK_API_RETRIES:3}
     session-timeout: ${MIKROTIK_SESSION_TIMEOUT:300} # 5 minutes
+    use-wireguard: ${MIKROTIK_USE_WIREGUARD:true} # Use WireGuard for API communication
 
-# SELCOM Payment Gateway Configuration
-selcom:
+
+# ZenoPay Payment Gateway Configuration
+zenopay:
   api:
-    base-url: ${SELCOM_BASE_URL:https://paypoint.selcommobile.com}
-    merchant-id: ${SELCOM_MERCHANT_ID:}
-    merchant-key: ${SELCOM_MERCHANT_KEY:}
-    api-key: ${SELCOM_API_KEY:}
-    api-secret: ${SELCOM_API_SECRET:}
-  webhook:
-    secret: ${SELCOM_WEBHOOK_SECRET:}
+    base-url: ${ZENOPAY_BASE_URL:https://zenoapi.com}
+    api-key: ${ZENOPAY_API_KEY:gUHLes8c3nVYCa7XEK8CWi-eBBNf04OCJ3JqJIU63NVj52MgevdOjFsL1tr26zgXZDvI3J6e5AjJAOflNS_EIw}
+  endpoints:
+    mobile-money: ${ZENOPAY_MOBILE_MONEY_ENDPOINT:/api/payments/mobile_money_tanzania}
+    order-status: ${ZENOPAY_ORDER_STATUS_ENDPOINT:/api/payments/order-status}
   payment:
-    timeout: ${SELCOM_PAYMENT_TIMEOUT:300000} # 5 minutes
-    currency: ${SELCOM_CURRENCY:TZS}
-    language: ${SELCOM_LANGUAGE:en}
+    timeout: ${ZENOPAY_PAYMENT_TIMEOUT:300000} # 5 minutes
+    currency: ${ZENOPAY_CURRENCY:TZS}
+    language: ${ZENOPAY_LANGUAGE:en}
+    country: ${ZENOPAY_COUNTRY:TZ}
 
 # SMS Service Configuration
 sms:
   api:
-    base-url: ${SMS_API_BASE_URL:https://api.smsprovider.com}
-    key: ${SMS_API_KEY:}
-    secret: ${SMS_API_SECRET:}
-  sender-id: ${SMS_SENDER_ID:GGNetworks}
+    base-url: ${SMS_API_BASE_URL:https://messaging-service.co.tz}
+    username: ${SMS_API_USERNAME:medalius}
+    password: ${SMS_API_PASSWORD:Kolombo@123%}
+  sender-id: ${SMS_SENDER_ID:GGWi-Fi}
   timeout: ${SMS_TIMEOUT:30000} # 30 seconds
 
 # Voucher Configuration

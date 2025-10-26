@@ -1,21 +1,19 @@
 package com.ggnetworks.config;
 
-import com.ggnetworks.security.JwtAuthenticationFilter;
-import com.ggnetworks.security.JwtAuthenticationEntryPoint;
-import com.ggnetworks.security.CustomAuthenticationProvider;
+import com.ggnetworks.service.JwtService;
 import com.ggnetworks.service.CustomUserDetailsService;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -23,23 +21,79 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.security.config.Customizer;
 
 import java.util.Arrays;
-import java.util.List;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
-@RequiredArgsConstructor
-@EnableConfigurationProperties({com.ggnetworks.config.props.CorsProperties.class})
 public class SecurityConfig {
 
-    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final CustomAuthenticationProvider customAuthenticationProvider;
-    private final CustomUserDetailsService customUserDetailsService;
+    @Autowired
+    private JwtService jwtService;
+
+    @Autowired
+    private CustomUserDetailsService userDetailsService;
+
+    @Autowired
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        System.out.println("🔧 SecurityConfig - Creating SecurityFilterChain");
+        http
+            .csrf(csrf -> csrf.disable())
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .headers(headers -> headers
+                .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'; img-src 'self' data:; script-src 'self'; style-src 'self' 'unsafe-inline'"))
+                .xssProtection(xss -> xss.disable())
+                .frameOptions(frame -> frame.sameOrigin())
+                .httpStrictTransportSecurity(hsts -> hsts.includeSubDomains(true).preload(true))
+            )
+            .authorizeHttpRequests(authz -> authz
+                // Public endpoints (no authentication required)
+                .requestMatchers("/api/v1/auth/login", "/api/v1/auth/register", "/api/v1/auth/admin-login", "/api/v1/auth/staff-login", "/api/v1/auth/simple-login", "/api/v1/auth/refresh", "/api/v1/auth/test", "/api/v1/customer-portal/packages", "/api/v1/test/**").permitAll()
+                .requestMatchers("/api/v1/customer-portal/**").permitAll()
+                .requestMatchers("/customer-portal/**").permitAll()
+                .requestMatchers("/auth/login", "/auth/register", "/auth/admin-login", "/auth/staff-login", "/auth/simple-login", "/auth/refresh", "/auth/test").permitAll()
+                
+                // Admin endpoints (ADMIN or SUPER_ADMIN role required)
+                .requestMatchers("/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                
+                // Dashboard endpoints (ADMIN or SUPER_ADMIN role required)
+                .requestMatchers("/dashboard/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                
+                // Technician endpoints
+                .requestMatchers("/technician/**").hasAnyRole("TECHNICIAN", "ADMIN", "SUPER_ADMIN")
+                
+                // RADIUS endpoints
+                .requestMatchers("/radius/**").hasAnyRole("TECHNICIAN", "ADMIN", "SUPER_ADMIN")
+                
+                // Finance endpoints
+                .requestMatchers("/finance/**").hasAnyRole("FINANCE", "ADMIN", "SUPER_ADMIN")
+                
+                // Marketing endpoints
+                .requestMatchers("/marketing/**").hasAnyRole("MARKETING", "ADMIN", "SUPER_ADMIN")
+                
+                // SMS endpoints
+                .requestMatchers("/api/v1/sms/**").hasAnyRole("MARKETING", "ADMIN", "SUPER_ADMIN", "FINANCE")
+                
+                // Sales endpoints
+                .requestMatchers("/sales/**").hasAnyRole("SALES", "ADMIN", "SUPER_ADMIN")
+                
+                // All other requests require authentication
+                .anyRequest().authenticated()
+            )
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authenticationProvider(authenticationProvider())
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        
+        System.out.println("🔧 SecurityConfig - JWT Filter added to filter chain");
+        
+        SecurityFilterChain chain = http.build();
+        System.out.println("🔧 SecurityConfig - SecurityFilterChain created: " + chain);
+        return chain;
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -48,7 +102,10 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
-        return customAuthenticationProvider;
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(userDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder());
+        return authProvider;
     }
 
     @Bean
@@ -56,41 +113,18 @@ public class SecurityConfig {
         return config.getAuthenticationManager();
     }
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-            .csrf(AbstractHttpConfigurer::disable)
-            .cors(Customizer.withDefaults())
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/auth/login", "/auth/register", "/auth/otp/**", "/health", "/actuator/**", "/api/v1/auth/login", "/api/v1/auth/register", "/api/v1/auth/otp/**", "/api/v1/health", "/api/v1/actuator/**").permitAll()
-                .anyRequest().authenticated()
-            )
-            .authenticationProvider(authenticationProvider())
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-        
-        return http.build();
-    }
 
     @Bean
-    public CorsConfigurationSource corsConfigurationSource(@org.springframework.lang.Nullable com.ggnetworks.config.props.CorsProperties corsProps) {
+    public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        if (corsProps != null && corsProps.getAllowedOrigins() != null && !corsProps.getAllowedOrigins().isEmpty()) {
-            configuration.setAllowedOrigins(corsProps.getAllowedOrigins());
-        } else {
-            configuration.setAllowedOriginPatterns(List.of("*"));
-        }
-        configuration.setAllowedMethods(corsProps == null || corsProps.getAllowedMethods() == null || corsProps.getAllowedMethods().isEmpty()
-                ? Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                : corsProps.getAllowedMethods());
-        configuration.setAllowedHeaders(corsProps == null || corsProps.getAllowedHeaders() == null || corsProps.getAllowedHeaders().isEmpty()
-                ? Arrays.asList("*")
-                : corsProps.getAllowedHeaders());
-        configuration.setAllowCredentials(corsProps != null && Boolean.TRUE.equals(corsProps.getAllowCredentials()));
-        configuration.setMaxAge(corsProps != null && corsProps.getMaxAge() != null ? corsProps.getMaxAge() : 3600L);
-
+        configuration.setAllowedOriginPatterns(Arrays.asList("*"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowCredentials(true);
+        configuration.setMaxAge(3600L);
+        
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
-} 
+}

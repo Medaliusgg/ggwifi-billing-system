@@ -1,290 +1,240 @@
 package com.ggnetworks.service;
 
-import com.ggnetworks.entity.SmsMessage;
-import com.ggnetworks.entity.User;
-import com.ggnetworks.repository.SmsMessageRepository;
-import com.ggnetworks.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
-@Slf4j
 @Service
-@RequiredArgsConstructor
 public class SmsService {
 
-    private final SmsMessageRepository smsMessageRepository;
-    private final UserRepository userRepository;
-    private final WebClient.Builder webClientBuilder;
-
-    @Value("${sms.api.base-url}")
+    @Value("${sms.api.base-url:https://messaging-service.co.tz}")
     private String smsApiBaseUrl;
 
-    @Value("${sms.api.key}")
-    private String smsApiKey;
+    @Value("${sms.api.username:medalius}")
+    private String smsApiUsername;
 
-    @Value("${sms.api.secret}")
-    private String smsApiSecret;
+    @Value("${sms.api.password:Kolombo@123}")
+    private String smsApiPassword;
 
-    @Value("${sms.sender-id}")
-    private String senderId;
+    @Value("${sms.api.sender-id:GGWi-Fi}")
+    private String smsApiSenderId;
 
-    @Value("${sms.timeout:30000}")
-    private int smsTimeout;
+    private final RestTemplate restTemplate;
+
+    public SmsService() {
+        this.restTemplate = new RestTemplate();
+    }
 
     /**
-     * Send SMS message
+     * Send SMS using NEXT SMS API
      */
-    @Transactional
-    public Map<String, Object> sendSms(String phoneNumber, String message, SmsMessage.MessageType type) {
+    public Map<String, Object> sendSms(String phoneNumber, String message) {
+        Map<String, Object> result = new HashMap<>();
+        
         try {
-            log.info("Sending SMS to {}: {}", phoneNumber, message);
+            // Format phone number to international format
+            String formattedPhone = formatPhoneNumber(phoneNumber);
+            
+            // Create request body
+            Map<String, Object> requestBody = new HashMap<>();
+            requestBody.put("from", smsApiSenderId);
+            requestBody.put("to", formattedPhone);
+            requestBody.put("text", message);
+            requestBody.put("reference", "GGWIFI_" + System.currentTimeMillis());
 
-            // Create SMS message record
-            SmsMessage smsMessage = new SmsMessage();
-            smsMessage.setPhoneNumber(phoneNumber);
-            smsMessage.setMessageContent(message);
-            smsMessage.setType(type);
-            smsMessage.setStatus(SmsMessage.MessageStatus.PENDING);
-            smsMessage.setSenderId(senderId);
+            // Create headers with Basic Authentication
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            
+            String credentials = smsApiUsername + ":" + smsApiPassword;
+            String encodedCredentials = Base64.getEncoder().encodeToString(credentials.getBytes());
+            headers.set("Authorization", "Basic " + encodedCredentials);
 
-            SmsMessage savedMessage = smsMessageRepository.save(smsMessage);
+            // Create HTTP entity
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
 
-            // Send SMS via API
-            Map<String, Object> apiResponse = sendSmsViaApi(phoneNumber, message, savedMessage.getId());
+            // Send SMS
+            String sendEndpoint = smsApiBaseUrl + "/api/sms/v1/text/single";
+            ResponseEntity<Map> response = restTemplate.postForEntity(sendEndpoint, entity, Map.class);
 
-            if (apiResponse.get("success").equals(true)) {
-                savedMessage.setStatus(SmsMessage.MessageStatus.SENT);
-                savedMessage.setSentAt(LocalDateTime.now());
-                savedMessage.setMessageId((String) apiResponse.get("messageId"));
-                smsMessageRepository.save(savedMessage);
-
-                log.info("SMS sent successfully to {} with message ID: {}", phoneNumber, savedMessage.getMessageId());
-                return Map.of("success", true, "messageId", savedMessage.getMessageId());
+            if (response.getStatusCode() == HttpStatus.OK) {
+                Map<String, Object> responseBody = response.getBody();
+                System.out.println("📱 SMS API Response: " + responseBody);
+                
+                if (responseBody != null) {
+                    // Check for success indicators in the response
+                    boolean isSuccess = false;
+                    String successMessage = "";
+                    
+                    if (responseBody.containsKey("success") && "true".equals(String.valueOf(responseBody.get("success")))) {
+                        isSuccess = true;
+                        successMessage = "SMS sent successfully";
+                    } else if (responseBody.containsKey("status") && "success".equals(String.valueOf(responseBody.get("status")))) {
+                        isSuccess = true;
+                        successMessage = "SMS sent successfully";
+                    } else if (responseBody.containsKey("message_id") || responseBody.containsKey("messageId")) {
+                        isSuccess = true;
+                        successMessage = "SMS sent successfully";
+                    } else if (responseBody.containsKey("messages")) {
+                        // Handle NEXT SMS API response format
+                        Object messagesObj = responseBody.get("messages");
+                        if (messagesObj instanceof java.util.List) {
+                            java.util.List<?> messages = (java.util.List<?>) messagesObj;
+                            if (!messages.isEmpty()) {
+                                Object firstMessage = messages.get(0);
+                                if (firstMessage instanceof java.util.Map) {
+                                    java.util.Map<?, ?> messageMap = (java.util.Map<?, ?>) firstMessage;
+                                    if (messageMap.containsKey("messageId")) {
+                                        isSuccess = true;
+                                        successMessage = "SMS sent successfully";
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    if (isSuccess) {
+                        result.put("status", "success");
+                        result.put("message", successMessage);
+                        result.put("message_id", responseBody.get("message_id") != null ? responseBody.get("message_id") : responseBody.get("messageId"));
+                        result.put("phone", formattedPhone);
+                        result.put("text", message);
+                        result.put("api_response", responseBody);
+                        
+                        System.out.println("✅ SMS sent successfully to " + formattedPhone);
+                    } else {
+                        result.put("status", "error");
+                        result.put("message", "SMS API returned error: " + responseBody);
+                        result.put("api_response", responseBody);
+                        System.err.println("❌ SMS API error: " + responseBody);
+                    }
+                } else {
+                    result.put("status", "error");
+                    result.put("message", "SMS API returned null response");
+                    System.err.println("❌ SMS API returned null response");
+                }
             } else {
-                savedMessage.setStatus(SmsMessage.MessageStatus.FAILED);
-                savedMessage.setErrorMessage((String) apiResponse.get("error"));
-                smsMessageRepository.save(savedMessage);
-
-                log.error("Failed to send SMS to {}: {}", phoneNumber, apiResponse.get("error"));
-                return Map.of("success", false, "error", apiResponse.get("error"));
+                result.put("status", "error");
+                result.put("message", "HTTP error: " + response.getStatusCode());
+                System.err.println("❌ SMS HTTP error: " + response.getStatusCode());
             }
 
+        } catch (HttpClientErrorException | HttpServerErrorException e) {
+            result.put("status", "error");
+            result.put("message", "SMS API error: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
+            System.err.println("❌ SMS API exception: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
         } catch (Exception e) {
-            log.error("Failed to send SMS to {}", phoneNumber, e);
-            return Map.of("success", false, "error", "SMS sending failed: " + e.getMessage());
+            result.put("status", "error");
+            result.put("message", "Error sending SMS: " + e.getMessage());
+            System.err.println("❌ SMS sending error: " + e.getMessage());
+            e.printStackTrace();
         }
+
+        return result;
     }
 
     /**
-     * Send payment confirmation SMS
+     * Send voucher notification SMS for successful payment
      */
-    @Transactional
-    public Map<String, Object> sendPaymentConfirmation(String phoneNumber, String transactionId, 
-                                                      BigDecimal amount, String voucherCode) {
-        try {
-            String message = String.format(
-                "Payment successful! Transaction ID: %s\nAmount: TZS %s\nVoucher Code: %s\nThank you for choosing GGNetworks!",
-                transactionId, amount.toString(), voucherCode
-            );
-
-            return sendSms(phoneNumber, message, SmsMessage.MessageType.TRANSACTIONAL);
-        } catch (Exception e) {
-            log.error("Failed to send payment confirmation SMS to {}", phoneNumber, e);
-            return Map.of("success", false, "error", "Failed to send payment confirmation");
-        }
+    public Map<String, Object> sendVoucherNotificationSms(String phoneNumber, String customerName, 
+                                                          String packageName, String voucherCode, 
+                                                          String amount, String duration) {
+        String message = String.format(
+            "🎉 Welcome %s! Your payment of %s TZS for %s (%s) was successful. " +
+            "Your voucher code: %s. Enjoy your internet access! " +
+            "For support, contact us at 0742844024. - GGWi-Fi",
+            customerName, amount, packageName, duration, voucherCode
+        );
+        
+        return sendSms(phoneNumber, message);
     }
 
     /**
-     * Send payment failure SMS
+     * Send payment failure SMS with caring message
      */
-    @Transactional
-    public Map<String, Object> sendPaymentFailure(String phoneNumber, String transactionId, String reason) {
-        try {
-            String message = String.format(
-                "Payment failed! Transaction ID: %s\nReason: %s\nPlease try again or contact support.",
-                transactionId, reason
-            );
-
-            return sendSms(phoneNumber, message, SmsMessage.MessageType.TRANSACTIONAL);
-        } catch (Exception e) {
-            log.error("Failed to send payment failure SMS to {}", phoneNumber, e);
-            return Map.of("success", false, "error", "Failed to send payment failure notification");
-        }
+    public Map<String, Object> sendPaymentFailureSms(String phoneNumber, String customerName) {
+        String message = String.format(
+            "Hi %s, we noticed your payment didn't go through. " +
+            "This might be due to insufficient balance or network issues. " +
+            "Please try again or contact your mobile money provider. " +
+            "We're here to help! For support: 0742844024. - GGWi-Fi",
+            customerName
+        );
+        
+        return sendSms(phoneNumber, message);
     }
 
     /**
-     * Send OTP SMS
+     * Format phone number to international format (255XXXXXXXXX)
      */
-    @Transactional
-    public Map<String, Object> sendOtp(String phoneNumber, String otpCode) {
-        try {
-            String message = String.format(
-                "Your GGNetworks verification code is: %s\nValid for 5 minutes. Do not share this code.",
-                otpCode
-            );
-
-            return sendSms(phoneNumber, message, SmsMessage.MessageType.OTP);
-        } catch (Exception e) {
-            log.error("Failed to send OTP SMS to {}", phoneNumber, e);
-            return Map.of("success", false, "error", "Failed to send OTP");
+    private String formatPhoneNumber(String phoneNumber) {
+        if (phoneNumber == null || phoneNumber.trim().isEmpty()) {
+            return phoneNumber;
         }
+        
+        // Remove any spaces, dashes, or other characters
+        String cleaned = phoneNumber.replaceAll("[^0-9]", "");
+        
+        // If it starts with 0, replace with 255
+        if (cleaned.startsWith("0")) {
+            return "255" + cleaned.substring(1);
+        }
+        
+        // If it starts with 255, return as is
+        if (cleaned.startsWith("255")) {
+            return cleaned;
+        }
+        
+        // If it's 9 digits, assume it's a local number and add 255
+        if (cleaned.length() == 9) {
+            return "255" + cleaned;
+        }
+        
+        // Return as is if it doesn't match any pattern
+        return cleaned;
     }
 
     /**
-     * Send voucher code SMS
+     * Test SMS service
      */
-    @Transactional
-    public Map<String, Object> sendVoucherCode(String phoneNumber, String voucherCode, 
-                                               String packageName, String validity) {
+    public Map<String, Object> testSmsService() {
+        Map<String, Object> result = new HashMap<>();
+        
         try {
-            String message = String.format(
-                "Your internet package is ready!\nPackage: %s\nVoucher Code: %s\nValidity: %s\nConnect to GGNetworks WiFi and enter the voucher code.",
-                packageName, voucherCode, validity
-            );
-
-            return sendSms(phoneNumber, message, SmsMessage.MessageType.TRANSACTIONAL);
-        } catch (Exception e) {
-            log.error("Failed to send voucher code SMS to {}", phoneNumber, e);
-            return Map.of("success", false, "error", "Failed to send voucher code");
-        }
-    }
-
-    /**
-     * Send welcome SMS
-     */
-    @Transactional
-    public Map<String, Object> sendWelcomeSms(String phoneNumber, String customerName) {
-        try {
-            String message = String.format(
-                "Welcome to GGNetworks, %s!\nThank you for choosing our internet services. For support, call us or visit our website.",
-                customerName
-            );
-
-            return sendSms(phoneNumber, message, SmsMessage.MessageType.WELCOME);
-        } catch (Exception e) {
-            log.error("Failed to send welcome SMS to {}", phoneNumber, e);
-            return Map.of("success", false, "error", "Failed to send welcome message");
-        }
-    }
-
-    /**
-     * Send promotional SMS
-     */
-    @Transactional
-    public Map<String, Object> sendPromotionalSms(String phoneNumber, String promotionMessage) {
-        try {
-            return sendSms(phoneNumber, promotionMessage, SmsMessage.MessageType.PROMOTIONAL);
-        } catch (Exception e) {
-            log.error("Failed to send promotional SMS to {}", phoneNumber, e);
-            return Map.of("success", false, "error", "Failed to send promotional message");
-        }
-    }
-
-    /**
-     * Send SMS via API
-     */
-    private Map<String, Object> sendSmsViaApi(String phoneNumber, String message, Long messageId) {
-        try {
-            // Prepare SMS request
-            Map<String, Object> smsRequest = new HashMap<>();
-            smsRequest.put("phone_number", phoneNumber);
-            smsRequest.put("message", message);
-            smsRequest.put("sender_id", senderId);
-            smsRequest.put("message_id", messageId.toString());
-
-            // Send request to SMS API
-            WebClient webClient = createWebClient();
-            Map<String, Object> response = webClient.post()
-                    .uri("/send")
-                    .bodyValue(smsRequest)
-                    .retrieve()
-                    .bodyToMono(Map.class)
-                    .timeout(java.time.Duration.ofMillis(smsTimeout))
-                    .block();
-
-            if (response != null && "success".equals(response.get("status"))) {
-                return Map.of("success", true, "messageId", response.get("message_id"));
+            System.out.println("🧪 Testing SMS Service...");
+            
+            // Test with a simple message
+            String testPhone = "0742844024";
+            String testMessage = "SMS service test from GGWi-Fi system. If you receive this, SMS is working!";
+            
+            Map<String, Object> smsResult = sendSms(testPhone, testMessage);
+            
+            if ("success".equals(smsResult.get("status"))) {
+                result.put("status", "success");
+                result.put("message", "SMS service test successful");
+                result.put("test_result", smsResult);
+                System.out.println("✅ SMS Service Test Successful");
             } else {
-                String error = response != null ? (String) response.get("error") : "Unknown error";
-                return Map.of("success", false, "error", error);
+                result.put("status", "error");
+                result.put("message", "SMS service test failed: " + smsResult.get("message"));
+                result.put("test_result", smsResult);
+                System.err.println("❌ SMS Service Test Failed: " + smsResult.get("message"));
             }
-
+            
         } catch (Exception e) {
-            log.error("Failed to send SMS via API", e);
-            return Map.of("success", false, "error", "API call failed: " + e.getMessage());
+            result.put("status", "error");
+            result.put("message", "SMS service test error: " + e.getMessage());
+            System.err.println("❌ SMS Service Test Error: " + e.getMessage());
+            e.printStackTrace();
         }
+        
+        return result;
     }
-
-    /**
-     * Get SMS delivery status
-     */
-    public Map<String, Object> getSmsDeliveryStatus(String messageId) {
-        try {
-            Optional<SmsMessage> smsOpt = smsMessageRepository.findByMessageId(messageId);
-            if (smsOpt.isEmpty()) {
-                return Map.of("success", false, "error", "SMS message not found");
-            }
-
-            SmsMessage sms = smsOpt.get();
-            Map<String, Object> status = new HashMap<>();
-            status.put("success", true);
-            status.put("messageId", sms.getMessageId());
-            status.put("status", sms.getStatus().toString());
-            status.put("sentAt", sms.getSentAt());
-            status.put("deliveredAt", sms.getDeliveredAt());
-            status.put("errorMessage", sms.getErrorMessage());
-
-            return status;
-        } catch (Exception e) {
-            log.error("Failed to get SMS delivery status for message ID: {}", messageId, e);
-            return Map.of("success", false, "error", "Failed to get delivery status");
-        }
-    }
-
-    /**
-     * Get SMS statistics
-     */
-    public Map<String, Object> getSmsStatistics() {
-        try {
-            long totalMessages = smsMessageRepository.count();
-            long sentMessages = smsMessageRepository.countByStatus(SmsMessage.MessageStatus.SENT);
-            long deliveredMessages = smsMessageRepository.countByStatus(SmsMessage.MessageStatus.DELIVERED);
-            long failedMessages = smsMessageRepository.countByStatus(SmsMessage.MessageStatus.FAILED);
-
-            Map<String, Object> stats = new HashMap<>();
-            stats.put("totalMessages", totalMessages);
-            stats.put("sentMessages", sentMessages);
-            stats.put("deliveredMessages", deliveredMessages);
-            stats.put("failedMessages", failedMessages);
-            stats.put("deliveryRate", totalMessages > 0 ? (double) deliveredMessages / totalMessages * 100 : 0);
-
-            return stats;
-        } catch (Exception e) {
-            log.error("Failed to get SMS statistics", e);
-            return new HashMap<>();
-        }
-    }
-
-    /**
-     * Create WebClient for SMS API
-     */
-    private WebClient createWebClient() {
-        return webClientBuilder
-                .baseUrl(smsApiBaseUrl)
-                .defaultHeader("Content-Type", "application/json")
-                .defaultHeader("Accept", "application/json")
-                .defaultHeader("Authorization", "Bearer " + smsApiKey)
-                .build();
-    }
-} 
+}

@@ -1,8 +1,6 @@
 package com.ggnetworks.repository;
 
 import com.ggnetworks.entity.User;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,57 +11,34 @@ import java.util.Optional;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
-
-    Optional<User> findByPhoneNumberAndDeletedAtIsNull(String phoneNumber);
-
+    Optional<User> findByUsername(String username);
+    Optional<User> findByEmail(String email);
     Optional<User> findByPhoneNumber(String phoneNumber);
+    Optional<User> findByUsernameAndPhoneNumber(String username, String phoneNumber);
+    Optional<User> findByUsernameAndStaffId(String username, String staffId);
+    boolean existsByUsername(String username);
+    boolean existsByEmail(String email);
+    boolean existsByPhoneNumber(String phoneNumber);
     
-    Optional<User> findByUsernameAndDeletedAtIsNull(String username);
-
-    boolean existsByPhoneNumberAndDeletedAtIsNull(String phoneNumber);
-
-    // Add missing methods
-    Optional<User> findByIdAndDeletedAtIsNull(Long id);
+    // Additional query methods
+    List<User> findByRole(User.UserRole role);
+    List<User> findByIsActiveTrue();
+    List<User> findByDepartment(String department);
+    List<User> findByStatus(User.UserStatus status);
     
-    long countByDeletedAtIsNull();
+    // Count methods
+    long countByIsActiveTrue();
+    long countByRole(User.UserRole role);
+    long countByStatus(User.UserStatus status);
+    long countByDepartment(String department);
     
-    long countByStatusAndDeletedAtIsNull(User.UserStatus status);
+    // Complex queries
+    @Query("SELECT u FROM User u WHERE u.role IN :roles AND u.isActive = true")
+    List<User> findActiveUsersByRoles(@Param("roles") List<User.UserRole> roles);
     
-    long countByRoleAndDeletedAtIsNull(User.UserRole role);
-
-    @Query("SELECT u FROM User u WHERE u.deletedAt IS NULL")
-    Page<User> findAllActive(Pageable pageable);
-
-    @Query("SELECT u FROM User u WHERE u.role = :role AND u.deletedAt IS NULL")
-    List<User> findByRole(@Param("role") User.UserRole role);
-
-    @Query("SELECT u FROM User u WHERE u.role = :role AND u.status = :status AND u.deletedAt IS NULL")
-    List<User> findByRoleAndStatus(@Param("role") User.UserRole role, @Param("status") User.UserStatus status);
-
-    @Query("SELECT COUNT(u) FROM User u WHERE u.role = :role AND u.deletedAt IS NULL")
-    long countByRole(@Param("role") User.UserRole role);
-
-    @Query("SELECT COUNT(u) FROM User u WHERE u.createdAt >= :startDate AND u.deletedAt IS NULL")
-    long countByCreatedAtAfter(@Param("startDate") java.time.LocalDateTime startDate);
-
-    @Query("SELECT u FROM User u WHERE u.phoneNumber LIKE %:phoneNumber% AND u.deletedAt IS NULL")
-    Page<User> findByPhoneNumberContaining(@Param("phoneNumber") String phoneNumber, Pageable pageable);
-
-    @Query("SELECT u FROM User u WHERE u.fullName LIKE %:fullName% AND u.deletedAt IS NULL")
-    Page<User> findByFullNameContaining(@Param("fullName") String fullName, Pageable pageable);
-
-    // Add missing methods for UserService
-    @Query("SELECT u FROM User u WHERE u.role = :role AND u.status = :status AND u.deletedAt IS NULL")
-    Page<User> findByRoleAndStatusAndDeletedAtIsNull(@Param("role") User.UserRole role, @Param("status") User.UserStatus status, Pageable pageable);
+    @Query("SELECT u FROM User u WHERE u.department = :department AND u.isActive = true")
+    List<User> findActiveUsersByDepartment(@Param("department") String department);
     
-    @Query("SELECT u FROM User u WHERE u.role = :role AND u.deletedAt IS NULL")
-    Page<User> findByRoleAndDeletedAtIsNull(@Param("role") User.UserRole role, Pageable pageable);
-    
-    @Query("SELECT u FROM User u WHERE u.status = :status AND u.deletedAt IS NULL")
-    Page<User> findByStatusAndDeletedAtIsNull(@Param("status") User.UserStatus status, Pageable pageable);
-    
-    @Query("SELECT u FROM User u WHERE u.deletedAt IS NULL")
-    Page<User> findAllByDeletedAtIsNull(Pageable pageable);
-
-    Optional<User> findByUsernameAndPhoneNumberAndDeletedAtIsNull(String username, String phoneNumber);
-} 
+    @Query("SELECT COUNT(u) FROM User u WHERE u.role = :role AND u.isActive = true")
+    long countActiveUsersByRole(@Param("role") User.UserRole role);
+}

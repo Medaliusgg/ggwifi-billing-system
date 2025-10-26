@@ -14,46 +14,88 @@ import java.util.List;
 @Repository
 public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
 
-    @Query("SELECT al FROM AuditLog al WHERE al.user.id = :userId ORDER BY al.createdAt DESC")
-    List<AuditLog> findByUserId(@Param("userId") Long userId);
+    // Basic queries
+    List<AuditLog> findByUserId(Long userId);
+    List<AuditLog> findByUsername(String username);
+    List<AuditLog> findByAction(String action);
+    List<AuditLog> findByResourceType(String resourceType);
+    List<AuditLog> findByRiskLevel(AuditLog.RiskLevel riskLevel);
+    List<AuditLog> findByIpAddress(String ipAddress);
 
-    @Query("SELECT al FROM AuditLog al WHERE al.action = :action ORDER BY al.createdAt DESC")
-    List<AuditLog> findByAction(@Param("action") String action);
+    // Date range queries
+    List<AuditLog> findByCreatedAtBetween(LocalDateTime startDate, LocalDateTime endDate);
+    List<AuditLog> findByCreatedAtAfter(LocalDateTime date);
+    List<AuditLog> findByCreatedAtBefore(LocalDateTime date);
 
-    @Query("SELECT al FROM AuditLog al WHERE al.entityType = :entityType ORDER BY al.createdAt DESC")
-    List<AuditLog> findByEntityType(@Param("entityType") String entityType);
+    // User activity queries
+    List<AuditLog> findByUserIdAndCreatedAtBetween(Long userId, LocalDateTime startDate, LocalDateTime endDate);
+    List<AuditLog> findByUsernameAndCreatedAtBetween(String username, LocalDateTime startDate, LocalDateTime endDate);
 
-    @Query("SELECT al FROM AuditLog al WHERE al.entityType = :entityType AND al.entityId = :entityId ORDER BY al.createdAt DESC")
-    List<AuditLog> findByEntityTypeAndEntityId(@Param("entityType") String entityType, @Param("entityId") Long entityId);
+    // Risk-based queries
+    List<AuditLog> findByRiskLevelAndCreatedAtBetween(AuditLog.RiskLevel riskLevel, LocalDateTime startDate, LocalDateTime endDate);
+    List<AuditLog> findByRiskLevelIn(List<AuditLog.RiskLevel> riskLevels);
+    List<AuditLog> findByRiskLevelInAndCreatedAtAfter(List<AuditLog.RiskLevel> riskLevels, LocalDateTime date);
 
-    @Query("SELECT al FROM AuditLog al WHERE al.createdAt >= :startDate ORDER BY al.createdAt DESC")
-    List<AuditLog> findByCreatedAtAfter(@Param("startDate") LocalDateTime startDate);
+    // IP-based queries
+    List<AuditLog> findByIpAddressAndCreatedAtBetween(String ipAddress, LocalDateTime startDate, LocalDateTime endDate);
 
-    @Query("SELECT al FROM AuditLog al WHERE al.createdAt BETWEEN :startDate AND :endDate ORDER BY al.createdAt DESC")
-    List<AuditLog> findByCreatedAtBetween(@Param("startDate") LocalDateTime startDate, 
-                                         @Param("endDate") LocalDateTime endDate);
+    // Resource-based queries
+    List<AuditLog> findByResourceTypeAndResourceId(String resourceType, String resourceId);
+    List<AuditLog> findByResourceTypeAndCreatedAtBetween(String resourceType, LocalDateTime startDate, LocalDateTime endDate);
 
-    @Query("SELECT al FROM AuditLog al WHERE al.ipAddress = :ipAddress ORDER BY al.createdAt DESC")
-    List<AuditLog> findByIpAddress(@Param("ipAddress") String ipAddress);
+    // Pagination support
+    Page<AuditLog> findByUserId(Long userId, Pageable pageable);
+    Page<AuditLog> findByUsername(String username, Pageable pageable);
+    Page<AuditLog> findByAction(String action, Pageable pageable);
+    Page<AuditLog> findByRiskLevel(AuditLog.RiskLevel riskLevel, Pageable pageable);
+    Page<AuditLog> findByCreatedAtBetween(LocalDateTime startDate, LocalDateTime endDate, Pageable pageable);
 
-    @Query("SELECT COUNT(al) FROM AuditLog al WHERE al.user.id = :userId")
-    long countByUserId(@Param("userId") Long userId);
+    // Count queries
+    long countByUserId(Long userId);
+    long countByUsername(String username);
+    long countByAction(String action);
+    long countByRiskLevel(AuditLog.RiskLevel riskLevel);
+    long countByCreatedAtBetween(LocalDateTime startDate, LocalDateTime endDate);
 
-    @Query("SELECT COUNT(al) FROM AuditLog al WHERE al.action = :action")
-    long countByAction(@Param("action") String action);
+    // Analytics queries
+    @Query("SELECT a.action, COUNT(a) FROM AuditLog a WHERE a.createdAt BETWEEN :startDate AND :endDate GROUP BY a.action ORDER BY COUNT(a) DESC")
+    List<Object[]> getActionCountsByDateRange(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
 
-    @Query("SELECT COUNT(al) FROM AuditLog al WHERE al.entityType = :entityType")
-    long countByEntityType(@Param("entityType") String entityType);
+    @Query("SELECT a.username, COUNT(a) FROM AuditLog a WHERE a.createdAt BETWEEN :startDate AND :endDate GROUP BY a.username ORDER BY COUNT(a) DESC")
+    List<Object[]> getUserActivityByDateRange(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
 
-    @Query("SELECT al FROM AuditLog al ORDER BY al.createdAt DESC")
-    Page<AuditLog> findAllOrdered(Pageable pageable);
+    @Query("SELECT a.ipAddress, COUNT(a) FROM AuditLog a WHERE a.createdAt BETWEEN :startDate AND :endDate GROUP BY a.ipAddress ORDER BY COUNT(a) DESC")
+    List<Object[]> getIpActivityByDateRange(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
 
-    @Query("SELECT al FROM AuditLog al WHERE al.user.id = :userId ORDER BY al.createdAt DESC")
-    Page<AuditLog> findByUserId(@Param("userId") Long userId, Pageable pageable);
+    @Query("SELECT a.riskLevel, COUNT(a) FROM AuditLog a WHERE a.createdAt BETWEEN :startDate AND :endDate GROUP BY a.riskLevel ORDER BY COUNT(a) DESC")
+    List<Object[]> getRiskLevelCountsByDateRange(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
 
-    @Query("SELECT al FROM AuditLog al WHERE al.action LIKE %:action% ORDER BY al.createdAt DESC")
-    Page<AuditLog> findByActionContaining(@Param("action") String action, Pageable pageable);
-
-    @Query("SELECT al FROM AuditLog al WHERE al.entityType LIKE %:entityType% ORDER BY al.createdAt DESC")
-    Page<AuditLog> findByEntityTypeContaining(@Param("entityType") String entityType, Pageable pageable);
-} 
+    // Search queries
+    @Query("SELECT a FROM AuditLog a WHERE " +
+           "(:username IS NULL OR a.username LIKE %:username%) AND " +
+           "(:action IS NULL OR a.action LIKE %:action%) AND " +
+           "(:resourceType IS NULL OR a.resourceType LIKE %:resourceType%) AND " +
+           "(:ipAddress IS NULL OR a.ipAddress LIKE %:ipAddress%) AND " +
+           "(:startDate IS NULL OR a.createdAt >= :startDate) AND " +
+           "(:endDate IS NULL OR a.createdAt <= :endDate)")
+    Page<AuditLog> searchAuditLogs(@Param("username") String username,
+                                   @Param("action") String action,
+                                   @Param("resourceType") String resourceType,
+                                   @Param("ipAddress") String ipAddress,
+                                   @Param("startDate") LocalDateTime startDate,
+                                   @Param("endDate") LocalDateTime endDate,
+                                   Pageable pageable);
+    
+    // Dashboard methods
+    @Query("SELECT COUNT(a) FROM AuditLog a WHERE a.riskLevel = :riskLevel")
+    long countByRiskLevelString(@Param("riskLevel") String riskLevel);
+    
+    @Query("SELECT COUNT(a) FROM AuditLog a WHERE a.resourceType = :resourceType")
+    long countByResourceType(@Param("resourceType") String resourceType);
+    
+    @Query("SELECT COUNT(a) FROM AuditLog a WHERE a.resourceType = :resourceType AND a.riskLevel = :riskLevel")
+    long countByResourceTypeAndRiskLevel(@Param("resourceType") String resourceType, @Param("riskLevel") AuditLog.RiskLevel riskLevel);
+    
+    @Query("SELECT COUNT(a) FROM AuditLog a WHERE a.riskLevel = :riskLevel AND a.createdAt >= :date")
+    long countByRiskLevelAndCreatedAtAfter(@Param("riskLevel") AuditLog.RiskLevel riskLevel, @Param("date") LocalDateTime date);
+}
