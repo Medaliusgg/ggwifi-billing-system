@@ -54,14 +54,13 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
     
     long countByAccountType(Customer.AccountType accountType);
     
+    @Query("SELECT COUNT(c) FROM Customer c WHERE c.status = 'ACTIVE'")
     long countByIsActiveTrue();
     
+    @Query("SELECT COUNT(c) FROM Customer c WHERE c.status != 'ACTIVE'")
     long countByIsActiveFalse();
     
     long countByRegistrationDateBetween(LocalDateTime startDate, LocalDateTime endDate);
-    
-    // Additional methods needed by services
-    List<Customer> findByIsActiveTrue();
     
     @Query("SELECT COUNT(c) FROM Customer c WHERE c.createdAt >= :date")
     long countByCreatedAtAfter(@Param("date") LocalDateTime date);

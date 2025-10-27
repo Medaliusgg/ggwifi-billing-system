@@ -82,7 +82,7 @@ public class CustomerService {
      * Get active customers
      */
     public List<Customer> getActiveCustomers() {
-        return customerRepository.findByIsActiveTrue();
+        return customerRepository.findByStatus(Customer.CustomerStatus.ACTIVE);
     }
     
     /**
