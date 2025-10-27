@@ -34,6 +34,8 @@ import { useSnackbar } from 'notistack';
 import { transactionAPI } from '../services/api';
 
 const Transactions = () => {
+  console.log('🔍 Transactions component rendered');
+  
   const { enqueueSnackbar } = useSnackbar();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');

@@ -35,6 +35,8 @@ import { useSnackbar } from 'notistack';
 import { invoiceAPI } from '../services/api';
 
 const Invoices = () => {
+  console.log('🔍 Invoices component rendered');
+  
   const { enqueueSnackbar } = useSnackbar();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
