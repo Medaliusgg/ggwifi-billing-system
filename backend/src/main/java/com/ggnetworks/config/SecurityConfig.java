@@ -56,6 +56,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/customer-portal/**").permitAll()
                 .requestMatchers("/customer-portal/**").permitAll()
                 .requestMatchers("/auth/login", "/auth/register", "/auth/admin-login", "/auth/staff-login", "/auth/simple-login", "/auth/refresh", "/auth/test").permitAll()
+                .requestMatchers("/test/**").permitAll()
+                .requestMatchers("/api/public/**").permitAll()
                 
                 // Admin endpoints (ADMIN or SUPER_ADMIN role required)
                 .requestMatchers("/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
