@@ -66,6 +66,8 @@ import useAuthStore from '/src/store/authStore.js';
 import apiClient from '/src/api/client.js';
 
 const UserManagement = () => {
+  console.log('🔍 Users component rendered');
+  
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { enqueueSnackbar } = useSnackbar();
