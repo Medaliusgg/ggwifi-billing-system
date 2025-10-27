@@ -84,6 +84,8 @@ import useAuthStore from '/src/store/authStore.js';
 import apiClient from '/src/api/client.js';
 
 const PaymentManagement = () => {
+  console.log('🔍 Payments component rendered');
+  
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { enqueueSnackbar } = useSnackbar();

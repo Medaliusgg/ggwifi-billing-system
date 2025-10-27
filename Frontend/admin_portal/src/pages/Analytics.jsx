@@ -86,6 +86,8 @@ import useAuthStore from '/src/store/authStore.js';
 import apiClient from '/src/api/client.js';
 
 const AnalyticsReports = () => {
+  console.log('🔍 Analytics component rendered');
+  
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { enqueueSnackbar } = useSnackbar();
