@@ -4,9 +4,9 @@
 
 class SelcomPaymentService {
   constructor() {
-    this.baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
-    this.selcomApiUrl = process.env.REACT_APP_SELCOM_API_URL || 'https://api.selcom.co.tz';
-    this.selcomApiKey = process.env.REACT_APP_SELCOM_API_KEY || 'your-selcom-api-key';
+    this.baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1';
+    this.selcomApiUrl = import.meta.env.VITE_SELCOM_API_URL || 'https://api.selcom.co.tz';
+    this.selcomApiKey = import.meta.env.VITE_SELCOM_API_KEY || 'your-selcom-api-key';
   }
 
   // Initialize payment with SELCOM
@@ -15,7 +15,7 @@ class SelcomPaymentService {
       console.log('Initializing payment with backend:', paymentRequest);
       
       // Call our backend API for payment initialization
-      const response = await fetch(`${this.baseUrl}/v1/payments/c2b/initialize`, {
+      const response = await fetch(`${this.baseUrl}/payments/c2b/initialize`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -65,7 +65,7 @@ class SelcomPaymentService {
       console.log('Verifying payment with backend:', { transactionId, pinCode });
       
       // Call our backend API for payment verification
-      const response = await fetch(`${this.baseUrl}/v1/payments/c2b/verify`, {
+      const response = await fetch(`${this.baseUrl}/payments/c2b/verify`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -141,7 +141,7 @@ class SelcomPaymentService {
       console.log('Loading payment methods from backend...');
       
       // Call our backend API for available payment methods
-      const response = await fetch(`${this.baseUrl}/v1/payments/methods`, {
+      const response = await fetch(`${this.baseUrl}/payments/methods`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

@@ -22,9 +22,9 @@
       "outputDirectory": "dist",
       "rootDirectory": "Frontend/customer_portal",
       "environmentVariables": {
-        "VITE_API_BASE_URL": "https://api.ggwifi.co.tz/api/v1",
+        "VITE_API_URL": "https://api.ggwifi.co.tz/api/v1",
         "VITE_APP_NAME": "GGWIFI Customer Portal",
-        "VITE_APP_DOMAIN": "portal.ggwifi.co.tz",
+        "VITE_APP_DOMAIN": "connect.ggwifi.co.tz",
         "VITE_ENVIRONMENT": "production"
       },
       "customDomain": "portal.ggwifi.co.tz",

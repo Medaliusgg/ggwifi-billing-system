@@ -1,7 +1,7 @@
 // API Service for GG Wi-Fi Customer Portal
 // Handles all backend API calls for voucher login and payment processing
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1';
 
 class ApiService {
   constructor() {
@@ -41,7 +41,7 @@ class ApiService {
 
   // Voucher Login API
   async voucherLogin(phoneNumber, voucherCode) {
-    return this.makeRequest('/api/v1/customer-portal/voucher-login', {
+    return this.makeRequest('/customer-portal/voucher-login', {
       method: 'POST',
       body: JSON.stringify({
         phoneNumber,
@@ -52,7 +52,7 @@ class ApiService {
 
   // Payment Initiation API
   async initiatePayment(paymentData) {
-    return this.makeRequest('/api/v1/customer-portal/payment', {
+    return this.makeRequest('/customer-portal/payment', {
       method: 'POST',
       body: JSON.stringify({
         customerName: paymentData.customerName,
@@ -70,42 +70,42 @@ class ApiService {
 
   // Payment Status Check API
   async checkPaymentStatus(orderId) {
-    return this.makeRequest(`/api/v1/customer-portal/payment/status/${orderId}`, {
+    return this.makeRequest(`/customer-portal/payment/status/${orderId}`, {
       method: 'GET',
     });
   }
 
   // Get Available Packages API
   async getPackages() {
-    return this.makeRequest('/api/v1/customer-portal/packages', {
+    return this.makeRequest('/customer-portal/packages', {
       method: 'GET',
     });
   }
 
   // Get Customer Dashboard Data
   async getCustomerDashboard(phoneNumber) {
-    return this.makeRequest(`/api/v1/customer-portal/dashboard/${phoneNumber}`, {
+    return this.makeRequest(`/customer-portal/dashboard/${phoneNumber}`, {
       method: 'GET',
     });
   }
 
   // Get Active Sessions
   async getActiveSessions() {
-    return this.makeRequest('/api/v1/customer-portal/sessions', {
+    return this.makeRequest('/customer-portal/sessions', {
       method: 'GET',
     });
   }
 
   // Get Coverage Areas
   async getCoverageAreas() {
-    return this.makeRequest('/api/v1/customer-portal/coverage', {
+    return this.makeRequest('/customer-portal/coverage', {
       method: 'GET',
     });
   }
 
   // ZenoPay Webhook Handler (for testing)
   async handleZenoPayWebhook(webhookData) {
-    return this.makeRequest('/api/v1/customer-portal/webhook/zenopay', {
+    return this.makeRequest('/customer-portal/webhook/zenopay', {
       method: 'POST',
       body: JSON.stringify(webhookData),
     });
