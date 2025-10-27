@@ -90,10 +90,16 @@ export const routerAPI = {
 
 // RADIUS Management API
 export const radiusAPI = {
-  getActiveSessions: () => apiClient.get('/admin/radius/sessions'),
-  disconnectUser: (userData) => apiClient.post('/admin/radius/disconnect', userData),
-  getSessionStatistics: () => apiClient.get('/admin/radius/statistics'),
-  getSessionById: (sessionId) => apiClient.get(`/admin/radius/sessions/${sessionId}`),
+  getHealth: () => apiClient.get('/radius/health'),
+  getAllUsers: () => apiClient.get('/radius/users'),
+  getUserByUsername: (username) => apiClient.get(`/radius/users/${username}`),
+  createUser: (userData) => apiClient.post('/radius/users', userData),
+  updateUser: (username, userData) => apiClient.put(`/radius/users/${username}`, userData),
+  deleteUser: (username) => apiClient.delete(`/radius/users/${username}`),
+  getActiveSessions: () => apiClient.get('/radius/sessions/active'),
+  disconnectSession: (sessionData) => apiClient.post('/radius/sessions/disconnect', sessionData),
+  getSessionById: (sessionId) => apiClient.get(`/radius/sessions/${sessionId}`),
+  getSessionStatistics: () => apiClient.get('/radius/statistics'),
 };
 
 // Payment Management API
@@ -103,6 +109,30 @@ export const paymentAPI = {
   createPayment: (paymentData) => apiClient.post('/admin/payments', paymentData),
   updatePayment: (paymentId, paymentData) => apiClient.put(`/admin/payments/${paymentId}`, paymentData),
   getPaymentsByPhoneNumber: (phoneNumber) => apiClient.get(`/admin/payments/phone/${phoneNumber}`),
+};
+
+// Transaction Management API
+export const transactionAPI = {
+  getAllTransactions: () => apiClient.get('/admin/transactions'),
+  getTransactionById: (transactionId) => apiClient.get(`/admin/transactions/${transactionId}`),
+  getTransactionsByCustomer: (customerId) => apiClient.get(`/admin/transactions/customer/${customerId}`),
+  getTransactionsByPayment: (paymentId) => apiClient.get(`/admin/transactions/payment/${paymentId}`),
+  createTransaction: (transactionData) => apiClient.post('/admin/transactions', transactionData),
+  updateTransaction: (transactionId, transactionData) => apiClient.put(`/admin/transactions/${transactionId}`, transactionData),
+  getTransactionStatistics: () => apiClient.get('/admin/transactions/statistics'),
+};
+
+// Invoice Management API
+export const invoiceAPI =domain
+  getAllInvoices: () => apiClient.get('/admin/invoices'),
+  getInvoiceById: (invoiceId) => apiClient.get(`/admin/invoices/${invoiceId}`),
+  getInvoicesByCustomer: (customerId) => apiClient.get(`/admin/invoices/customer/${customerId}`),
+  createInvoice: (invoiceData) => apiClient.post('/admin/invoices', invoiceData),
+  updateInvoice: (invoiceId, invoiceData) => apiClient.put(`/admin/invoices/${invoiceId}`, invoiceData),
+  deleteInvoice: (invoiceId) => apiClient.delete(`/admin/invoices/${invoiceId}`),
+  generateInvoice: (invoiceData) => apiClient.post('/admin/invoices/generate', invoiceData),
+  downloadInvoice: (invoiceId) => apiClient.get(`/admin/invoices/${invoiceId}/download`, { responseType: 'blob' }),
+  getInvoiceStatistics: () => apiClient.get('/admin/invoices/statistics'),
 };
 
 // Customer Management API
