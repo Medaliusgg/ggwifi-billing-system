@@ -123,7 +123,7 @@ export const transactionAPI = {
 };
 
 // Invoice Management API
-export const invoiceAPI =domain
+export const invoiceAPI = {
   getAllInvoices: () => apiClient.get('/admin/invoices'),
   getInvoiceById: (invoiceId) => apiClient.get(`/admin/invoices/${invoiceId}`),
   getInvoicesByCustomer: (customerId) => apiClient.get(`/admin/invoices/customer/${customerId}`),
