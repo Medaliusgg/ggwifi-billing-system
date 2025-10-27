@@ -433,7 +433,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                 }
                 break;
               case 'ERROR':
-                setPaymentStatus(' masteringTime');
+                setPaymentStatus('failed');
                 setPaymentMessage(statusData.message);
                 toast.error(statusData.message);
                 // Stop polling on error
