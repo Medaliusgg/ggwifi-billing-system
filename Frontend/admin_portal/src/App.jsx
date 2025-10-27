@@ -18,6 +18,8 @@ import AnalyticsReports from './pages/Analytics';
 import BackendTest from './pages/BackendTest';
 import SettingsConfiguration from './pages/Settings';
 import SessionManagement from './pages/Sessions';
+import TransactionManagement from './pages/Transactions';
+import InvoiceManagement from './pages/Invoices';
 
 // Placeholder pages for other routes
 const Finance = () => (
@@ -214,6 +216,28 @@ function App() {
         }
       >
         <Route index element={<SessionManagement />} />
+      </Route>
+
+      <Route
+        path="/transactions"
+        element={
+          <ProtectedRoute>
+            <MainLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<TransactionManagement />} />
+      </Route>
+
+      <Route
+        path="/invoices"
+        element={
+          <ProtectedRoute>
+            <MainLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<InvoiceManagement />} />
       </Route>
 
       <Route
