@@ -48,6 +48,9 @@ import {
   Timeline as TimelineIcon,
   Security as SecurityIcon,
   Support as SupportIcon,
+  SwapHoriz as TransactionIcon,
+  Description as InvoiceIcon,
+  Payment as PaymentIcon,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import useAuthStore from '/src/store/authStore.js';
@@ -112,6 +115,24 @@ const MainLayout = () => {
       text: 'Finance & Payments',
       icon: <MoneyIcon />,
       path: '/finance',
+      permission: 'finance',
+    },
+    {
+      text: 'Transactions',
+      icon: <TransactionIcon />,
+      path: '/transactions',
+      permission: 'finance',
+    },
+    {
+      text: 'Invoices',
+      icon: <InvoiceIcon />,
+      path: '/invoices',
+      permission: 'finance',
+    },
+    {
+      text: 'Payments',
+      icon: <PaymentIcon />,
+      path: '/payments',
       permission: 'finance',
     },
     {

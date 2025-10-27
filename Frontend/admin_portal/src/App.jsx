@@ -15,7 +15,6 @@ import RouterManagement from './pages/Routers';
 import FinancialManagement from './pages/Finance';
 import PaymentManagement from './pages/Payments';
 import AnalyticsReports from './pages/Analytics';
-import BackendTest from './pages/BackendTest';
 import SettingsConfiguration from './pages/Settings';
 import SessionManagement from './pages/Sessions';
 import TransactionManagement from './pages/Transactions';
@@ -238,17 +237,6 @@ function App() {
         }
       >
         <Route index element={<InvoiceManagement />} />
-      </Route>
-
-      <Route
-        path="/backend-test"
-        element={
-          <ProtectedRoute>
-            <MainLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<BackendTest />} />
       </Route>
 
       {/* Error Routes */}
