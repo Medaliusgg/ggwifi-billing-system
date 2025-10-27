@@ -65,6 +65,11 @@ public class SecurityConfig {
                 // Dashboard endpoints (ADMIN or SUPER_ADMIN role required)
                 .requestMatchers("/dashboard/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
                 
+                // Core business endpoints (ADMIN or SUPER_ADMIN role required)
+                .requestMatchers("/packages/**", "/vouchers/**", "/customers/**", "/routers/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                .requestMatchers("/payments/**", "/transactions/**", "/invoices/**", "/sessions/**").hasAnyRole("ADMIN", "SUPER_ADMIN", "FINANCE")
+                .requestMatchers("/analytics/**", "/reports/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                
                 // Technician endpoints
                 .requestMatchers("/technician/**").hasAnyRole("TECHNICIAN", "ADMIN", "SUPER_ADMIN")
                 
