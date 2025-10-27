@@ -433,13 +433,12 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                 }
                 break;
               case 'ERROR':
-              case 'TIMEOUT':
-                setPaymentStatus('failed');
+                setPaymentStatus(' masteringTime');
                 setPaymentMessage(statusData.message);
                 toast.error(statusData.message);
-                // Stop polling on error/timeout
+                // Stop polling on error
                 if (currentPollingStop) {
-                  console.log('🛑 Stopping polling - payment error/timeout');
+                  console.log('🛑 Stopping polling - payment error');
                   currentPollingStop();
                   setCurrentPollingStop(null);
                 }
