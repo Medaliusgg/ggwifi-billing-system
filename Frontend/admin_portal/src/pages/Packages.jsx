@@ -96,7 +96,7 @@ const InternetPackageManagement = () => {
   const { data: packagesData, isLoading, error, refetch } = useQuery({
     queryKey: ['packages', page, rowsPerPage, searchTerm, typeFilter, statusFilter],
     queryFn: async () => {
-      const response = await apiClient.get('/packages');
+      const response = await apiClient.get('/admin/packages');
       return response.data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes

@@ -112,7 +112,7 @@ const CustomerManagement = () => {
   const { data: customersData, isLoading, error, refetch } = useQuery({
     queryKey: ['customers', page, rowsPerPage, searchTerm, statusFilter, typeFilter],
     queryFn: async () => {
-      const response = await apiClient.get('/customers');
+      const response = await apiClient.get('/admin/customers');
       return response.data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -122,7 +122,7 @@ const CustomerManagement = () => {
   const { data: transactionsData } = useQuery({
     queryKey: ['customer-transactions'],
     queryFn: async () => {
-      const response = await apiClient.get('/transactions');
+      const response = await apiClient.get('/admin/transactions');
       return response.data;
     },
   });

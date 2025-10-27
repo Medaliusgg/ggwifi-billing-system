@@ -60,15 +60,15 @@ public class SecurityConfig {
                 .requestMatchers("/api/public/**").permitAll()
                 
                 // Admin endpoints (ADMIN or SUPER_ADMIN role required)
-                .requestMatchers("/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                .requestMatchers("/admin/**", "/api/v1/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
                 
                 // Dashboard endpoints (ADMIN or SUPER_ADMIN role required)
-                .requestMatchers("/dashboard/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                .requestMatchers("/dashboard/**", "/api/v1/dashboard/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
                 
                 // Core business endpoints (ADMIN or SUPER_ADMIN role required)
-                .requestMatchers("/packages/**", "/vouchers/**", "/customers/**", "/routers/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
-                .requestMatchers("/payments/**", "/transactions/**", "/invoices/**", "/sessions/**").hasAnyRole("ADMIN", "SUPER_ADMIN", "FINANCE")
-                .requestMatchers("/analytics/**", "/reports/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                .requestMatchers("/packages/**", "/api/v1/packages/**", "/vouchers/**", "/api/v1/vouchers/**", "/customers/**", "/api/v1/customers/**", "/routers/**", "/api/v1/routers/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                .requestMatchers("/payments/**", "/api/v1/payments/**", "/transactions/**", "/api/v1/transactions/**", "/invoices/**", "/api/v1/invoices/**", "/sessions/**", "/api/v1/sessions/**").hasAnyRole("ADMIN", "SUPER_ADMIN", "FINANCE")
+                .requestMatchers("/analytics/**", "/api/v1/analytics/**", "/reports/**", "/api/v1/reports/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
                 
                 // Technician endpoints
                 .requestMatchers("/technician/**").hasAnyRole("TECHNICIAN", "ADMIN", "SUPER_ADMIN")

@@ -114,7 +114,7 @@ const VoucherManagement = () => {
   const { data: vouchersData, isLoading, error, refetch } = useQuery({
     queryKey: ['vouchers', page, rowsPerPage, searchTerm, statusFilter, packageFilter],
     queryFn: async () => {
-      const response = await apiClient.get('/vouchers');
+      const response = await apiClient.get('/admin/vouchers');
       return response.data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -124,7 +124,7 @@ const VoucherManagement = () => {
   const { data: packagesData } = useQuery({
     queryKey: ['packages'],
     queryFn: async () => {
-      const response = await apiClient.get('/packages');
+      const response = await apiClient.get('/admin/packages');
       return response.data;
     },
   });

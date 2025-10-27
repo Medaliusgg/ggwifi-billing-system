@@ -128,7 +128,7 @@ const RouterManagement = () => {
   const { data: routersData, isLoading, error, refetch } = useQuery({
     queryKey: ['routers', page, rowsPerPage, searchTerm, statusFilter, locationFilter],
     queryFn: async () => {
-      const response = await apiClient.get('/routers');
+      const response = await apiClient.get('/admin/routers');
       return response.data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -138,7 +138,7 @@ const RouterManagement = () => {
   const { data: configsData } = useQuery({
     queryKey: ['router-configs'],
     queryFn: async () => {
-      const response = await apiClient.get('/router-configs');
+      const response = await apiClient.get('/admin/routers/status');
       return response.data;
     },
   });
