@@ -195,9 +195,21 @@ const MainLayout = () => {
   };
 
   // Filter navigation items based on permissions
-  const filteredNavigationItems = navigationItems.filter(item => 
-    hasPermission(item.permission)
-  );
+  const filteredNavigationItems = navigationItems.filter(item => {
+    // Always show all items for ADMIN role
+    if (user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN') {
+      return true;
+    }
+    // Otherwise check permissions
+    return hasPermission(item.permission);
+  });
+  
+  console.log('🔍 MainLayout - Navigation items:', {
+    totalItems: navigationItems.length,
+    filteredItems: filteredNavigationItems.length,
+    userRole: user?.role,
+    permissions: user?.permissions || []
+  });
 
 
   const drawer = (
