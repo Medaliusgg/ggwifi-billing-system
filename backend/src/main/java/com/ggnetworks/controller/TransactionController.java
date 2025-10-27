@@ -1,8 +1,10 @@
 package com.ggnetworks.controller;
 
 import com.ggnetworks.entity.Transaction;
+import com.ggnetworks.entity.Customer;
 import com.ggnetworks.service.TransactionService;
 import com.ggnetworks.service.PermissionService;
+import com.ggnetworks.repository.CustomerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -24,6 +26,9 @@ public class TransactionController {
 
     @Autowired
     private PermissionService permissionService;
+
+    @Autowired
+    private CustomerRepository customerRepository;
 
     private ResponseEntity<Map<String, Object>> checkPermission(String permission) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -87,7 +92,16 @@ public class TransactionController {
         if (permissionCheck != null) return permissionCheck;
 
         try {
-            List<Transaction> transactions = transactionService.getTransactionsByCustomerPhone(phoneNumber);
+            // Find customer by phone number
+            Optional<Customer> customerOpt = customerRepository.findByPhoneNumber(phoneNumber);
+            if (!customerOpt.isPresent()) {
+                response.put("status", "error");
+                response.put("message", "Customer not found with phone number: " + phoneNumber);
+                return ResponseEntity.status(404).body(response);
+            }
+
+            Customer customer = customerOpt.get();
+            List<Transaction> transactions = transactionService.getTransactionsByCustomerId(customer.getId());
             response.put("status", "success");
             response.put("message", "Transactions retrieved successfully");
             response.put("data", transactions);

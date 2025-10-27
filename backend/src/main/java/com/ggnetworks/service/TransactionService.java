@@ -75,13 +75,6 @@ public class TransactionService {
     }
     
     /**
-     * Get transactions by customer ID
-     */
-    public List<Transaction> getTransactionsByCustomerId(Long customerId) {
-        return transactionRepository.findByCustomerId(customerId);
-    }
-    
-    /**
      * Get transactions by status
      */
     public List<Transaction> getTransactionsByStatus(Transaction.TransactionStatus status) {

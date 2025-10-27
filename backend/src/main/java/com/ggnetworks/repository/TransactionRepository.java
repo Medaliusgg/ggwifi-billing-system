@@ -64,9 +64,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     // Find by customer ID
     List<Transaction> findByCustomerIdOrderByCreatedAtDesc(Long customerId);
     
-    @Query("SELECT t FROM Transaction t WHERE t.customerId = :customerId AND t.status = :status ORDER BY t.createdAt DESC")
-    List<Transaction> findByCustomerIdAndStatusOrderByCreatedAtDesc(@Param("customerId") Long customerId, @Param("status") Transaction.TransactionStatus status);
-    
     // Additional methods needed by services
     long countByStatus(Transaction.TransactionStatus status);
     
