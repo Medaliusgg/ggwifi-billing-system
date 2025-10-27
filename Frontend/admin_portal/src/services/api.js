@@ -70,24 +70,22 @@ export const packageAPI = {
 
 // Voucher Management API
 export const voucherAPI = {
-  generateVoucher: (voucherData) => apiClient.post('/admin/vouchers/generate', voucherData),
-  generateBulkVouchers: (bulkData) => apiClient.post('/admin/vouchers/generate-bulk', bulkData),
-  getVoucherStatistics: () => apiClient.get('/admin/vouchers/statistics'),
-  cleanupExpiredVouchers: () => apiClient.post('/admin/vouchers/cleanup'),
+  getAllVouchers: () => apiClient.get('/admin/vouchers'),
   getVoucherById: (voucherId) => apiClient.get(`/admin/vouchers/${voucherId}`),
+  createVoucher: (voucherData) => apiClient.post('/admin/vouchers', voucherData),
   updateVoucher: (voucherId, voucherData) => apiClient.put(`/admin/vouchers/${voucherId}`, voucherData),
   deleteVoucher: (voucherId) => apiClient.delete(`/admin/vouchers/${voucherId}`),
+  // Additional voucher operations
+  getVoucherByCode: (code) => apiClient.get(`/admin/vouchers/code/${code}`),
 };
 
 // Router Management API
 export const routerAPI = {
-  getAllRouters: () => apiClient.get('/admin/mikrotik/routers'),
-  getRouterStatus: (routerId) => apiClient.get(`/admin/mikrotik/routers/${routerId}/status`),
-  getRouterUsers: (routerId) => apiClient.get(`/admin/mikrotik/routers/${routerId}/users`),
-  rebootRouter: (routerId) => apiClient.post(`/admin/mikrotik/routers/${routerId}/reboot`),
-  getRouterById: (routerId) => apiClient.get(`/admin/mikrotik/routers/${routerId}`),
-  updateRouter: (routerId, routerData) => apiClient.put(`/admin/mikrotik/routers/${routerId}`, routerData),
-  testRouterConnection: (routerId) => apiClient.post(`/admin/mikrotik/routers/${routerId}/test`),
+  getAllRouters: () => apiClient.get('/admin/routers'),
+  getRouterStatus: () => apiClient.get('/admin/routers/status'),
+  getRouterById: (routerId) => apiClient.get(`/admin/routers/${routerId}`),
+  updateRouter: (routerId, routerData) => apiClient.put(`/admin/routers/${routerId}`, routerData),
+  configureRouter: (routerId) => apiClient.post(`/admin/routers/${routerId}/configure`),
 };
 
 // RADIUS Management API
@@ -100,11 +98,11 @@ export const radiusAPI = {
 
 // Payment Management API
 export const paymentAPI = {
-  getAllPayments: (params = {}) => apiClient.get('/admin/payments', { params }),
-  getPaymentStatistics: () => apiClient.get('/admin/payments/statistics'),
-  processRefund: (refundData) => apiClient.post('/admin/payments/refund', refundData),
+  getAllPayments: () => apiClient.get('/admin/payments'),
   getPaymentById: (paymentId) => apiClient.get(`/admin/payments/${paymentId}`),
-  updatePaymentStatus: (paymentId, status) => apiClient.put(`/admin/payments/${paymentId}/status`, { status }),
+  createPayment: (paymentData) => apiClient.post('/admin/payments', paymentData),
+  updatePayment: (paymentId, paymentData) => apiClient.put(`/admin/payments/${paymentId}`, paymentData),
+  getPaymentsByPhoneNumber: (phoneNumber) => apiClient.get(`/admin/payments/phone/${phoneNumber}`),
 };
 
 // Customer Management API
@@ -118,42 +116,47 @@ export const customerAPI = {
   getCustomerPayments: (customerId) => apiClient.get(`/admin/customers/${customerId}/payments`),
 };
 
-// Loyalty Management API
+// Loyalty Management API - Not implemented in backend yet
 export const loyaltyAPI = {
-  getAllLoyaltyPrograms: () => apiClient.get('/admin/loyalty/programs'),
-  getLoyaltyProgramById: (programId) => apiClient.get(`/admin/loyalty/programs/${programId}`),
-  createLoyaltyProgram: (programData) => apiClient.post('/admin/loyalty/programs', programData),
-  updateLoyaltyProgram: (programId, programData) => apiClient.put(`/admin/loyalty/programs/${programId}`, programData),
-  deleteLoyaltyProgram: (programId) => apiClient.delete(`/admin/loyalty/programs/${programId}`),
-  getCustomerLoyalty: (customerId) => apiClient.get(`/admin/loyalty/customers/${customerId}`),
-  updateCustomerLoyalty: (customerId, loyaltyData) => apiClient.put(`/admin/loyalty/customers/${customerId}`, loyaltyData),
-  getLoyaltyStatistics: () => apiClient.get('/admin/loyalty/statistics'),
+  // Placeholder - will be implemented in future
+  getAllLoyaltyPrograms: () => Promise.resolve({ data: [] }),
+  getLoyaltyProgramById: (programId) => Promise.resolve({ data: null }),
+  createLoyaltyProgram: (programData) => Promise.reject({ message: 'Not implemented yet' }),
+  updateLoyaltyProgram: (programId, programData) => Promise.reject({ message: 'Not implemented yet' }),
+  deleteLoyaltyProgram: (programId) => Promise.reject({ message: 'Not implemented yet' }),
+  getCustomerLoyalty: (customerId) => Promise.resolve({ data: null }),
+  updateCustomerLoyalty: (customerId, loyaltyData) => Promise.reject({ message: 'Not implemented yet' }),
+  getLoyaltyStatistics: () => Promise.resolve({ data: {} }),
 };
 
 // Dashboard API
 export const dashboardAPI = {
   getSystemDashboard: () => apiClient.get('/admin/dashboard'),
+  getDashboardStats: () => apiClient.get('/admin/dashboard/stats'),
+  getTechnicianDashboard: () => apiClient.get('/admin/dashboard/technician'),
+  getFinanceDashboard: () => apiClient.get('/admin/dashboard/finance'),
+  getMarketingDashboard: () => apiClient.get('/admin/dashboard/marketing'),
   getSystemHealth: () => apiClient.get('/admin/health'),
   getSystemMetrics: () => apiClient.get('/admin/metrics'),
   getRecentActivity: () => apiClient.get('/admin/activity'),
 };
 
-// Application Management API
+// Application Management API - Not implemented in backend yet
 export const applicationAPI = {
-  getAllApplications: (params = {}) => apiClient.get('/admin/applications', { params }),
-  getApplicationById: (applicationId) => apiClient.get(`/admin/applications/${applicationId}`),
-  updateApplicationStatus: (applicationId, status) => apiClient.put(`/admin/applications/${applicationId}/status`, { status }),
-  approveApplication: (applicationId, approvalData) => apiClient.post(`/admin/applications/${applicationId}/approve`, approvalData),
-  rejectApplication: (applicationId, rejectionData) => apiClient.post(`/admin/applications/${applicationId}/reject`, rejectionData),
-  getApplicationStatistics: () => apiClient.get('/admin/applications/statistics'),
+  getAllApplications: (params = {}) => Promise.resolve({ data: [] }),
+  getApplicationById: (applicationId) => Promise.resolve({ data: null }),
+  updateApplicationStatus: (applicationId, status) => Promise.reject({ message: 'Not implemented yet' }),
+  approveApplication: (applicationId, approvalData) => Promise.reject({ message: 'Not implemented yet' }),
+  rejectApplication: (applicationId, rejectionData) => Promise.reject({ message: 'Not implemented yet' }),
+  getApplicationStatistics: () => Promise.resolve({ data: {} }),
 };
 
-// Finance Management API
+// Finance Management API - Use dashboard finance endpoint for now
 export const financeAPI = {
   getFinancialReports: (params = {}) => apiClient.get('/admin/finance/reports', { params }),
-  getRevenueStatistics: () => apiClient.get('/admin/finance/revenue'),
-  getExpenseStatistics: () => apiClient.get('/admin/finance/expenses'),
-  getProfitLossReport: (params = {}) => apiClient.get('/admin/finance/profit-loss', { params }),
+  getRevenueStatistics: () => apiClient.get('/admin/dashboard/finance'),
+  getExpenseStatistics: () => apiClient.get('/admin/dashboard/finance'),
+  getProfitLossReport: (params = {}) => apiClient.get('/admin/dashboard/finance', { params }),
   createFinancialReport: (reportData) => apiClient.post('/admin/finance/reports', reportData),
   updateFinancialReport: (reportId, reportData) => apiClient.put(`/admin/finance/reports/${reportId}`, reportData),
 };
