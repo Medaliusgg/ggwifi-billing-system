@@ -123,7 +123,7 @@ const FinancialManagement = () => {
   const { data: financialData, isLoading, error, refetch } = useQuery({
     queryKey: ['financial-data', page, rowsPerPage, searchTerm, typeFilter, categoryFilter],
     queryFn: async () => {
-      const response = await apiClient.get('/financial');
+      const response = await apiClient.get('/admin/dashboard/finance');
       return response.data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
