@@ -1,6 +1,12 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1';
+const API_BASE_URL = (
+  import.meta.env.VITE_API_URL ||
+  import.meta.env.VITE_API_BASE_URL ||
+  (typeof window !== 'undefined' && window.location?.host?.includes('ggwifi.co.tz')
+    ? 'https://api.ggwifi.co.tz/api/v1'
+    : 'http://localhost:8080/api/v1')
+);
 
 // Create axios instance with default config
 const apiClient = axios.create({
@@ -51,7 +57,6 @@ export const authAPI = {
 // User Management API
 export const userAPI = {
   getAllUsers: (params = {}) => apiClient.get('/admin/users', { params }),
-  updateUserStatus: (userId, status) => apiClient.put(`/admin/users/${userId}/status`, { status }),
   getUserById: (userId) => apiClient.get(`/admin/users/${userId}`),
   createUser: (userData) => apiClient.post('/admin/users', userData),
   updateUser: (userId, userData) => apiClient.put(`/admin/users/${userId}`, userData),
@@ -83,23 +88,23 @@ export const voucherAPI = {
 export const routerAPI = {
   getAllRouters: () => apiClient.get('/admin/routers'),
   getRouterStatus: () => apiClient.get('/admin/routers/status'),
-  getRouterById: (routerId) => apiClient.get(`/admin/routers/${routerId}`),
-  updateRouter: (routerId, routerData) => apiClient.put(`/admin/routers/${routerId}`, routerData),
-  configureRouter: (routerId) => apiClient.post(`/admin/routers/${routerId}/configure`),
+  // Configure via technician controller route available in backend
+  configureRouter: (routerId) => apiClient.post(`/api/v1/technician/routers/${routerId}/configure`),
 };
 
 // RADIUS Management API
 export const radiusAPI = {
   getHealth: () => apiClient.get('/radius/health'),
   getAllUsers: () => apiClient.get('/radius/users'),
-  getUserByUsername: (username) => apiClient.get(`/radius/users/${username}`),
   createUser: (userData) => apiClient.post('/radius/users', userData),
-  updateUser: (username, userData) => apiClient.put(`/radius/users/${username}`, userData),
   deleteUser: (username) => apiClient.delete(`/radius/users/${username}`),
-  getActiveSessions: () => apiClient.get('/radius/sessions/active'),
-  disconnectSession: (sessionData) => apiClient.post('/radius/sessions/disconnect', sessionData),
-  getSessionById: (sessionId) => apiClient.get(`/radius/sessions/${sessionId}`),
+  authenticate: (payload) => apiClient.post('/radius/authenticate', payload),
+  getSessions: () => apiClient.get('/radius/sessions'),
   getSessionStatistics: () => apiClient.get('/radius/statistics'),
+  configureNas: (payload) => apiClient.post('/radius/nas', payload),
+  listNas: () => apiClient.get('/radius/nas'),
+  startAccounting: (payload) => apiClient.post('/radius/accounting/start', payload),
+  stopAccounting: (payload) => apiClient.post('/radius/accounting/stop', payload),
 };
 
 // Payment Management API
@@ -115,10 +120,8 @@ export const paymentAPI = {
 export const transactionAPI = {
   getAllTransactions: () => apiClient.get('/admin/transactions'),
   getTransactionById: (transactionId) => apiClient.get(`/admin/transactions/${transactionId}`),
-  getTransactionsByCustomer: (customerId) => apiClient.get(`/admin/transactions/customer/${customerId}`),
-  getTransactionsByPayment: (paymentId) => apiClient.get(`/admin/transactions/payment/${paymentId}`),
-  createTransaction: (transactionData) => apiClient.post('/admin/transactions', transactionData),
-  updateTransaction: (transactionId, transactionData) => apiClient.put(`/admin/transactions/${transactionId}`, transactionData),
+  getTransactionsByPhone: (phoneNumber) => apiClient.get(`/admin/transactions/phone/${phoneNumber}`),
+  getTransactionsByStatus: (status) => apiClient.get(`/admin/transactions/status/${status}`),
   getTransactionStatistics: () => apiClient.get('/admin/transactions/statistics'),
 };
 
@@ -126,12 +129,11 @@ export const transactionAPI = {
 export const invoiceAPI = {
   getAllInvoices: () => apiClient.get('/admin/invoices'),
   getInvoiceById: (invoiceId) => apiClient.get(`/admin/invoices/${invoiceId}`),
+  getInvoiceByNumber: (invoiceNumber) => apiClient.get(`/admin/invoices/number/${invoiceNumber}`),
   getInvoicesByCustomer: (customerId) => apiClient.get(`/admin/invoices/customer/${customerId}`),
-  createInvoice: (invoiceData) => apiClient.post('/admin/invoices', invoiceData),
-  updateInvoice: (invoiceId, invoiceData) => apiClient.put(`/admin/invoices/${invoiceId}`, invoiceData),
-  deleteInvoice: (invoiceId) => apiClient.delete(`/admin/invoices/${invoiceId}`),
-  generateInvoice: (invoiceData) => apiClient.post('/admin/invoices/generate', invoiceData),
-  downloadInvoice: (invoiceId) => apiClient.get(`/admin/invoices/${invoiceId}/download`, { responseType: 'blob' }),
+  getInvoicesByStatus: (status) => apiClient.get(`/admin/invoices/status/${status}`),
+  getPaidInvoices: () => apiClient.get('/admin/invoices/paid'),
+  getUnpaidInvoices: () => apiClient.get('/admin/invoices/unpaid'),
   getInvoiceStatistics: () => apiClient.get('/admin/invoices/statistics'),
 };
 
@@ -139,11 +141,10 @@ export const invoiceAPI = {
 export const customerAPI = {
   getAllCustomers: (params = {}) => apiClient.get('/admin/customers', { params }),
   getCustomerById: (customerId) => apiClient.get(`/admin/customers/${customerId}`),
-  updateCustomerStatus: (customerId, status) => apiClient.put(`/admin/customers/${customerId}/status`, { status }),
-  getCustomerProfile: (customerId) => apiClient.get(`/admin/customers/${customerId}/profile`),
-  updateCustomerProfile: (customerId, profileData) => apiClient.put(`/admin/customers/${customerId}/profile`, profileData),
-  getCustomerSessions: (customerId) => apiClient.get(`/admin/customers/${customerId}/sessions`),
-  getCustomerPayments: (customerId) => apiClient.get(`/admin/customers/${customerId}/payments`),
+  getCustomerByPhone: (phoneNumber) => apiClient.get(`/admin/customers/phone/${phoneNumber}`),
+  getCustomerByEmail: (email) => apiClient.get(`/admin/customers/email/${email}`),
+  getActiveCustomers: () => apiClient.get('/admin/customers/active'),
+  getCustomerStatistics: () => apiClient.get('/admin/customers/statistics'),
 };
 
 // Loyalty Management API - Not implemented in backend yet
@@ -166,9 +167,7 @@ export const dashboardAPI = {
   getTechnicianDashboard: () => apiClient.get('/admin/dashboard/technician'),
   getFinanceDashboard: () => apiClient.get('/admin/dashboard/finance'),
   getMarketingDashboard: () => apiClient.get('/admin/dashboard/marketing'),
-  getSystemHealth: () => apiClient.get('/admin/health'),
-  getSystemMetrics: () => apiClient.get('/admin/metrics'),
-  getRecentActivity: () => apiClient.get('/admin/activity'),
+  getProfile: () => apiClient.get('/admin/profile'),
 };
 
 // Application Management API - Not implemented in backend yet

@@ -1,12 +1,18 @@
 import axios from 'axios';
 import useAuthStore from '/src/store/authStore.js';
 
-// Create axios instance - LOCAL DEVELOPMENT
-const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1';
-console.log('🔍 Debug: API Base URL configured as:', baseURL);
+// Create axios instance - prefer explicit envs, then prod default for Cloudflare, else localhost
+const resolvedBaseURL = (
+  import.meta.env.VITE_API_BASE_URL ||
+  import.meta.env.VITE_API_URL ||
+  (typeof window !== 'undefined' && window.location?.host?.includes('ggwifi.co.tz')
+    ? 'https://api.ggwifi.co.tz/api/v1'
+    : 'http://localhost:8080/api/v1')
+);
+console.log('🔍 Debug: API Base URL configured as:', resolvedBaseURL);
 
 const apiClient = axios.create({
-  baseURL: baseURL,
+  baseURL: resolvedBaseURL,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
