@@ -2,7 +2,8 @@ import apiService from './apiService';
 
 class PaymentService {
   constructor() {
-    this.baseUrl = 'http://localhost:8080/api/v1/customer-portal';
+    // Use API service directly, no need for separate base URL
+    this.apiService = apiService;
   }
 
   /**
