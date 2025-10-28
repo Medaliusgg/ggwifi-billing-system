@@ -378,15 +378,15 @@ public class CustomerPortalController {
                     packageData.put("packageType", pkg.getPackageType());
                     packageData.put("category", pkg.getCategory());
                     
-                    // Add time-based offer information (temporarily disabled until migration)
-                    packageData.put("isTimeBasedOffer", false); // pkg.getIsTimeBasedOffer());
-                    packageData.put("offerType", null); // pkg.getOfferType());
-                    packageData.put("offerDescription", null); // pkg.getOfferDescription());
-                    packageData.put("originalPrice", null); // pkg.getOriginalPrice());
-                    packageData.put("discountPercentage", null); // pkg.getDiscountPercentage());
-                    packageData.put("availableDays", null); // pkg.getAvailableDays());
-                    packageData.put("offerStartTime", null); // pkg.getOfferStartTime());
-                    packageData.put("offerEndTime", null); // pkg.getOfferEndTime());
+                    // Add time-based offer information (ENABLED)
+                    packageData.put("isTimeBasedOffer", pkg.getIsTimeBasedOffer());
+                    packageData.put("offerType", pkg.getOfferType());
+                    packageData.put("offerDescription", pkg.getOfferDescription());
+                    packageData.put("originalPrice", pkg.getOriginalPrice());
+                    packageData.put("discountPercentage", pkg.getDiscountPercentage());
+                    packageData.put("availableDays", pkg.getAvailableDays());
+                    packageData.put("offerStartTime", pkg.getOfferStartTime());
+                    packageData.put("offerEndTime", pkg.getOfferEndTime());
                     
                     // Calculate savings for offer packages (temporarily disabled)
                     // if (Boolean.TRUE.equals(pkg.getIsTimeBasedOffer()) && 

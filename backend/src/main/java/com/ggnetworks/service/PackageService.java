@@ -61,14 +61,10 @@ public class PackageService {
     public List<InternetPackage> getAvailablePackagesForCustomers() {
         List<InternetPackage> activePackages = packageRepository.findByIsActiveTrue();
         
-        // For now, return all active packages until migration is applied
-        // TODO: Re-enable time-based filtering after migration
-        return activePackages;
-        
-        // Uncomment after migration:
-        // return activePackages.stream()
-        //     .filter(this::isPackageCurrentlyAvailable)
-        //     .collect(Collectors.toList());
+        // Time-based filtering ENABLED
+        return activePackages.stream()
+            .filter(this::isPackageCurrentlyAvailable)
+            .collect(Collectors.toList());
     }
 
     /**
