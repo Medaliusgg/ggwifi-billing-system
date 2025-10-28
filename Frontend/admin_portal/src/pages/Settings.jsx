@@ -120,7 +120,7 @@ const SettingsConfiguration = () => {
   const { data: settingsData, isLoading, error, refetch } = useQuery({
     queryKey: ['settings', page, rowsPerPage, searchTerm, categoryFilter],
     queryFn: async () => {
-      const response = await apiClient.get('/settings');
+      const response = await apiClient.get('/admin/settings');  // or remove if endpoint doesn't exist
       return response.data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -130,7 +130,7 @@ const SettingsConfiguration = () => {
   const { data: systemInfo } = useQuery({
     queryKey: ['system-info'],
     queryFn: async () => {
-      const response = await apiClient.get('/system/info');
+      const response = await apiClient.get('/admin/system/info');  // or remove if endpoint doesn't exist
       return response.data;
     },
   });

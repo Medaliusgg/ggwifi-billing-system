@@ -132,7 +132,7 @@ const SessionManagement = () => {
   const { data: sessionsData, isLoading, error, refetch } = useQuery({
     queryKey: ['sessions', page, rowsPerPage, searchTerm, statusFilter],
     queryFn: async () => {
-      const response = await apiClient.get('/sessions');
+      const response = await apiClient.get('/radius/sessions');
       return response.data;
     },
     staleTime: 30 * 1000, // 30 seconds
@@ -143,7 +143,7 @@ const SessionManagement = () => {
   const { data: sessionStats } = useQuery({
     queryKey: ['session-stats'],
     queryFn: async () => {
-      const response = await apiClient.get('/sessions/stats');
+      const response = await apiClient.get('/radius/statistics');
       return response.data;
     },
     staleTime: 30 * 1000,

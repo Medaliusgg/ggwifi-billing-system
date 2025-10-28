@@ -120,7 +120,7 @@ const PaymentManagement = () => {
   const { data: paymentsData, isLoading, error, refetch } = useQuery({
     queryKey: ['payments', page, rowsPerPage, searchTerm, statusFilter, methodFilter],
     queryFn: async () => {
-      const response = await apiClient.get('/payments');
+      const response = await apiClient.get('/admin/payments');
       return response.data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -130,7 +130,7 @@ const PaymentManagement = () => {
   const { data: customersData } = useQuery({
     queryKey: ['customers'],
     queryFn: async () => {
-      const response = await apiClient.get('/customers');
+      const response = await apiClient.get('/admin/customers');
       return response.data;
     },
   });
@@ -139,7 +139,7 @@ const PaymentManagement = () => {
   const { data: gatewaysData } = useQuery({
     queryKey: ['payment-gateways'],
     queryFn: async () => {
-      const response = await apiClient.get('/payment-gateways');
+      const response = await apiClient.get('/admin/payments/gateways');  // or remove if endpoint doesn't exist
       return response.data;
     },
   });

@@ -133,7 +133,7 @@ const FinancialManagement = () => {
   const { data: expensesData } = useQuery({
     queryKey: ['expenses'],
     queryFn: async () => {
-      const response = await apiClient.get('/expenses');
+      const response = await apiClient.get('/admin/finance/expenses');  // or use finance dashboard
       return response.data;
     },
   });
@@ -142,7 +142,7 @@ const FinancialManagement = () => {
   const { data: budgetsData } = useQuery({
     queryKey: ['budgets'],
     queryFn: async () => {
-      const response = await apiClient.get('/budgets');
+      const response = await apiClient.get('/admin/finance/budgets');  // or use finance dashboard
       return response.data;
     },
   });
@@ -151,7 +151,7 @@ const FinancialManagement = () => {
   const { data: employeesData } = useQuery({
     queryKey: ['employees'],
     queryFn: async () => {
-      const response = await apiClient.get('/employees');
+      const response = await apiClient.get('/admin/users');  // or employees endpoint
       return response.data;
     },
   });
@@ -160,7 +160,7 @@ const FinancialManagement = () => {
   const { data: rentPlacesData } = useQuery({
     queryKey: ['rent-places'],
     queryFn: async () => {
-      const response = await apiClient.get('/rent-places');
+      const response = await apiClient.get('/admin/locations');  // or rent places endpoint
       return response.data;
     },
   });
