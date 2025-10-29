@@ -41,6 +41,7 @@ public class DatabaseInitializationService implements CommandLineRunner {
 
         // Create admin user if not exists
         createAdminUser();
+        enforceRoleModel();
         
         // Create default packages
         createDefaultPackages();
@@ -76,6 +77,43 @@ public class DatabaseInitializationService implements CommandLineRunner {
             
         } catch (Exception e) {
             System.err.println("❌ Error creating admin user: " + e.getMessage());
+        }
+    }
+
+    private void enforceRoleModel() {
+        try {
+            // Ensure exactly one SUPER_ADMIN exists
+            long superAdmins = userRepository.countByRole(User.UserRole.SUPER_ADMIN);
+            if (superAdmins == 0) {
+                // Promote existing 'admin' if present, else first ADMIN to SUPER_ADMIN
+                userRepository.findByUsername("admin").ifPresentOrElse(u -> {
+                    u.setRole(User.UserRole.SUPER_ADMIN);
+                    u.setIsActive(true);
+                    userRepository.save(u);
+                    System.out.println("✅ Promoted 'admin' to SUPER_ADMIN");
+                }, () -> {
+                    var admins = userRepository.findByRole(User.UserRole.valueOf("ADMIN"));
+                    if (!admins.isEmpty()) {
+                        User u = admins.get(0);
+                        u.setRole(User.UserRole.SUPER_ADMIN);
+                        u.setIsActive(true);
+                        userRepository.save(u);
+                        System.out.println("✅ Promoted first ADMIN to SUPER_ADMIN: " + u.getUsername());
+                    }
+                });
+            }
+
+            // Convert any remaining ADMIN users to TECHNICIAN (staff)
+            var adminsLeft = userRepository.findByRole(User.UserRole.valueOf("ADMIN"));
+            for (User u : adminsLeft) {
+                u.setRole(User.UserRole.TECHNICIAN);
+                userRepository.save(u);
+            }
+            if (!adminsLeft.isEmpty()) {
+                System.out.println("✅ Converted " + adminsLeft.size() + " ADMIN users to TECHNICIAN");
+            }
+        } catch (Exception e) {
+            System.err.println("⚠️ enforceRoleModel: " + e.getMessage());
         }
     }
 
