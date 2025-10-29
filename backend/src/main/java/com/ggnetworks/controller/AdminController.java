@@ -688,10 +688,11 @@ public class AdminController {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String adminUsername = authentication.getName();
             
-            // Check if admin has USER_CREATE permission
-            if (!permissionService.hasPermission(adminUsername, "USER_CREATE")) {
+            // Require SUPER_ADMIN to create users
+            Optional<User> creatorOpt = userRepository.findByUsername(adminUsername);
+            if (creatorOpt.isEmpty() || creatorOpt.get().getRole() != User.UserRole.SUPER_ADMIN) {
                 response.put("status", "error");
-                response.put("message", "Insufficient permissions to create users");
+                response.put("message", "SUPER_ADMIN required to create users");
                 return ResponseEntity.status(403).body(response);
             }
             
@@ -707,6 +708,9 @@ public class AdminController {
             String position = (String) userData.get("position");
             
             User.UserRole role = User.UserRole.valueOf(roleStr.toUpperCase());
+            if (role == User.UserRole.ADMIN) {
+                throw new SecurityException("ADMIN role is not allowed. Use staff roles or SUPER_ADMIN.");
+            }
             
             User newUser = permissionService.createUserWithRole(
                 adminUsername, username, email, password, firstName, lastName, 
@@ -1066,11 +1070,11 @@ public class AdminController {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String username = authentication.getName();
             
-            // Check if user has admin role (temporary - will be replaced with proper permission system)
+            // Only SUPER_ADMIN can update users
             Optional<User> userOpt = userRepository.findByUsername(username);
-            if (userOpt.isEmpty() || (userOpt.get().getRole() != User.UserRole.ADMIN && userOpt.get().getRole() != User.UserRole.SUPER_ADMIN)) {
+            if (userOpt.isEmpty() || userOpt.get().getRole() != User.UserRole.SUPER_ADMIN) {
                 response.put("status", "error");
-                response.put("message", "Insufficient permissions to update users");
+                response.put("message", "SUPER_ADMIN required to update users");
                 return ResponseEntity.status(403).body(response);
             }
             // Real DB update
@@ -1148,11 +1152,11 @@ public class AdminController {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String username = authentication.getName();
             
-            // Check if user has admin role (temporary - will be replaced with proper permission system)
+            // Only SUPER_ADMIN can delete users
             Optional<User> userOpt = userRepository.findByUsername(username);
-            if (userOpt.isEmpty() || (userOpt.get().getRole() != User.UserRole.ADMIN && userOpt.get().getRole() != User.UserRole.SUPER_ADMIN)) {
+            if (userOpt.isEmpty() || userOpt.get().getRole() != User.UserRole.SUPER_ADMIN) {
                 response.put("status", "error");
-                response.put("message", "Insufficient permissions to delete users");
+                response.put("message", "SUPER_ADMIN required to delete users");
                 return ResponseEntity.status(403).body(response);
             }
             

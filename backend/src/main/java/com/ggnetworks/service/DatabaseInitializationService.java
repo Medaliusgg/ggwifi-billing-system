@@ -63,7 +63,7 @@ public class DatabaseInitializationService implements CommandLineRunner {
             admin.setFirstName("System");
             admin.setLastName("Administrator");
             admin.setEmail("admin@ggwifi.co.tz");
-            admin.setRole(User.UserRole.ADMIN);
+            admin.setRole(User.UserRole.SUPER_ADMIN);
             admin.setIsActive(true);
             admin.setIsEmailVerified(true);
             admin.setIsPhoneVerified(true);

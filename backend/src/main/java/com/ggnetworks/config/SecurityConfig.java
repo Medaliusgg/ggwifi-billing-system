@@ -59,34 +59,24 @@ public class SecurityConfig {
                 .requestMatchers("/test/**").permitAll()
                 .requestMatchers("/api/public/**").permitAll()
                 
-                // Admin endpoints (ADMIN or SUPER_ADMIN role required)
-                .requestMatchers("/admin/**", "/api/v1/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                // Admin endpoints (SUPER_ADMIN only)
+                .requestMatchers("/admin/**", "/api/v1/admin/**").hasRole("SUPER_ADMIN")
                 
-                // Dashboard endpoints (ADMIN or SUPER_ADMIN role required)
-                .requestMatchers("/dashboard/**", "/api/v1/dashboard/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                // Dashboard endpoints (SUPER_ADMIN only)
+                .requestMatchers("/dashboard/**", "/api/v1/dashboard/**").hasRole("SUPER_ADMIN")
                 
-                // Core business endpoints (ADMIN or SUPER_ADMIN role required)
-                .requestMatchers("/packages/**", "/api/v1/packages/**", "/vouchers/**", "/api/v1/vouchers/**", "/customers/**", "/api/v1/customers/**", "/routers/**", "/api/v1/routers/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
-                .requestMatchers("/payments/**", "/api/v1/payments/**", "/transactions/**", "/api/v1/transactions/**", "/invoices/**", "/api/v1/invoices/**", "/sessions/**", "/api/v1/sessions/**").hasAnyRole("ADMIN", "SUPER_ADMIN", "FINANCE")
-                .requestMatchers("/analytics/**", "/api/v1/analytics/**", "/reports/**", "/api/v1/reports/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                // Core business endpoints
+                // Admin-managed data only by SUPER_ADMIN
+                .requestMatchers("/packages/**", "/api/v1/packages/**", "/vouchers/**", "/api/v1/vouchers/**", "/customers/**", "/api/v1/customers/**").hasRole("SUPER_ADMIN")
+                // Routers and Radius accessible by TECHNICIAN and SUPER_ADMIN
+                .requestMatchers("/routers/**", "/api/v1/routers/**", "/radius/**", "/api/v1/radius/**").hasAnyRole("TECHNICIAN", "SUPER_ADMIN")
+                // Finance modules accessible by FINANCE and SUPER_ADMIN
+                .requestMatchers("/payments/**", "/api/v1/payments/**", "/transactions/**", "/api/v1/transactions/**", "/invoices/**", "/api/v1/invoices/**").hasAnyRole("FINANCE", "SUPER_ADMIN")
+                // Analytics and reports only SUPER_ADMIN
+                .requestMatchers("/analytics/**", "/api/v1/analytics/**", "/reports/**", "/api/v1/reports/**").hasRole("SUPER_ADMIN")
                 
-                // Technician endpoints
-                .requestMatchers("/technician/**").hasAnyRole("TECHNICIAN", "ADMIN", "SUPER_ADMIN")
-                
-                // RADIUS endpoints
-                .requestMatchers("/radius/**").hasAnyRole("TECHNICIAN", "ADMIN", "SUPER_ADMIN")
-                
-                // Finance endpoints
-                .requestMatchers("/finance/**").hasAnyRole("FINANCE", "ADMIN", "SUPER_ADMIN")
-                
-                // Marketing endpoints
-                .requestMatchers("/marketing/**").hasAnyRole("MARKETING", "ADMIN", "SUPER_ADMIN")
-                
-                // SMS endpoints
-                .requestMatchers("/api/v1/sms/**").hasAnyRole("MARKETING", "ADMIN", "SUPER_ADMIN", "FINANCE")
-                
-                // Sales endpoints
-                .requestMatchers("/sales/**").hasAnyRole("SALES", "ADMIN", "SUPER_ADMIN")
+                // Marketing/Sales/SMS accessible only to SUPER_ADMIN for now
+                .requestMatchers("/marketing/**", "/sales/**", "/api/v1/sms/**").hasRole("SUPER_ADMIN")
                 
                 // All other requests require authentication
                 .anyRequest().authenticated()

@@ -231,8 +231,12 @@ public class PermissionService {
                                   String firstName, String lastName, String phoneNumber, String staffId,
                                   User.UserRole role, String department, String position) {
         
-        // Only SUPER_ADMIN can create SUPER_ADMIN users
-        // ADMIN users can create other ADMIN users and lower-level users
+        // Disallow creating ADMIN role entirely
+        if (role == User.UserRole.ADMIN) {
+            throw new SecurityException("ADMIN role is not allowed. Use staff roles or SUPER_ADMIN.");
+        }
+
+        // Only SUPER_ADMIN can create SUPER_ADMIN users, and only one allowed in system
         if (role == User.UserRole.SUPER_ADMIN) {
             // Check if the current user is SUPER_ADMIN
             User currentUser = userRepository.findByUsername(adminUsername)
@@ -240,6 +244,11 @@ public class PermissionService {
             
             if (currentUser.getRole() != User.UserRole.SUPER_ADMIN) {
                 throw new SecurityException("Only SUPER_ADMIN can create SUPER_ADMIN users");
+            }
+
+            long superAdmins = userRepository.countByRole(User.UserRole.SUPER_ADMIN);
+            if (superAdmins >= 1) {
+                throw new SecurityException("A SUPER_ADMIN already exists. Only one SUPER_ADMIN is permitted.");
             }
         }
         
