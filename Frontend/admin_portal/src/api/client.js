@@ -38,17 +38,29 @@ apiClient.interceptors.request.use(
   }
 );
 
-// Response interceptor for error handling and token refresh
+// Response interceptor for error handling, token refresh and structured logging
 apiClient.interceptors.response.use(
   (response) => {
     console.log('🔍 Debug: API response received:', response.status, response.config.url);
     return response;
   },
   async (error) => {
-    console.log('🔍 Debug: API error:', error.message, error.code, error.config?.url);
     const originalRequest = error.config;
+    const status = error.response?.status;
+    const url = originalRequest?.url;
+    const method = originalRequest?.method;
+    const data = error.response?.data;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Structured client-side logging for easier backend error visibility during debugging
+    console.error('[GGWIFI API ERROR]', {
+      method,
+      url,
+      status,
+      message: error.message,
+      response: data,
+    });
+
+    if (status === 401 && !originalRequest?._retry) {
       originalRequest._retry = true;
       
       try {

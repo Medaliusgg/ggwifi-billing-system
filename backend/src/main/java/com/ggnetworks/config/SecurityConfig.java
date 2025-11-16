@@ -59,24 +59,22 @@ public class SecurityConfig {
                 .requestMatchers("/test/**").permitAll()
                 .requestMatchers("/api/public/**").permitAll()
                 
-                // Admin endpoints (SUPER_ADMIN only)
-                .requestMatchers("/admin/**", "/api/v1/admin/**").hasRole("SUPER_ADMIN")
-                
-                // Dashboard endpoints (SUPER_ADMIN only)
-                .requestMatchers("/dashboard/**", "/api/v1/dashboard/**").hasRole("SUPER_ADMIN")
-                
-                // Core business endpoints
-                // Admin-managed data only by SUPER_ADMIN
-                .requestMatchers("/packages/**", "/api/v1/packages/**", "/vouchers/**", "/api/v1/vouchers/**", "/customers/**", "/api/v1/customers/**").hasRole("SUPER_ADMIN")
-                // Routers and Radius accessible by TECHNICIAN and SUPER_ADMIN
-                .requestMatchers("/routers/**", "/api/v1/routers/**", "/radius/**", "/api/v1/radius/**").hasAnyRole("TECHNICIAN", "SUPER_ADMIN")
-                // Finance modules accessible by FINANCE and SUPER_ADMIN
-                .requestMatchers("/payments/**", "/api/v1/payments/**", "/transactions/**", "/api/v1/transactions/**", "/invoices/**", "/api/v1/invoices/**").hasAnyRole("FINANCE", "SUPER_ADMIN")
-                // Analytics and reports only SUPER_ADMIN
-                .requestMatchers("/analytics/**", "/api/v1/analytics/**", "/reports/**", "/api/v1/reports/**").hasRole("SUPER_ADMIN")
-                
-                // Marketing/Sales/SMS accessible only to SUPER_ADMIN for now
-                .requestMatchers("/marketing/**", "/sales/**", "/api/v1/sms/**").hasRole("SUPER_ADMIN")
+                // All admin/business endpoints: require authenticated admin token (single admin in system)
+                .requestMatchers(
+                    "/admin/**", "/api/v1/admin/**",
+                    "/dashboard/**", "/api/v1/dashboard/**",
+                    "/packages/**", "/api/v1/packages/**",
+                    "/vouchers/**", "/api/v1/vouchers/**",
+                    "/customers/**", "/api/v1/customers/**",
+                    "/routers/**", "/api/v1/routers/**",
+                    "/radius/**", "/api/v1/radius/**",
+                    "/payments/**", "/api/v1/payments/**",
+                    "/transactions/**", "/api/v1/transactions/**",
+                    "/invoices/**", "/api/v1/invoices/**",
+                    "/analytics/**", "/api/v1/analytics/**",
+                    "/reports/**", "/api/v1/reports/**",
+                    "/marketing/**", "/sales/**", "/api/v1/sms/**"
+                ).authenticated()
                 
                 // All other requests require authentication
                 .anyRequest().authenticated()

@@ -174,12 +174,12 @@ public class PermissionService {
         if (userOpt.isEmpty()) {
             return false;
         }
-        
-        User user = userOpt.get();
-        Optional<UserPermission> permissionOpt = rolePermissionRepository
-            .findPermissionByRoleResourceAndAction(user.getRole(), resource, action);
-        
-        return permissionOpt.isPresent();
+
+        // 🔓 Simplified permission model:
+        // Any authenticated user (able to reach this point) is allowed to perform
+        // any action. This matches the requirement to have a single administrator
+        // without complex staff-role based access control.
+        return true;
     }
     
     /**
@@ -190,18 +190,11 @@ public class PermissionService {
         if (userOpt.isEmpty()) {
             return false;
         }
-        
-        User user = userOpt.get();
-        Optional<UserPermission> permissionOpt = userPermissionRepository.findByPermissionName(permissionName);
-        if (permissionOpt.isEmpty()) {
-            return false;
-        }
-        
-        UserPermission permission = permissionOpt.get();
-        Optional<UserPermission> rolePermissionOpt = rolePermissionRepository
-            .findPermissionByRoleResourceAndAction(user.getRole(), permission.getResource(), permission.getAction());
-        
-        return rolePermissionOpt.isPresent();
+
+        // 🔓 Simplified permission model:
+        // Any authenticated user is treated as fully authorized for all named
+        // permissions. Detailed per-permission checks are intentionally disabled.
+        return true;
     }
     
     /**

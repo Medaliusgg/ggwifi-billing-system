@@ -16,6 +16,8 @@ const useAuthStore = create(
       lastActivity: null,
       permissions: [],
       userPreferences: {},
+      expiresAt: null,
+      idleTimer: null,
 
       // Actions
       login: async (credentials) => {
@@ -59,15 +61,30 @@ const useAuthStore = create(
             const { user, token } = response.data.data;
             const permissions = user.permissions || [];
             
-            
-            // Store tokens
+            // Store tokens for both new client and legacy axios usage
             apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+            try {
+              localStorage.setItem('authToken', token);
+              localStorage.setItem('user', JSON.stringify({ ...user, permissions }));
+            } catch (e) {
+              console.warn('Failed to persist auth token to localStorage:', e);
+            }
             
-            // Set session timeout (default 8 hours)
-            const timeout = 8 * 60 * 60 * 1000; // 8 hours
+            // Derive expiry from JWT if present; fallback 8h
+            const decodeJwt = (jwt) => {
+              try {
+                const base64 = jwt.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+                const json = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+                return JSON.parse(json);
+              } catch (e) { return {}; }
+            };
+            const claims = decodeJwt(token) || {};
+            const expMs = claims.exp ? claims.exp * 1000 : (Date.now() + 8 * 60 * 60 * 1000);
+
+            // Timer to enforce absolute expiry
             const sessionTimeout = setTimeout(() => {
               get().logout('Session expired');
-            }, timeout);
+            }, Math.max(0, expMs - Date.now()));
             
             set({
               user: { ...user, permissions },
@@ -78,11 +95,12 @@ const useAuthStore = create(
               error: null,
               sessionTimeout,
               lastActivity: Date.now(),
-              permissions: permissions || []
+              permissions: permissions || [],
+              expiresAt: expMs
             });
             
             // Track user activity for session management
-            get().updateActivity();
+            get().initSessionWatch();
             
             return { success: true, user: { ...user, permissions } };
           } else {
@@ -175,7 +193,26 @@ const useAuthStore = create(
       },
 
       updateActivity: () => {
-        set({ lastActivity: Date.now() });
+        const state = get();
+        const now = Date.now();
+        set({ lastActivity: now });
+        // Reset idle timer on any activity
+        if (state.idleTimer) clearTimeout(state.idleTimer);
+        const idleMinutes = Number(import.meta.env.VITE_SESSION_MAX_IDLE_MINUTES || 30);
+        const idleMs = idleMinutes * 60 * 1000;
+        const newIdle = setTimeout(() => {
+          get().logout('Logged out due to inactivity');
+        }, idleMs);
+        set({ idleTimer: newIdle });
+      },
+
+      initSessionWatch: () => {
+        // Attach listeners once per session
+        const activityEvents = ['mousemove', 'keydown', 'scroll', 'click', 'touchstart'];
+        const onActivity = () => get().updateActivity();
+        activityEvents.forEach(evt => window.addEventListener(evt, onActivity, { passive: true }));
+        // Initialize idle timer immediately
+        get().updateActivity();
       },
 
       clearError: () => set({ error: null }),
@@ -232,12 +269,15 @@ const useAuthStore = create(
 
       // Session management
       isSessionValid: () => {
-        const { lastActivity, isAuthenticated } = get();
+        const { lastActivity, isAuthenticated, expiresAt } = get();
         if (!isAuthenticated || !lastActivity) return false;
         
-        // Check if session is still valid (30 minutes of inactivity)
-        const thirtyMinutes = 30 * 60 * 1000;
-        return Date.now() - lastActivity < thirtyMinutes;
+        // Inactivity limit (default 30m)
+        const idleMinutes = Number(import.meta.env.VITE_SESSION_MAX_IDLE_MINUTES || 30);
+        const idleMs = idleMinutes * 60 * 1000;
+        const notIdle = Date.now() - lastActivity < idleMs;
+        const notExpired = !expiresAt || Date.now() < expiresAt;
+        return notIdle && notExpired;
       },
 
       // Get user display name
@@ -320,12 +360,19 @@ const useAuthStore = create(
         isAuthenticated: state.isAuthenticated,
         lastActivity: state.lastActivity,
         permissions: state.permissions,
-        userPreferences: state.userPreferences
+        userPreferences: state.userPreferences,
+        expiresAt: state.expiresAt
       }),
       // Security: Only persist essential data
       onRehydrateStorage: () => (state) => {
         if (state?.token) {
           apiClient.defaults.headers.common['Authorization'] = `Bearer ${state.token}`;
+        }
+        // Resume session watchers after reload
+        if (state?.isAuthenticated) {
+          setTimeout(() => {
+            try { get().initSessionWatch(); } catch (_) {}
+          }, 0);
         }
       }
     }

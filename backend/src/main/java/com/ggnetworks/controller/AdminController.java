@@ -60,6 +60,36 @@ public class AdminController {
     private AuditLogRepository auditLogRepository;
     
     /**
+     * Lightweight backend health check for the admin portal
+     */
+    @GetMapping("/health")
+    public ResponseEntity<Map<String, Object>> health() {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            long totalUsers = userRepository.count();
+            long totalCustomers = customerRepository.count();
+            long totalRouters = routerRepository.count();
+            
+            Map<String, Object> details = new HashMap<>();
+            details.put("users", totalUsers);
+            details.put("customers", totalCustomers);
+            details.put("routers", totalRouters);
+            
+            response.put("status", "UP");
+            response.put("timestamp", LocalDateTime.now().toString());
+            response.put("details", details);
+        } catch (Exception e) {
+            response.put("status", "DOWN");
+            response.put("timestamp", LocalDateTime.now().toString());
+            response.put("error", e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+        
+        return ResponseEntity.ok(response);
+    }
+    
+    /**
      * Get comprehensive dashboard statistics with 18 KPI cards
      */
     @GetMapping("/dashboard/stats")

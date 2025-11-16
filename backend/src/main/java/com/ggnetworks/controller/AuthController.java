@@ -67,10 +67,10 @@ public class AuthController {
                 return ResponseEntity.status(403).body(response);
             }
 
-            // Check if user has ADMIN role
-            if (user.getRole() != User.UserRole.ADMIN && user.getRole() != User.UserRole.SUPER_ADMIN) {
+            // Require SUPER_ADMIN strictly
+            if (user.getRole() != User.UserRole.SUPER_ADMIN) {
                 response.put("status", "error");
-                response.put("message", "Access denied. Admin role required.");
+                response.put("message", "Access denied. SUPER_ADMIN required.");
                 return ResponseEntity.status(403).body(response);
             }
 

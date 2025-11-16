@@ -95,3 +95,4 @@ curl https://api.ggwifi.co.tz/api/v1/customer-portal/packages
 **IMPORTANT:** Until you fix Cloudflare, the customer portal will keep getting 403 errors.  
 **Once fixed:** Everything will work! ✅
 
+

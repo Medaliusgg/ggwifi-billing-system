@@ -168,6 +168,7 @@ export const dashboardAPI = {
   getFinanceDashboard: () => apiClient.get('/admin/dashboard/finance'),
   getMarketingDashboard: () => apiClient.get('/admin/dashboard/marketing'),
   getProfile: () => apiClient.get('/admin/profile'),
+  getHealth: () => apiClient.get('/admin/health'),
 };
 
 // Application Management API - Not implemented in backend yet
