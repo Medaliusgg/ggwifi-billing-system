@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/admin/payments")
+@RequestMapping("/api/v1/admin/payments")
 @CrossOrigin(origins = "*")
 public class PaymentController {
 

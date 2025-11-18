@@ -3,19 +3,22 @@ package com.ggnetworks.controller;
 import com.ggnetworks.entity.Voucher;
 import com.ggnetworks.service.VoucherService;
 import com.ggnetworks.service.PermissionService;
+import com.ggnetworks.service.FreeRadiusService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/admin/vouchers")
+@RequestMapping("/api/v1/admin/vouchers")
 @CrossOrigin(origins = "*")
 public class VoucherController {
 
@@ -24,6 +27,9 @@ public class VoucherController {
 
     @Autowired
     private PermissionService permissionService;
+
+    @Autowired
+    private FreeRadiusService freeRadiusService;
 
     private ResponseEntity<Map<String, Object>> checkPermission(String permission) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -158,6 +164,82 @@ public class VoucherController {
         } catch (Exception e) {
             response.put("status", "error");
             response.put("message", "Failed to retrieve unused vouchers: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    @PostMapping
+    public ResponseEntity<Map<String, Object>> createVoucher(@RequestBody Map<String, Object> voucherData) {
+        Map<String, Object> response = new HashMap<>();
+        ResponseEntity<Map<String, Object>> permissionCheck = checkPermission("VOUCHER_CREATE");
+        if (permissionCheck != null) return permissionCheck;
+
+        try {
+            Long packageId = Long.valueOf(voucherData.get("packageId").toString());
+            BigDecimal amount = new BigDecimal(voucherData.get("amount").toString());
+            String customerName = (String) voucherData.get("customerName");
+            String customerPhone = (String) voucherData.get("customerPhone");
+            String customerEmail = (String) voucherData.getOrDefault("customerEmail", "");
+
+            String voucherCode = voucherService.generateVoucherCode(packageId);
+            Voucher voucher = voucherService.createVoucher(voucherCode, packageId, amount, customerName, customerPhone, customerEmail);
+
+            response.put("status", "success");
+            response.put("message", "Voucher created successfully");
+            response.put("data", voucher);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to create voucher: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    @GetMapping("/sessions/active")
+    public ResponseEntity<Map<String, Object>> getActiveVoucherSessions() {
+        Map<String, Object> response = new HashMap<>();
+        ResponseEntity<Map<String, Object>> permissionCheck = checkPermission("VOUCHER_READ");
+        if (permissionCheck != null) return permissionCheck;
+
+        try {
+            // Get active RADIUS sessions (which represent active voucher sessions)
+            List<Map<String, Object>> activeSessions = freeRadiusService.getActiveRadiusSessions();
+            
+            // Enrich with voucher details
+            List<Map<String, Object>> enrichedSessions = new ArrayList<>();
+            for (Map<String, Object> session : activeSessions) {
+                String username = (String) session.get("username");
+                if (username != null && username.contains("_")) {
+                    String[] parts = username.split("_");
+                    if (parts.length >= 2) {
+                        String phoneNumber = parts[0];
+                        String voucherCode = parts[1];
+                        
+                        Optional<Voucher> voucherOpt = voucherService.getVoucherByCode(voucherCode);
+                        if (voucherOpt.isPresent()) {
+                            Voucher voucher = voucherOpt.get();
+                            Map<String, Object> enriched = new HashMap<>(session);
+                            enriched.put("voucherCode", voucherCode);
+                            enriched.put("customerPhone", phoneNumber);
+                            enriched.put("customerName", voucher.getCustomerName());
+                            enriched.put("packageId", voucher.getPackageId());
+                            enriched.put("packageName", voucher.getPackageName());
+                            enriched.put("amount", voucher.getAmount());
+                            enriched.put("activatedAt", voucher.getActivatedAt());
+                            enrichedSessions.add(enriched);
+                        }
+                    }
+                }
+            }
+            
+            response.put("status", "success");
+            response.put("message", "Active voucher sessions retrieved successfully");
+            response.put("data", enrichedSessions);
+            response.put("count", enrichedSessions.size());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to retrieve active voucher sessions: " + e.getMessage());
             return ResponseEntity.status(500).body(response);
         }
     }

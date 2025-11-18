@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/admin/transactions")
+@RequestMapping("/api/v1/admin/transactions")
 @CrossOrigin(origins = "*")
 public class TransactionController {
 
