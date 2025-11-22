@@ -1,0 +1,23 @@
+# Copy and paste these commands (replace YOUR_VPS_IP with your actual VPS IP address)
+
+# ============================================
+# STEP 1: Copy script to VPS
+# ============================================
+cd "/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP"
+scp deploy-to-vps.sh root@YOUR_VPS_IP:/root/
+
+
+# ============================================
+# STEP 2: SSH into VPS and deploy
+# ============================================
+ssh root@YOUR_VPS_IP
+chmod +x /root/deploy-to-vps.sh
+/root/deploy-to-vps.sh
+
+
+# ============================================
+# STEP 3: Test from local machine (after deployment)
+# ============================================
+cd "/home/medalius/Desktop/PROJECT 3./GG-WIFI WEB-APP/backend"
+./test-all-modules.sh
+

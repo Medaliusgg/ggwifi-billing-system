@@ -147,6 +147,140 @@ public class PaymentService {
         
         return stats;
     }
+    
+    /**
+     * Reconcile payments with payment gateway (ZenoPay) for hotspot billing
+     */
+    public Map<String, Object> reconcilePayments(LocalDateTime startDate, LocalDateTime endDate) {
+        Map<String, Object> result = new HashMap<>();
+        
+        List<Payment> payments = paymentRepository.findByCreatedAtBetween(startDate, endDate);
+        
+        long totalPayments = payments.size();
+        long reconciled = 0;
+        long discrepancies = 0;
+        BigDecimal totalAmount = BigDecimal.ZERO;
+        BigDecimal reconciledAmount = BigDecimal.ZERO;
+        
+        // Count by gateway
+        Map<String, Long> gatewayCounts = new HashMap<>();
+        Map<String, BigDecimal> gatewayAmounts = new HashMap<>();
+        
+        for (Payment payment : payments) {
+            totalAmount = totalAmount.add(payment.getAmount() != null ? payment.getAmount() : BigDecimal.ZERO);
+            
+            String gateway = payment.getPaymentGateway() != null ? payment.getPaymentGateway() : "UNKNOWN";
+            gatewayCounts.put(gateway, gatewayCounts.getOrDefault(gateway, 0L) + 1);
+            gatewayAmounts.put(gateway, gatewayAmounts.getOrDefault(gateway, BigDecimal.ZERO)
+                .add(payment.getAmount() != null ? payment.getAmount() : BigDecimal.ZERO));
+            
+            // Check if payment has gateway confirmation
+            if (payment.getGatewayTransactionId() != null && !payment.getGatewayTransactionId().isEmpty() 
+                && payment.getConfirmedAt() != null) {
+                reconciled++;
+                reconciledAmount = reconciledAmount.add(payment.getAmount() != null ? payment.getAmount() : BigDecimal.ZERO);
+            } else if (payment.getStatus() == Payment.PaymentStatus.COMPLETED 
+                && (payment.getGatewayTransactionId() == null || payment.getGatewayTransactionId().isEmpty())) {
+                discrepancies++;
+            }
+        }
+        
+        result.put("period", Map.of("start", startDate.toString(), "end", endDate.toString()));
+        result.put("totalPayments", totalPayments);
+        result.put("reconciled", reconciled);
+        result.put("discrepancies", discrepancies);
+        result.put("unreconciled", totalPayments - reconciled);
+        result.put("totalAmount", totalAmount);
+        result.put("reconciledAmount", reconciledAmount);
+        result.put("reconciliationRate", totalPayments > 0 ? 
+            Math.round((double) reconciled / totalPayments * 10000.0) / 100.0 : 0);
+        result.put("byGateway", gatewayCounts);
+        result.put("amountByGateway", gatewayAmounts);
+        result.put("generatedAt", LocalDateTime.now().toString());
+        
+        return result;
+    }
+    
+    /**
+     * Get payments requiring reconciliation for hotspot billing
+     */
+    public List<Payment> getPaymentsRequiringReconciliation() {
+        return paymentRepository.findAll().stream()
+            .filter(payment -> payment.getStatus() == Payment.PaymentStatus.COMPLETED 
+                && (payment.getGatewayTransactionId() == null || payment.getGatewayTransactionId().isEmpty()))
+            .toList();
+    }
+    
+    /**
+     * Get payment analytics dashboard for hotspot billing
+     */
+    public Map<String, Object> getPaymentAnalytics(LocalDateTime startDate, LocalDateTime endDate) {
+        Map<String, Object> analytics = new HashMap<>();
+        
+        List<Payment> payments = paymentRepository.findByCreatedAtBetween(startDate, endDate);
+        
+        // Revenue analytics
+        BigDecimal totalRevenue = payments.stream()
+            .filter(p -> p.getStatus() == Payment.PaymentStatus.COMPLETED)
+            .map(p -> p.getAmount() != null ? p.getAmount() : BigDecimal.ZERO)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+        
+        // Payment method breakdown
+        Map<String, Long> methodCounts = new HashMap<>();
+        Map<String, BigDecimal> methodAmounts = new HashMap<>();
+        
+        // Payment gateway breakdown
+        Map<String, Long> gatewayCounts = new HashMap<>();
+        Map<String, BigDecimal> gatewayAmounts = new HashMap<>();
+        
+        // Daily revenue trend
+        Map<String, BigDecimal> dailyRevenue = new HashMap<>();
+        
+        for (Payment payment : payments) {
+            if (payment.getStatus() == Payment.PaymentStatus.COMPLETED) {
+                String method = payment.getPaymentMethod() != null ? payment.getPaymentMethod().name() : "UNKNOWN";
+                String gateway = payment.getPaymentGateway() != null ? payment.getPaymentGateway() : "UNKNOWN";
+                String date = payment.getCreatedAt() != null ? payment.getCreatedAt().toLocalDate().toString() : "UNKNOWN";
+                
+                methodCounts.put(method, methodCounts.getOrDefault(method, 0L) + 1);
+                methodAmounts.put(method, methodAmounts.getOrDefault(method, BigDecimal.ZERO)
+                    .add(payment.getAmount() != null ? payment.getAmount() : BigDecimal.ZERO));
+                
+                gatewayCounts.put(gateway, gatewayCounts.getOrDefault(gateway, 0L) + 1);
+                gatewayAmounts.put(gateway, gatewayAmounts.getOrDefault(gateway, BigDecimal.ZERO)
+                    .add(payment.getAmount() != null ? payment.getAmount() : BigDecimal.ZERO));
+                
+                dailyRevenue.put(date, dailyRevenue.getOrDefault(date, BigDecimal.ZERO)
+                    .add(payment.getAmount() != null ? payment.getAmount() : BigDecimal.ZERO));
+            }
+        }
+        
+        // Success rate by gateway
+        Map<String, Double> gatewaySuccessRates = new HashMap<>();
+        for (String gateway : gatewayCounts.keySet()) {
+            long total = payments.stream()
+                .filter(p -> gateway.equals(p.getPaymentGateway()))
+                .count();
+            long successful = payments.stream()
+                .filter(p -> gateway.equals(p.getPaymentGateway()) && p.getStatus() == Payment.PaymentStatus.COMPLETED)
+                .count();
+            gatewaySuccessRates.put(gateway, total > 0 ? Math.round((double) successful / total * 10000.0) / 100.0 : 0.0);
+        }
+        
+        analytics.put("period", Map.of("start", startDate.toString(), "end", endDate.toString()));
+        analytics.put("totalRevenue", totalRevenue);
+        analytics.put("totalTransactions", payments.size());
+        analytics.put("successfulTransactions", payments.stream().filter(p -> p.getStatus() == Payment.PaymentStatus.COMPLETED).count());
+        analytics.put("failedTransactions", payments.stream().filter(p -> p.getStatus() == Payment.PaymentStatus.FAILED).count());
+        analytics.put("byPaymentMethod", Map.of("counts", methodCounts, "amounts", methodAmounts));
+        analytics.put("byGateway", Map.of("counts", gatewayCounts, "amounts", gatewayAmounts, "successRates", gatewaySuccessRates));
+        analytics.put("dailyRevenue", dailyRevenue);
+        analytics.put("averageTransactionAmount", payments.size() > 0 ? 
+            totalRevenue.divide(BigDecimal.valueOf(payments.size()), 2, java.math.RoundingMode.HALF_UP) : BigDecimal.ZERO);
+        analytics.put("generatedAt", LocalDateTime.now().toString());
+        
+        return analytics;
+    }
 }
 
 

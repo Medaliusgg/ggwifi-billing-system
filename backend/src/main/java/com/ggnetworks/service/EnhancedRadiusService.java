@@ -47,6 +47,10 @@ public class EnhancedRadiusService {
     @Autowired
     private MikroTikApiService mikrotikApiService;
     
+    // Note: RouterRepository removed - routers authenticate via FreeRADIUS only
+    // Users are created in FreeRADIUS tables (radcheck, radreply)
+    // All MikroTik routers query the FreeRADIUS server for authentication
+    
     /**
      * Create RADIUS user after successful payment
      */
@@ -92,8 +96,9 @@ public class EnhancedRadiusService {
             // Create RADIUS reply entries (authorization)
             createRadiusReplyEntries(radiusUsername, internetPackage, timeLimitSeconds);
             
-            // Create user on MikroTik routers
-            createUserOnMikroTikRouters(radiusUsername, radiusPassword, timeLimitSeconds);
+            // Note: Users are created in RADIUS tables (radcheck, radreply) only.
+            // All MikroTik routers authenticate against the RADIUS server on the VPS.
+            // No need to create users directly on routers via API - routers query RADIUS automatically.
             
             // Update voucher status
             voucher.setStatus(Voucher.VoucherStatus.ACTIVE);
@@ -158,8 +163,9 @@ public class EnhancedRadiusService {
             // Create RADIUS reply entries (authorization)
             createRadiusReplyEntries(radiusUsername, internetPackage, timeLimitSeconds);
             
-            // Create user on MikroTik routers
-            createUserOnMikroTikRouters(radiusUsername, radiusPassword, timeLimitSeconds);
+            // Note: Users are created in RADIUS tables (radcheck, radreply) only.
+            // All MikroTik routers authenticate against the RADIUS server on the VPS.
+            // No need to create users directly on routers via API - routers query RADIUS automatically.
             
             // Update voucher status
             voucher.setStatus(Voucher.VoucherStatus.ACTIVE);
@@ -196,8 +202,9 @@ public class EnhancedRadiusService {
             // Remove RADIUS reply entries
             radiusReplyRepository.deleteByUsername(radiusUsername);
             
-            // Remove user from MikroTik routers
-            removeUserFromMikroTikRouters(radiusUsername);
+            // Note: Users are removed from RADIUS tables only.
+            // Routers will automatically stop authenticating the user since RADIUS no longer has the credentials.
+            // No need to remove users directly from routers via API.
             
             logger.info("Successfully removed RADIUS user '{}'", radiusUsername);
             return true;
@@ -380,39 +387,18 @@ public class EnhancedRadiusService {
         radiusReplyRepository.save(framedProtocolReply);
     }
     
-    private void createUserOnMikroTikRouters(String username, String password, int timeLimitSeconds) {
-        // This would iterate through all configured MikroTik routers
-        // For now, we'll use a default router configuration
-        try {
-            // Get default router configuration (this should come from database)
-            String routerId = "DEFAULT_ROUTER";
-            String routerIp = "192.168.1.1";
-            String routerUsername = "admin";
-            String routerPassword = "admin123";
-            int routerPort = 8728;
-            
-            // Connect and create user
-            if (mikrotikApiService.connectToRouter(routerId, routerIp, routerUsername, routerPassword, routerPort)) {
-                mikrotikApiService.createRadiusUser(routerId, routerIp, username, password, "default", timeLimitSeconds);
-            }
-            
-        } catch (Exception e) {
-            logger.error("Failed to create user on MikroTik routers: {}", e.getMessage());
-        }
-    }
-    
-    private void removeUserFromMikroTikRouters(String username) {
-        try {
-            // Get default router configuration
-            String routerId = "DEFAULT_ROUTER";
-            String routerIp = "192.168.1.1";
-            
-            if (mikrotikApiService.isConnected(routerId, routerIp)) {
-                mikrotikApiService.removeRadiusUser(routerId, routerIp, username);
-            }
-            
-        } catch (Exception e) {
-            logger.error("Failed to remove user from MikroTik routers: {}", e.getMessage());
-        }
-    }
+    /**
+     * NOTE: Users are NOT created directly on MikroTik routers.
+     * 
+     * Architecture:
+     * 1. Spring Boot creates users in FreeRADIUS database tables (radcheck, radreply)
+     * 2. All MikroTik routers are configured to authenticate against the FreeRADIUS server
+     * 3. When a user connects to any router, the router queries FreeRADIUS for authentication
+     * 4. FreeRADIUS checks its database and returns authorization attributes
+     * 
+     * This means:
+     * - One user entry in FreeRADIUS works for ALL routers
+     * - No need to create/remove users on individual routers
+     * - Router management via API is for configuration/monitoring only, not user management
+     */
 }

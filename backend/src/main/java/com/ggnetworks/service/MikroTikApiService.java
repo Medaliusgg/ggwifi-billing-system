@@ -272,4 +272,45 @@ public class MikroTikApiService {
         ApiConnection connection = connections.get(connectionKey);
         return connection != null && connection.isConnected();
     }
+
+    /**
+     * Reboot router
+     */
+    public boolean rebootRouter(String routerId, String ipAddress) {
+        try {
+            String connectionKey = routerId + "_" + ipAddress;
+            ApiConnection connection = connections.get(connectionKey);
+            if (connection == null || !connection.isConnected()) {
+                logger.warn("No active connection to router: {}", routerId);
+                return false;
+            }
+            connection.execute("/system reboot");
+            logger.info("Reboot command sent to router {}", routerId);
+            return true;
+        } catch (MikrotikApiException e) {
+            logger.error("Failed to reboot router {}: {}", routerId, e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Backup router configuration
+     */
+    public boolean backupRouter(String routerId, String ipAddress, String backupName) {
+        try {
+            String connectionKey = routerId + "_" + ipAddress;
+            ApiConnection connection = connections.get(connectionKey);
+            if (connection == null || !connection.isConnected()) {
+                logger.warn("No active connection to router: {}", routerId);
+                return false;
+            }
+            String sanitizedName = backupName.replaceAll("[^a-zA-Z0-9-_\\.]", "_");
+            connection.execute("/system backup save name=" + sanitizedName);
+            logger.info("Backup command '{}' executed on router {}", sanitizedName, routerId);
+            return true;
+        } catch (MikrotikApiException e) {
+            logger.error("Failed to backup router {}: {}", routerId, e.getMessage());
+            return false;
+        }
+    }
 }

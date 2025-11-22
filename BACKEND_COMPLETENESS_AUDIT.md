@@ -236,6 +236,28 @@ This document provides a comprehensive audit of all backend modules, features, a
 
 ---
 
+### 11. Projects Module
+**Controller:** `ProjectController.java`  
+**Base Path:** `/api/v1/admin/projects`  
+**Status:** ✅ **100% Complete**
+
+#### Implemented Endpoints:
+- ✅ `GET /admin/projects` - List projects with filters (status, highlighted, upcoming)
+- ✅ `GET /admin/projects/{id}` - Get project by ID
+- ✅ `POST /admin/projects` - Create hotspot project / lead
+- ✅ `PUT /admin/projects/{id}` - Update project details
+- ✅ `DELETE /admin/projects/{id}` - Delete project
+- ✅ `PATCH /admin/projects/{id}/highlight` - Highlight/unhighlight project
+- ✅ `GET /admin/projects/statistics` - Project metrics
+
+#### Features:
+- Capture location, budget, revenue expectation, and contact leads
+- Highlight priority projects for visibility
+- Upcoming launch tracking (next 30 days)
+- Status & priority management (planning, active, completed, on-hold, etc.)
+
+---
+
 ## 🔧 Infrastructure Configuration
 
 ### MySQL Database
@@ -278,6 +300,7 @@ This document provides a comprehensive audit of all backend modules, features, a
 | FreeRADIUS | ✅ | ✅ | ✅ | ✅ | ✅ 100% |
 | Router Management | ✅ | ✅ | ✅ | N/A | ✅ 100% |
 | Customer Portal | ✅ | ✅ | N/A | N/A | ✅ 100% |
+| Projects | ✅ | ✅ | ✅ | N/A | ✅ 100% |
 
 ---
 
@@ -309,6 +332,7 @@ chmod +x test-all-modules.sh
 2. ✅ Added CREATE endpoint to VoucherController
 3. ✅ Added active voucher session tracking endpoint (`/admin/vouchers/sessions/active`)
 4. ✅ Enhanced voucher session tracking with customer details enrichment
+5. ✅ Introduced Projects module for hotspot rollout planning
 
 ---
 

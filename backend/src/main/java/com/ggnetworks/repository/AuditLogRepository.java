@@ -98,4 +98,16 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
     
     @Query("SELECT COUNT(a) FROM AuditLog a WHERE a.riskLevel = :riskLevel AND a.createdAt >= :date")
     long countByRiskLevelAndCreatedAtAfter(@Param("riskLevel") AuditLog.RiskLevel riskLevel, @Param("date") LocalDateTime date);
+    
+    @Query("SELECT COUNT(a) FROM AuditLog a WHERE a.createdAt >= :date")
+    long countByCreatedAtAfter(@Param("date") LocalDateTime date);
+    
+    @Query("SELECT COUNT(a) FROM AuditLog a WHERE a.action = :action AND a.createdAt >= :date")
+    long countByActionAndCreatedAtAfter(@Param("action") String action, @Param("date") LocalDateTime date);
+    
+    @Query(value = "SELECT action, COUNT(*) as cnt FROM audit_logs GROUP BY action ORDER BY cnt DESC LIMIT :limit", nativeQuery = true)
+    List<Object[]> findTopActionsByCount(@Param("limit") int limit);
+    
+    @Query(value = "SELECT username, COUNT(*) as cnt FROM audit_logs GROUP BY username ORDER BY cnt DESC LIMIT :limit", nativeQuery = true)
+    List<Object[]> findTopUsersByActionCount(@Param("limit") int limit);
 }

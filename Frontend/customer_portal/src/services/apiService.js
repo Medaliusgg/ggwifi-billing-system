@@ -69,10 +69,17 @@ class ApiService {
   }
 
   // Payment Status Check API
+  // NOTE: This endpoint doesn't exist in backend - payment status comes from webhook
+  // For now, we'll remove this or implement polling differently
   async checkPaymentStatus(orderId) {
-    return this.makeRequest(`/customer-portal/payment/status/${orderId}`, {
-      method: 'GET',
-    });
+    // This endpoint doesn't exist in backend - webhook handles payment status
+    // Return a mock response or handle differently
+    console.warn('⚠️ Payment status endpoint not available - webhook handles status updates');
+    return {
+      status: 'info',
+      message: 'Payment status is updated via webhook. Please wait for confirmation.',
+      order_id: orderId
+    };
   }
 
   // Get Available Packages API
@@ -82,28 +89,56 @@ class ApiService {
     });
   }
 
-  // Get Customer Dashboard Data
+  // Get Customer Dashboard Data (matches backend endpoint)
   async getCustomerDashboard(phoneNumber) {
-    return this.makeRequest(`/customer-portal/dashboard/${phoneNumber}`, {
+    return this.makeRequest(`/customer-portal/customer/${phoneNumber}/dashboard`, {
       method: 'GET',
     });
   }
 
-  // Get Active Sessions
-  async getActiveSessions() {
-    return this.makeRequest('/customer-portal/sessions', {
+  // Get Customer Profile (matches backend endpoint)
+  async getCustomerProfile(phoneNumber) {
+    return this.makeRequest(`/customer-portal/customer/${phoneNumber}/profile`, {
       method: 'GET',
     });
   }
 
-  // Get Coverage Areas
-  async getCoverageAreas() {
-    return this.makeRequest('/customer-portal/coverage', {
+  // Get Customer Usage History (matches backend endpoint)
+  async getCustomerUsage(phoneNumber) {
+    return this.makeRequest(`/customer-portal/customer/${phoneNumber}/usage`, {
       method: 'GET',
     });
   }
 
-  // ZenoPay Webhook Handler (for testing)
+  // Get Customer Payment History (matches backend endpoint)
+  async getCustomerPayments(phoneNumber) {
+    return this.makeRequest(`/customer-portal/customer/${phoneNumber}/payments`, {
+      method: 'GET',
+    });
+  }
+
+  // Validate Voucher (matches backend endpoint)
+  async validateVoucher(voucherCode) {
+    return this.makeRequest(`/customer-portal/voucher/${voucherCode}/validate`, {
+      method: 'GET',
+    });
+  }
+
+  // Test endpoint (matches backend)
+  async testEndpoint() {
+    return this.makeRequest('/customer-portal/test', {
+      method: 'GET',
+    });
+  }
+
+  // Note: The following endpoints are not in backend - they will fail if called
+  // Consider removing or implementing them in backend:
+  // - /customer-portal/voucher-login (line 44)
+  // - /customer-portal/payment/status/{orderId} (line 73)
+  // - /customer-portal/sessions (removed - not in backend)
+  // - /customer-portal/coverage (removed - not in backend)
+
+  // ZenoPay Webhook Handler (for testing) - matches backend
   async handleZenoPayWebhook(webhookData) {
     return this.makeRequest('/customer-portal/webhook/zenopay', {
       method: 'POST',
@@ -118,13 +153,16 @@ export default apiService;
 
 // Export individual methods for convenience
 export const {
-  voucherLogin,
+  voucherLogin, // ⚠️ WARNING: Endpoint not in backend - will fail
   initiatePayment,
-  checkPaymentStatus,
+  checkPaymentStatus, // ⚠️ WARNING: Endpoint not in backend - will fail
   getPackages,
   getCustomerDashboard,
-  getActiveSessions,
-  getCoverageAreas,
+  getCustomerProfile,
+  getCustomerUsage,
+  getCustomerPayments,
+  validateVoucher,
+  testEndpoint, // ✅ Added - matches backend
   handleZenoPayWebhook,
 } = apiService;
 

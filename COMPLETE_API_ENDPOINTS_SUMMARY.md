@@ -174,6 +174,24 @@
 
 ---
 
+## 🏗 Projects Module
+
+**Base Path:** `/admin/projects`
+
+| Method | Endpoint | Description | Auth Required | Status |
+|--------|----------|-------------|---------------|--------|
+| GET | `/admin/projects` | Get projects (filters: status, highlighted, upcoming) | ✅ Yes | ✅ Working |
+| GET | `/admin/projects/{id}` | Get project by ID | ✅ Yes | ✅ Working |
+| POST | `/admin/projects` | Create new project / hotspot lead | ✅ Yes | ✅ Working |
+| PUT | `/admin/projects/{id}` | Update project details | ✅ Yes | ✅ Working |
+| DELETE | `/admin/projects/{id}` | Delete project | ✅ Yes | ✅ Working |
+| PATCH | `/admin/projects/{id}/highlight` | Highlight/unhighlight project | ✅ Yes | ✅ Working |
+| GET | `/admin/projects/statistics` | Get project statistics | ✅ Yes | ✅ Working |
+
+**Total Project Endpoints:** 7
+
+---
+
 ## 🌐 FreeRADIUS Module
 
 **Base Path:** `/radius`

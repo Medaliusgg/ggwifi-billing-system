@@ -144,4 +144,87 @@ public class TransactionService {
         
         return stats;
     }
+    
+    /**
+     * Process refund for a transaction
+     */
+    public Transaction processRefund(Long transactionId, BigDecimal refundAmount, String reason) {
+        Transaction transaction = transactionRepository.findById(transactionId)
+            .orElseThrow(() -> new IllegalArgumentException("Transaction not found"));
+        
+        if (transaction.getStatus() != Transaction.TransactionStatus.COMPLETED) {
+            throw new IllegalStateException("Only completed transactions can be refunded");
+        }
+        
+        if (refundAmount.compareTo(transaction.getAmount()) > 0) {
+            throw new IllegalArgumentException("Refund amount cannot exceed transaction amount");
+        }
+        
+        // Create refund transaction
+        Transaction refund = new Transaction();
+        refund.setTransactionId(generateTransactionId());
+        refund.setCustomerId(transaction.getCustomerId());
+        refund.setAmount(refundAmount);
+        refund.setCurrency(transaction.getCurrency());
+        refund.setTransactionType(Transaction.TransactionType.REFUND);
+        refund.setPaymentMethod(transaction.getPaymentMethod());
+        refund.setPaymentGateway(transaction.getPaymentGateway());
+        refund.setDescription("Refund for transaction " + transaction.getTransactionId() + ": " + reason);
+        refund.setStatus(Transaction.TransactionStatus.PENDING);
+        refund.setMetadata("{\"originalTransactionId\":\"" + transaction.getTransactionId() + "\",\"reason\":\"" + reason + "\"}");
+        
+        return transactionRepository.save(refund);
+    }
+    
+    /**
+     * Reconcile transactions with payment gateway
+     */
+    public Map<String, Object> reconcileTransactions(LocalDateTime startDate, LocalDateTime endDate) {
+        Map<String, Object> result = new HashMap<>();
+        
+        List<Transaction> transactions = transactionRepository.findByCreatedAtBetween(startDate, endDate);
+        
+        long totalTransactions = transactions.size();
+        long reconciled = 0;
+        long discrepancies = 0;
+        BigDecimal totalAmount = BigDecimal.ZERO;
+        BigDecimal reconciledAmount = BigDecimal.ZERO;
+        
+        for (Transaction txn : transactions) {
+            totalAmount = totalAmount.add(txn.getAmount() != null ? txn.getAmount() : BigDecimal.ZERO);
+            
+            // Check if transaction has gateway confirmation
+            if (txn.getGatewayTransactionId() != null && !txn.getGatewayTransactionId().isEmpty() 
+                && txn.getConfirmedAt() != null) {
+                reconciled++;
+                reconciledAmount = reconciledAmount.add(txn.getAmount() != null ? txn.getAmount() : BigDecimal.ZERO);
+            } else if (txn.getStatus() == Transaction.TransactionStatus.COMPLETED 
+                && (txn.getGatewayTransactionId() == null || txn.getGatewayTransactionId().isEmpty())) {
+                discrepancies++;
+            }
+        }
+        
+        result.put("period", Map.of("start", startDate.toString(), "end", endDate.toString()));
+        result.put("totalTransactions", totalTransactions);
+        result.put("reconciled", reconciled);
+        result.put("discrepancies", discrepancies);
+        result.put("unreconciled", totalTransactions - reconciled);
+        result.put("totalAmount", totalAmount);
+        result.put("reconciledAmount", reconciledAmount);
+        result.put("reconciliationRate", totalTransactions > 0 ? 
+            Math.round((double) reconciled / totalTransactions * 10000.0) / 100.0 : 0);
+        result.put("generatedAt", LocalDateTime.now().toString());
+        
+        return result;
+    }
+    
+    /**
+     * Get transactions requiring reconciliation
+     */
+    public List<Transaction> getTransactionsRequiringReconciliation() {
+        return transactionRepository.findAll().stream()
+            .filter(txn -> txn.getStatus() == Transaction.TransactionStatus.COMPLETED 
+                && (txn.getGatewayTransactionId() == null || txn.getGatewayTransactionId().isEmpty()))
+            .toList();
+    }
 }

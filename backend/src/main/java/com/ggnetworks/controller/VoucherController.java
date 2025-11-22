@@ -68,7 +68,7 @@ public class VoucherController {
         if (permissionCheck != null) return permissionCheck;
 
         try {
-            Optional<Voucher> voucher = voucherService.getVoucherByCode(id.toString());
+            Optional<Voucher> voucher = voucherService.getVoucherById(id);
             if (voucher.isPresent()) {
                 response.put("status", "success");
                 response.put("message", "Voucher retrieved successfully");
@@ -264,6 +264,187 @@ public class VoucherController {
         } catch (Exception e) {
             response.put("status", "error");
             response.put("message", "Failed to mark voucher as used: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    @PostMapping("/bulk")
+    public ResponseEntity<Map<String, Object>> createBulkVouchers(@RequestBody Map<String, Object> request) {
+        Map<String, Object> response = new HashMap<>();
+        ResponseEntity<Map<String, Object>> permissionCheck = checkPermission("VOUCHER_CREATE");
+        if (permissionCheck != null) return permissionCheck;
+
+        try {
+            int quantity = (Integer) request.getOrDefault("quantity", 1);
+            Long packageId = Long.valueOf(request.get("packageId").toString());
+            BigDecimal amount = new BigDecimal(request.get("amount").toString());
+            String customerName = (String) request.getOrDefault("customerName", "Pre-Generated");
+            String customerPhone = (String) request.getOrDefault("customerPhone", "");
+            String customerEmail = (String) request.getOrDefault("customerEmail", "");
+
+            if (quantity < 1 || quantity > 1000) {
+                response.put("status", "error");
+                response.put("message", "Quantity must be between 1 and 1000");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            List<Voucher> vouchers = voucherService.createBulkVouchers(
+                quantity, packageId, amount, customerName, customerPhone, customerEmail);
+
+            response.put("status", "success");
+            response.put("message", "Bulk vouchers created successfully");
+            response.put("data", vouchers);
+            response.put("count", vouchers.size());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to create bulk vouchers: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    @PostMapping("/template")
+    public ResponseEntity<Map<String, Object>> createVouchersFromTemplate(@RequestBody Map<String, Object> template) {
+        Map<String, Object> response = new HashMap<>();
+        ResponseEntity<Map<String, Object>> permissionCheck = checkPermission("VOUCHER_CREATE");
+        if (permissionCheck != null) return permissionCheck;
+
+        try {
+            List<Voucher> vouchers = voucherService.createVouchersFromTemplate(template);
+            response.put("status", "success");
+            response.put("message", "Vouchers created from template successfully");
+            response.put("data", vouchers);
+            response.put("count", vouchers.size());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to create vouchers from template: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    @GetMapping("/statistics")
+    public ResponseEntity<Map<String, Object>> getVoucherStatistics() {
+        Map<String, Object> response = new HashMap<>();
+        ResponseEntity<Map<String, Object>> permissionCheck = checkPermission("VOUCHER_READ");
+        if (permissionCheck != null) return permissionCheck;
+
+        try {
+            Map<String, Object> stats = voucherService.getVoucherStatistics();
+            response.put("status", "success");
+            response.put("message", "Voucher statistics retrieved successfully");
+            response.put("data", stats);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to retrieve voucher statistics: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    @GetMapping("/analytics")
+    public ResponseEntity<Map<String, Object>> getVoucherAnalytics(
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate
+    ) {
+        Map<String, Object> response = new HashMap<>();
+        ResponseEntity<Map<String, Object>> permissionCheck = checkPermission("VOUCHER_READ");
+        if (permissionCheck != null) return permissionCheck;
+
+        try {
+            java.time.LocalDateTime start;
+            java.time.LocalDateTime end;
+            
+            try {
+                start = startDate != null && !startDate.isEmpty() ? 
+                    java.time.LocalDateTime.parse(startDate) : 
+                    java.time.LocalDateTime.now().minusDays(30);
+                end = endDate != null && !endDate.isEmpty() ? 
+                    java.time.LocalDateTime.parse(endDate) : 
+                    java.time.LocalDateTime.now();
+            } catch (Exception e) {
+                // If date parsing fails, use defaults
+                start = java.time.LocalDateTime.now().minusDays(30);
+                end = java.time.LocalDateTime.now();
+            }
+            
+            Map<String, Object> analytics = voucherService.getVoucherAnalytics(start, end);
+            response.put("status", "success");
+            response.put("message", "Voucher analytics retrieved successfully");
+            response.put("data", analytics);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to retrieve analytics: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    @GetMapping("/status/{status}")
+    public ResponseEntity<Map<String, Object>> getVouchersByStatus(@PathVariable String status) {
+        Map<String, Object> response = new HashMap<>();
+        ResponseEntity<Map<String, Object>> permissionCheck = checkPermission("VOUCHER_READ");
+        if (permissionCheck != null) return permissionCheck;
+
+        try {
+            Voucher.VoucherStatus voucherStatus = Voucher.VoucherStatus.valueOf(status.toUpperCase());
+            List<Voucher> vouchers = voucherService.getVouchersByStatus(voucherStatus);
+            response.put("status", "success");
+            response.put("message", "Vouchers retrieved successfully");
+            response.put("data", vouchers);
+            response.put("count", vouchers.size());
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            response.put("status", "error");
+            response.put("message", "Invalid status: " + status);
+            return ResponseEntity.badRequest().body(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to retrieve vouchers: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    @GetMapping("/package/{packageId}")
+    public ResponseEntity<Map<String, Object>> getVouchersByPackage(@PathVariable Long packageId) {
+        Map<String, Object> response = new HashMap<>();
+        ResponseEntity<Map<String, Object>> permissionCheck = checkPermission("VOUCHER_READ");
+        if (permissionCheck != null) return permissionCheck;
+
+        try {
+            List<Voucher> vouchers = voucherService.getVouchersByPackage(packageId);
+            response.put("status", "success");
+            response.put("message", "Vouchers retrieved successfully");
+            response.put("data", vouchers);
+            response.put("count", vouchers.size());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to retrieve vouchers: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    @DeleteMapping("/{voucherCode}")
+    public ResponseEntity<Map<String, Object>> deleteUnusedVoucher(@PathVariable String voucherCode) {
+        Map<String, Object> response = new HashMap<>();
+        ResponseEntity<Map<String, Object>> permissionCheck = checkPermission("VOUCHER_DELETE");
+        if (permissionCheck != null) return permissionCheck;
+
+        try {
+            boolean deleted = voucherService.deleteUnusedVoucher(voucherCode);
+            if (deleted) {
+                response.put("status", "success");
+                response.put("message", "Voucher deleted successfully");
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("status", "error");
+                response.put("message", "Voucher not found or already used");
+                return ResponseEntity.status(404).body(response);
+            }
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to delete voucher: " + e.getMessage());
             return ResponseEntity.status(500).body(response);
         }
     }

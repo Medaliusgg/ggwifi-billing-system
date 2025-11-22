@@ -314,4 +314,90 @@ public class PackageService {
         
         return "desc".equalsIgnoreCase(sortDir) ? comparator.reversed() : comparator;
     }
+    
+    /**
+     * Get package analytics for hotspot billing system
+     */
+    public Map<String, Object> getPackageAnalytics(LocalDateTime startDate, LocalDateTime endDate) {
+        Map<String, Object> analytics = new HashMap<>();
+        
+        // Get all packages
+        List<InternetPackage> packages = packageRepository.findAll();
+        
+        // Package performance metrics
+        Map<Long, Map<String, Object>> packageMetrics = new HashMap<>();
+        
+        for (InternetPackage pkg : packages) {
+            Map<String, Object> metrics = new HashMap<>();
+            metrics.put("packageId", pkg.getId());
+            metrics.put("packageName", pkg.getName());
+            metrics.put("packageType", pkg.getPackageType());
+            metrics.put("price", pkg.getPrice());
+            metrics.put("isActive", pkg.getIsActive());
+            metrics.put("isPopular", pkg.getIsPopular());
+            metrics.put("isFeatured", pkg.getIsFeatured());
+            
+            // TODO: Add voucher count and revenue from VoucherRepository
+            // This would require joining with Voucher table to get actual usage data
+            
+            packageMetrics.put(pkg.getId(), metrics);
+        }
+        
+        // Package type breakdown
+        Map<String, Long> typeCounts = packages.stream()
+            .collect(Collectors.groupingBy(
+                p -> p.getPackageType() != null ? p.getPackageType().name() : "UNKNOWN",
+                Collectors.counting()
+            ));
+        
+        // Active vs inactive
+        long activeCount = packages.stream().filter(p -> Boolean.TRUE.equals(p.getIsActive())).count();
+        long inactiveCount = packages.size() - activeCount;
+        
+        // Popular packages
+        long popularCount = packages.stream().filter(p -> Boolean.TRUE.equals(p.getIsPopular())).count();
+        
+        // Featured packages
+        long featuredCount = packages.stream().filter(p -> Boolean.TRUE.equals(p.getIsFeatured())).count();
+        
+        analytics.put("period", Map.of("start", startDate.toString(), "end", endDate.toString()));
+        analytics.put("totalPackages", packages.size());
+        analytics.put("activePackages", activeCount);
+        analytics.put("inactivePackages", inactiveCount);
+        analytics.put("popularPackages", popularCount);
+        analytics.put("featuredPackages", featuredCount);
+        analytics.put("byType", typeCounts);
+        analytics.put("packageMetrics", packageMetrics);
+        analytics.put("generatedAt", LocalDateTime.now().toString());
+        
+        return analytics;
+    }
+    
+    /**
+     * Get package performance statistics
+     */
+    public Map<String, Object> getPackagePerformance(Long packageId) {
+        Map<String, Object> performance = new HashMap<>();
+        
+        InternetPackage pkg = packageRepository.findById(packageId)
+            .orElseThrow(() -> new RuntimeException("Package not found"));
+        
+        performance.put("packageId", pkg.getId());
+        performance.put("packageName", pkg.getName());
+        performance.put("packageType", pkg.getPackageType());
+        performance.put("price", pkg.getPrice());
+        performance.put("durationDays", pkg.getDurationDays());
+        performance.put("dataLimitMb", pkg.getDataLimitMb());
+        performance.put("isUnlimitedData", pkg.getIsUnlimitedData());
+        performance.put("downloadSpeedMbps", pkg.getDownloadSpeedMbps());
+        performance.put("uploadSpeedMbps", pkg.getUploadSpeedMbps());
+        performance.put("isActive", pkg.getIsActive());
+        performance.put("isPopular", pkg.getIsPopular());
+        performance.put("isFeatured", pkg.getIsFeatured());
+        
+        // TODO: Add actual usage statistics from Voucher/Payment tables
+        // This would show how many vouchers were sold, revenue generated, etc.
+        
+        return performance;
+    }
 }

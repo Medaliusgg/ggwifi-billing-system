@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -117,9 +118,12 @@ public class FreeRadiusService {
             String activeSessionsSql = "SELECT COUNT(*) FROM radacct WHERE acctstoptime IS NULL";
             String totalSessionsSql = "SELECT COUNT(*) FROM radacct WHERE acctstarttime >= DATE_SUB(NOW(), INTERVAL 24 HOUR)";
             
-            int activeUsers = jdbcTemplate.queryForObject(activeUsersSql, Integer.class);
-            int activeSessions = jdbcTemplate.queryForObject(activeSessionsSql, Integer.class);
-            int totalSessions24h = jdbcTemplate.queryForObject(totalSessionsSql, Integer.class);
+            Integer activeUsersInt = jdbcTemplate.queryForObject(activeUsersSql, Integer.class);
+            Integer activeSessionsInt = jdbcTemplate.queryForObject(activeSessionsSql, Integer.class);
+            Integer totalSessions24hInt = jdbcTemplate.queryForObject(totalSessionsSql, Integer.class);
+            int activeUsers = activeUsersInt != null ? activeUsersInt : 0;
+            int activeSessions = activeSessionsInt != null ? activeSessionsInt : 0;
+            int totalSessions24h = totalSessions24hInt != null ? totalSessions24hInt : 0;
             
             return Map.of(
                 "activeUsers", activeUsers,
@@ -214,19 +218,89 @@ public class FreeRadiusService {
            /**
             * Stop accounting session
             */
-           public boolean stopAccountingSession(String username, String sessionId) {
+           public boolean stopAccountingSession(String username, String terminateCause) {
                try {
                    String sql = """
                        UPDATE radacct 
-                       SET acctstoptime = ?, acctterminatecause = 'User-Request', updated_at = ?
-                       WHERE username = ? AND acctsessionid = ? AND acctstoptime IS NULL
+                       SET acctstoptime = ?, acctterminatecause = ?, updated_at = ?
+                       WHERE username = ? AND acctstoptime IS NULL
                        """;
                    
-                   jdbcTemplate.update(sql, LocalDateTime.now(), LocalDateTime.now(), username, sessionId);
+                   jdbcTemplate.update(sql, LocalDateTime.now(), terminateCause, LocalDateTime.now(), username);
                    return true;
                } catch (Exception e) {
                    System.err.println("Error stopping accounting session: " + e.getMessage());
                    return false;
                }
+           }
+           
+           /**
+            * Get RADIUS analytics for hotspot billing system
+            */
+           public Map<String, Object> getRadiusAnalytics(LocalDateTime startDate, LocalDateTime endDate) {
+               Map<String, Object> analytics = new HashMap<>();
+               
+               try {
+                   // Total sessions in period
+                   String totalSessionsSql = """
+                       SELECT COUNT(*) FROM radacct 
+                       WHERE acctstarttime BETWEEN ? AND ?
+                       """;
+                   Integer totalSessionsInt = jdbcTemplate.queryForObject(totalSessionsSql, Integer.class, startDate, endDate);
+                   int totalSessions = totalSessionsInt != null ? totalSessionsInt : 0;
+                   
+                   // Active sessions
+                   String activeSessionsSql = "SELECT COUNT(*) FROM radacct WHERE acctstoptime IS NULL";
+                   Integer activeSessionsInt = jdbcTemplate.queryForObject(activeSessionsSql, Integer.class);
+                   int activeSessions = activeSessionsInt != null ? activeSessionsInt : 0;
+                   
+                   // Total data usage
+                   String dataUsageSql = """
+                       SELECT 
+                           SUM(acctinputoctets + acctoutputoctets) as totalBytes,
+                           SUM(acctinputoctets) as bytesIn,
+                           SUM(acctoutputoctets) as bytesOut
+                       FROM radacct 
+                       WHERE acctstarttime BETWEEN ? AND ?
+                       """;
+                   Map<String, Object> dataUsage = jdbcTemplate.queryForMap(dataUsageSql, startDate, endDate);
+                   
+                   // Sessions by NAS
+                   String sessionsByNasSql = """
+                       SELECT nasipaddress, COUNT(*) as sessionCount
+                       FROM radacct 
+                       WHERE acctstarttime BETWEEN ? AND ?
+                       GROUP BY nasipaddress
+                       """;
+                   List<Map<String, Object>> sessionsByNas = jdbcTemplate.queryForList(sessionsByNasSql, startDate, endDate);
+                   
+                   // Average session duration
+                   String avgDurationSql = """
+                       SELECT AVG(acctsessiontime) as avgDuration
+                       FROM radacct 
+                       WHERE acctstarttime BETWEEN ? AND ? AND acctstoptime IS NOT NULL
+                       """;
+                   Double avgDuration = jdbcTemplate.queryForObject(avgDurationSql, Double.class, startDate, endDate);
+                   
+                   // Active users
+                   String activeUsersSql = "SELECT COUNT(DISTINCT username) FROM radcheck WHERE is_active = TRUE";
+                   Integer activeUsersInt = jdbcTemplate.queryForObject(activeUsersSql, Integer.class);
+                   int activeUsers = activeUsersInt != null ? activeUsersInt : 0;
+                   
+                   analytics.put("period", Map.of("start", startDate.toString(), "end", endDate.toString()));
+                   analytics.put("totalSessions", totalSessions);
+                   analytics.put("activeSessions", activeSessions);
+                   analytics.put("activeUsers", activeUsers);
+                   analytics.put("dataUsage", dataUsage);
+                   analytics.put("sessionsByNas", sessionsByNas);
+                   analytics.put("averageSessionDuration", avgDuration != null ? avgDuration : 0.0);
+                   analytics.put("generatedAt", LocalDateTime.now().toString());
+                   
+               } catch (Exception e) {
+                   System.err.println("Error getting RADIUS analytics: " + e.getMessage());
+                   analytics.put("error", e.getMessage());
+               }
+               
+               return analytics;
            }
        }

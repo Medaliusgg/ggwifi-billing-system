@@ -45,6 +45,7 @@ import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import paymentService from '../services/paymentService';
 import apiService from '../services/apiService';
+import { customerPortalAPI } from '../services/customerPortalApi';
 
 const BuyPackage = ({ onBack, currentLanguage }) => {
   const theme = useTheme();
@@ -92,20 +93,32 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
     const fetchPackages = async () => {
       try {
         setIsLoadingPackages(true);
-        const response = await apiService.getPackages();
+        // Use customerPortalAPI for exact endpoint match
+        const apiResponse = await customerPortalAPI.getPackages();
+        // Axios returns response.data, extract the actual response
+        const response = apiResponse.data || apiResponse;
         
         if (response.status === 'success' && response.packages) {
-          // Transform backend packages to frontend format
+          // Transform backend packages to frontend format with time-based offers
           const transformedPackages = response.packages.map((pkg, index) => ({
             id: pkg.id,
             name: pkg.name,
             duration: pkg.duration || `${pkg.durationDays} Days`,
             price: pkg.price,
+            originalPrice: pkg.originalPrice || null,
+            discountPercentage: pkg.discountPercentage || null,
             description: pkg.description || 'High-speed internet access',
             popular: pkg.isPopular || false,
             featured: pkg.isFeatured || false,
             dataLimit: pkg.dataLimit || 'Unlimited',
             speed: pkg.speed || 'High Speed',
+            // Time-based offer fields
+            isTimeBasedOffer: pkg.isTimeBasedOffer || false,
+            offerType: pkg.offerType || null,
+            offerDescription: pkg.offerDescription || null,
+            offerStartTime: pkg.offerStartTime || null,
+            offerEndTime: pkg.offerEndTime || null,
+            availableDays: pkg.availableDays || null,
             features: [
               pkg.speed || 'High Speed',
               pkg.dataLimit || 'Unlimited Data',
@@ -244,11 +257,40 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
     }));
   };
 
-  const handleProceedToPayment = () => {
+  const handleProceedToPayment = async () => {
+    // Client-side validation
     if (!customerDetails.fullName || !customerDetails.phoneNumber || !customerDetails.location) {
       toast.error('Please fill in all required fields');
       return;
     }
+
+    // Validate phone number format
+    const phoneRegex = /^(\+255|0)?[0-9]{9}$/;
+    const cleanPhone = customerDetails.phoneNumber.replace(/[^0-9]/g, '');
+    if (!phoneRegex.test(cleanPhone) && cleanPhone.length < 9) {
+      toast.error('Please enter a valid Tanzanian phone number (e.g., 0773404760)');
+      return;
+    }
+
+    // Validate name
+    if (customerDetails.fullName.trim().length < 3) {
+      toast.error('Please enter your full name (at least 3 characters)');
+      return;
+    }
+
+    // Validate location
+    if (customerDetails.location.trim().length < 2) {
+      toast.error('Please enter a valid location');
+      return;
+    }
+
+    // Validate package selection
+    if (!selectedPackage || !selectedPackage.id) {
+      toast.error('Please select a package first');
+      return;
+    }
+
+    // All validations passed, proceed to payment
     setPaymentStep(2);
     initiateZenoPayPayment();
   };
@@ -259,11 +301,20 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
     toast.loading('Initializing ZenoPay payment...');
 
     try {
+      // Format phone number for backend
+      let formattedPhone = customerDetails.phoneNumber.replace(/[^0-9]/g, '');
+      if (formattedPhone.startsWith('0')) {
+        formattedPhone = '255' + formattedPhone.substring(1);
+      } else if (!formattedPhone.startsWith('255')) {
+        formattedPhone = '255' + formattedPhone;
+      }
+      formattedPhone = '+' + formattedPhone;
+
       // Validate payment data
       const validation = paymentService.validatePaymentData({
-        customerName: customerDetails.fullName,
-        phoneNumber: customerDetails.phoneNumber,
-        location: customerDetails.location,
+        customerName: customerDetails.fullName.trim(),
+        phoneNumber: formattedPhone,
+        location: customerDetails.location.trim(),
         packageId: selectedPackage.id,
         amount: selectedPackage.price,
       });
@@ -275,11 +326,11 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
         return;
       }
 
-      // Prepare payment data
+      // Prepare payment data with formatted phone
       const paymentData = {
-        customerName: customerDetails.fullName,
-        phoneNumber: customerDetails.phoneNumber,
-        location: customerDetails.location,
+        customerName: customerDetails.fullName.trim(),
+        phoneNumber: formattedPhone,
+        location: customerDetails.location.trim(),
         packageId: selectedPackage.id,
         packageName: selectedPackage.name,
         amount: selectedPackage.price,
@@ -287,8 +338,20 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
         paymentMethod: 'ZENOPAY',
       };
 
-      // Initiate payment using payment service
-      const result = await paymentService.initiateZenoPayPayment(paymentData);
+      // Initiate payment using customerPortalAPI for exact endpoint match
+      const paymentResponse = await customerPortalAPI.processPayment(paymentData);
+      
+      // Axios returns response.data, extract the actual response
+      const responseData = paymentResponse.data || paymentResponse;
+      
+      // Transform response to match expected format
+      const result = {
+        status: responseData.status || (paymentResponse.status === 200 ? 'success' : 'error'),
+        order_id: responseData.order_id,
+        voucher_code: responseData.voucher_code,
+        message: responseData.message || 'Payment initiated successfully',
+        zenopay_response: responseData.zenopay_response
+      };
 
       console.log('🔍 Payment Result:', result);
       console.log('🔍 Result Status:', result.status);
@@ -459,9 +522,24 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
     } catch (error) {
       console.error('Payment initiation failed:', error);
       setPaymentStatus('failed');
-      toast.error('Payment failed. Please try again.');
+      
+      // Better error messages based on error type
+      if (error.message?.includes('403') || error.message?.includes('Forbidden')) {
+        setPaymentMessage('Unable to connect to payment service. Please check your internet connection and try again.');
+        toast.error('Connection error. Please check your internet and try again.');
+      } else if (error.message?.includes('network') || error.message?.includes('fetch')) {
+        setPaymentMessage('Network error. Please check your internet connection and try again.');
+        toast.error('Network error. Please check your connection.');
+      } else if (error.message?.includes('validation') || error.message?.includes('required')) {
+        setPaymentMessage(error.message || 'Please check your information and try again.');
+        toast.error(error.message || 'Invalid information. Please check your details.');
+      } else {
+        setPaymentMessage(error.message || 'Payment initiation failed. Please try again.');
+        toast.error(error.message || 'Payment failed. Please try again.');
+      }
     } finally {
       setIsLoading(false);
+      toast.dismiss();
     }
   };
 
@@ -689,10 +767,38 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
             </Box>
           </motion.div>
 
+          {/* Loading State */}
+          {isLoadingPackages && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
+              <Box sx={{ textAlign: 'center' }}>
+                <CircularProgress size={60} sx={{ color: '#0072CE', mb: 2 }} />
+                <Typography variant="h6" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                  Loading packages...
+                </Typography>
+                <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1 }}>
+                  Please wait while we fetch available packages
+                </Typography>
+              </Box>
+            </Box>
+          )}
+
           {/* Packages Grid */}
-          <motion.div variants={itemVariants}>
-            <Grid container spacing={{ xs: 2, sm: 3, md: 4 }} sx={{ mb: { xs: 4, md: 6 } }}>
-              {packages.map((pkg) => (
+          {!isLoadingPackages && (
+            <motion.div variants={itemVariants}>
+              <Grid container spacing={{ xs: 2, sm: 3, md: 4 }} sx={{ mb: { xs: 4, md: 6 } }}>
+                {packages.length === 0 ? (
+                  <Grid item xs={12}>
+                    <Alert severity="info" sx={{ borderRadius: 3 }}>
+                      <Typography variant="h6" sx={{ mb: 1 }}>
+                        No packages available
+                      </Typography>
+                      <Typography variant="body2">
+                        Please check back later or contact support for assistance.
+                      </Typography>
+                    </Alert>
+                  </Grid>
+                ) : (
+                  packages.map((pkg) => (
                 <Grid item xs={12} sm={6} lg={3} key={pkg.id}>
                   <motion.div
                     variants={cardVariants}
@@ -744,6 +850,54 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                               '& .MuiChip-icon': {
                                 color: '#000000',
                               },
+                            }}
+                          />
+                        </Box>
+                      )}
+
+                      {/* Time-Based Offer Badge */}
+                      {pkg.isTimeBasedOffer && (
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            top: 16,
+                            left: 16,
+                            zIndex: 1,
+                          }}
+                        >
+                          <Chip
+                            icon={<LocalOfferIcon />}
+                            label="Limited Offer"
+                            sx={{
+                              background: 'linear-gradient(135deg, #E74C3C 0%, #C0392B 100%)',
+                              color: '#FFFFFF',
+                              fontWeight: 700,
+                              fontSize: '0.75rem',
+                              '& .MuiChip-icon': {
+                                color: '#FFFFFF',
+                              },
+                            }}
+                          />
+                        </Box>
+                      )}
+
+                      {/* Discount Badge */}
+                      {pkg.originalPrice && pkg.originalPrice > pkg.price && (
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            top: pkg.isTimeBasedOffer ? 60 : 16,
+                            left: 16,
+                            zIndex: 1,
+                          }}
+                        >
+                          <Chip
+                            label={`Save ${pkg.discountPercentage || Math.round(((pkg.originalPrice - pkg.price) / pkg.originalPrice) * 100)}%`}
+                            sx={{
+                              background: 'linear-gradient(135deg, #1ABC9C 0%, #16A085 100%)',
+                              color: '#FFFFFF',
+                              fontWeight: 700,
+                              fontSize: '0.75rem',
                             }}
                           />
                         </Box>
@@ -810,20 +964,90 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                           {pkg.duration}
                         </Typography>
 
-                        {/* Price */}
-                        <Typography
-                          variant="h3"
-                          sx={{
-                            fontWeight: 900,
-                            background: `linear-gradient(135deg, ${pkg.color} 0%, ${pkg.color}CC 100%)`,
-                            backgroundClip: 'text',
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent',
-                            mb: 2,
-                          }}
-                        >
-                          TZS {pkg.price.toLocaleString()}
-                        </Typography>
+                        {/* Price with Discount */}
+                        <Box sx={{ mb: 2 }}>
+                          {pkg.originalPrice && pkg.originalPrice > pkg.price ? (
+                            <>
+                              <Typography
+                                variant="h6"
+                                sx={{
+                                  textDecoration: 'line-through',
+                                  color: 'text.secondary',
+                                  opacity: 0.6,
+                                  mb: 0.5,
+                                }}
+                              >
+                                TZS {pkg.originalPrice.toLocaleString()}
+                              </Typography>
+                              <Typography
+                                variant="h3"
+                                sx={{
+                                  fontWeight: 900,
+                                  background: `linear-gradient(135deg, ${pkg.color} 0%, ${pkg.color}CC 100%)`,
+                                  backgroundClip: 'text',
+                                  WebkitBackgroundClip: 'text',
+                                  WebkitTextFillColor: 'transparent',
+                                }}
+                              >
+                                TZS {pkg.price.toLocaleString()}
+                              </Typography>
+                              {pkg.discountPercentage && (
+                                <Typography
+                                  variant="caption"
+                                  sx={{
+                                    color: '#1ABC9C',
+                                    fontWeight: 700,
+                                    display: 'block',
+                                    mt: 0.5,
+                                  }}
+                                >
+                                  Save {pkg.discountPercentage}%!
+                                </Typography>
+                              )}
+                            </>
+                          ) : (
+                            <Typography
+                              variant="h3"
+                              sx={{
+                                fontWeight: 900,
+                                background: `linear-gradient(135deg, ${pkg.color} 0%, ${pkg.color}CC 100%)`,
+                                backgroundClip: 'text',
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent',
+                              }}
+                            >
+                              TZS {pkg.price.toLocaleString()}
+                            </Typography>
+                          )}
+                        </Box>
+
+                        {/* Time-Based Offer Info */}
+                        {pkg.isTimeBasedOffer && pkg.offerDescription && (
+                          <Alert
+                            severity="info"
+                            sx={{
+                              mb: 2,
+                              borderRadius: 2,
+                              background: 'rgba(255, 199, 44, 0.1)',
+                              border: '1px solid rgba(255, 199, 44, 0.3)',
+                              '& .MuiAlert-icon': {
+                                color: '#FFC72C',
+                              },
+                            }}
+                          >
+                            <Typography variant="caption" sx={{ fontWeight: 600, display: 'block', mb: 0.5 }}>
+                              ⚡ Limited Time Offer
+                            </Typography>
+                            <Typography variant="caption" sx={{ display: 'block' }}>
+                              {pkg.offerDescription}
+                            </Typography>
+                            {pkg.offerStartTime && pkg.offerEndTime && (
+                              <Typography variant="caption" sx={{ display: 'block', mt: 0.5, opacity: 0.8 }}>
+                                Available: {pkg.offerStartTime} - {pkg.offerEndTime}
+                              </Typography>
+                            )}
+                          </Alert>
+                        )}
 
                         {/* Description */}
                         <Typography
@@ -901,9 +1125,11 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                     </Card>
                   </motion.div>
                 </Grid>
-              ))}
-            </Grid>
-          </motion.div>
+                  ))
+                )}
+              </Grid>
+            </motion.div>
+          )}
 
           {/* Purchase Section */}
           {selectedPackage && (
@@ -1113,6 +1339,10 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                     onChange={(e) => handleCustomerDetailsChange('fullName', e.target.value)}
                     placeholder="Enter your full name"
                     required
+                    error={customerDetails.fullName && customerDetails.fullName.trim().length < 3}
+                    helperText={customerDetails.fullName && customerDetails.fullName.trim().length < 3 
+                      ? 'Name must be at least 3 characters' 
+                      : 'Enter your full name as it appears on your ID'}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: 3,
@@ -1125,10 +1355,16 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                     label="Phone Number"
                     type="tel"
                     value={customerDetails.phoneNumber}
-                    onChange={(e) => handleCustomerDetailsChange('phoneNumber', e.target.value.replace(/[^0-9]/g, ''))}
-                    placeholder="+255 XXX XXX XXX"
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^0-9+]/g, '');
+                      handleCustomerDetailsChange('phoneNumber', value);
+                    }}
+                    placeholder="0773404760 or +255773404760"
                     required
-                    helperText="Enter your phone number for payment and SMS notifications"
+                    error={customerDetails.phoneNumber && customerDetails.phoneNumber.replace(/[^0-9]/g, '').length < 9}
+                    helperText={customerDetails.phoneNumber && customerDetails.phoneNumber.replace(/[^0-9]/g, '').length < 9
+                      ? 'Please enter a valid Tanzanian phone number (9-10 digits)'
+                      : 'Enter your phone number for payment and SMS notifications'}
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: 3,

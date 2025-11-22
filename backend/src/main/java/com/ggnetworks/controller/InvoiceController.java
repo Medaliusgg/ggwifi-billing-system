@@ -200,6 +200,51 @@ public class InvoiceController {
             return ResponseEntity.status(500).body(response);
         }
     }
+
+    @GetMapping("/{id}/pdf")
+    public ResponseEntity<Map<String, Object>> generateInvoicePdf(@PathVariable Long id) {
+        Map<String, Object> response = new HashMap<>();
+        ResponseEntity<Map<String, Object>> permissionCheck = checkPermission("INVOICE_READ");
+        if (permissionCheck != null) return permissionCheck;
+
+        try {
+            Optional<Invoice> invoiceOpt = invoiceService.getInvoiceById(id);
+            if (!invoiceOpt.isPresent()) {
+                response.put("status", "error");
+                response.put("message", "Invoice not found");
+                return ResponseEntity.status(404).body(response);
+            }
+
+            String pdfContent = invoiceService.generateInvoicePdfContent(invoiceOpt.get());
+            response.put("status", "success");
+            response.put("message", "Invoice PDF generated successfully");
+            response.put("data", Map.of("html", pdfContent, "invoiceId", id));
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to generate PDF: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    @GetMapping("/template")
+    public ResponseEntity<Map<String, Object>> getInvoiceTemplate() {
+        Map<String, Object> response = new HashMap<>();
+        ResponseEntity<Map<String, Object>> permissionCheck = checkPermission("INVOICE_READ");
+        if (permissionCheck != null) return permissionCheck;
+
+        try {
+            Map<String, Object> template = invoiceService.getInvoiceTemplate();
+            response.put("status", "success");
+            response.put("message", "Invoice template retrieved");
+            response.put("data", template);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to retrieve template: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
 }
 
 

@@ -137,6 +137,101 @@ public class PaymentController {
             return ResponseEntity.status(500).body(response);
         }
     }
+
+    @GetMapping("/reconcile")
+    public ResponseEntity<Map<String, Object>> reconcilePayments(
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate
+    ) {
+        Map<String, Object> response = new HashMap<>();
+        ResponseEntity<Map<String, Object>> permissionCheck = checkPermission("PAYMENT_READ");
+        if (permissionCheck != null) return permissionCheck;
+
+        try {
+            java.time.LocalDateTime start;
+            java.time.LocalDateTime end;
+            
+            try {
+                start = startDate != null && !startDate.isEmpty() ? 
+                    java.time.LocalDateTime.parse(startDate) : 
+                    java.time.LocalDateTime.now().minusDays(30);
+                end = endDate != null && !endDate.isEmpty() ? 
+                    java.time.LocalDateTime.parse(endDate) : 
+                    java.time.LocalDateTime.now();
+            } catch (Exception e) {
+                // If date parsing fails, use defaults
+                start = java.time.LocalDateTime.now().minusDays(30);
+                end = java.time.LocalDateTime.now();
+            }
+            
+            Map<String, Object> reconciliation = paymentService.reconcilePayments(start, end);
+            response.put("status", "success");
+            response.put("message", "Payment reconciliation completed successfully");
+            response.put("data", reconciliation);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to reconcile payments: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    @GetMapping("/reconcile/pending")
+    public ResponseEntity<Map<String, Object>> getPaymentsRequiringReconciliation() {
+        Map<String, Object> response = new HashMap<>();
+        ResponseEntity<Map<String, Object>> permissionCheck = checkPermission("PAYMENT_READ");
+        if (permissionCheck != null) return permissionCheck;
+
+        try {
+            List<Payment> payments = paymentService.getPaymentsRequiringReconciliation();
+            response.put("status", "success");
+            response.put("message", "Payments requiring reconciliation retrieved");
+            response.put("data", payments);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to retrieve payments: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    @GetMapping("/analytics")
+    public ResponseEntity<Map<String, Object>> getPaymentAnalytics(
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate
+    ) {
+        Map<String, Object> response = new HashMap<>();
+        ResponseEntity<Map<String, Object>> permissionCheck = checkPermission("PAYMENT_READ");
+        if (permissionCheck != null) return permissionCheck;
+
+        try {
+            java.time.LocalDateTime start;
+            java.time.LocalDateTime end;
+            
+            try {
+                start = startDate != null && !startDate.isEmpty() ? 
+                    java.time.LocalDateTime.parse(startDate) : 
+                    java.time.LocalDateTime.now().minusDays(30);
+                end = endDate != null && !endDate.isEmpty() ? 
+                    java.time.LocalDateTime.parse(endDate) : 
+                    java.time.LocalDateTime.now();
+            } catch (Exception e) {
+                // If date parsing fails, use defaults
+                start = java.time.LocalDateTime.now().minusDays(30);
+                end = java.time.LocalDateTime.now();
+            }
+            
+            Map<String, Object> analytics = paymentService.getPaymentAnalytics(start, end);
+            response.put("status", "success");
+            response.put("message", "Payment analytics retrieved successfully");
+            response.put("data", analytics);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to retrieve analytics: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
 }
 
 

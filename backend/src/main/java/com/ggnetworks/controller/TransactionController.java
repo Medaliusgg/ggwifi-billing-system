@@ -151,6 +151,90 @@ public class TransactionController {
             return ResponseEntity.status(500).body(response);
         }
     }
+
+    @PostMapping("/{id}/refund")
+    public ResponseEntity<Map<String, Object>> processRefund(
+            @PathVariable Long id,
+            @RequestParam java.math.BigDecimal refundAmount,
+            @RequestParam String reason
+    ) {
+        Map<String, Object> response = new HashMap<>();
+        ResponseEntity<Map<String, Object>> permissionCheck = checkPermission("TRANSACTION_REFUND");
+        if (permissionCheck != null) return permissionCheck;
+
+        try {
+            Transaction refund = transactionService.processRefund(id, refundAmount, reason);
+            response.put("status", "success");
+            response.put("message", "Refund processed successfully");
+            response.put("data", refund);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            response.put("status", "error");
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to process refund: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    @GetMapping("/reconcile")
+    public ResponseEntity<Map<String, Object>> reconcileTransactions(
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate
+    ) {
+        Map<String, Object> response = new HashMap<>();
+        ResponseEntity<Map<String, Object>> permissionCheck = checkPermission("TRANSACTION_RECONCILE");
+        if (permissionCheck != null) return permissionCheck;
+
+        try {
+            java.time.LocalDateTime start;
+            java.time.LocalDateTime end;
+            
+            try {
+                start = startDate != null && !startDate.isEmpty() ? 
+                    java.time.LocalDateTime.parse(startDate) : 
+                    java.time.LocalDateTime.now().minusDays(30);
+                end = endDate != null && !endDate.isEmpty() ? 
+                    java.time.LocalDateTime.parse(endDate) : 
+                    java.time.LocalDateTime.now();
+            } catch (Exception e) {
+                // If date parsing fails, use defaults
+                start = java.time.LocalDateTime.now().minusDays(30);
+                end = java.time.LocalDateTime.now();
+            }
+            
+            Map<String, Object> reconciliation = transactionService.reconcileTransactions(start, end);
+            response.put("status", "success");
+            response.put("message", "Reconciliation completed successfully");
+            response.put("data", reconciliation);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to reconcile transactions: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    @GetMapping("/reconcile/pending")
+    public ResponseEntity<Map<String, Object>> getTransactionsRequiringReconciliation() {
+        Map<String, Object> response = new HashMap<>();
+        ResponseEntity<Map<String, Object>> permissionCheck = checkPermission("TRANSACTION_READ");
+        if (permissionCheck != null) return permissionCheck;
+
+        try {
+            List<Transaction> transactions = transactionService.getTransactionsRequiringReconciliation();
+            response.put("status", "success");
+            response.put("message", "Transactions requiring reconciliation retrieved");
+            response.put("data", transactions);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to retrieve transactions: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
 }
 
 

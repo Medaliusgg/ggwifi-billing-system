@@ -173,4 +173,61 @@ public class PackageController {
             return ResponseEntity.status(500).body(response);
         }
     }
+
+    @GetMapping("/analytics")
+    public ResponseEntity<Map<String, Object>> getPackageAnalytics(
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate
+    ) {
+        Map<String, Object> response = new HashMap<>();
+        ResponseEntity<Map<String, Object>> permissionCheck = checkPermission("PACKAGE_READ");
+        if (permissionCheck != null) return permissionCheck;
+
+        try {
+            java.time.LocalDateTime start;
+            java.time.LocalDateTime end;
+            
+            try {
+                start = startDate != null && !startDate.isEmpty() ? 
+                    java.time.LocalDateTime.parse(startDate) : 
+                    java.time.LocalDateTime.now().minusDays(30);
+                end = endDate != null && !endDate.isEmpty() ? 
+                    java.time.LocalDateTime.parse(endDate) : 
+                    java.time.LocalDateTime.now();
+            } catch (Exception e) {
+                // If date parsing fails, use defaults
+                start = java.time.LocalDateTime.now().minusDays(30);
+                end = java.time.LocalDateTime.now();
+            }
+            
+            Map<String, Object> analytics = packageService.getPackageAnalytics(start, end);
+            response.put("status", "success");
+            response.put("message", "Package analytics retrieved successfully");
+            response.put("data", analytics);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to retrieve analytics: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    @GetMapping("/{id}/performance")
+    public ResponseEntity<Map<String, Object>> getPackagePerformance(@PathVariable Long id) {
+        Map<String, Object> response = new HashMap<>();
+        ResponseEntity<Map<String, Object>> permissionCheck = checkPermission("PACKAGE_READ");
+        if (permissionCheck != null) return permissionCheck;
+
+        try {
+            Map<String, Object> performance = packageService.getPackagePerformance(id);
+            response.put("status", "success");
+            response.put("message", "Package performance retrieved successfully");
+            response.put("data", performance);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to retrieve performance: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
 }

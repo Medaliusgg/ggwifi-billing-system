@@ -4,6 +4,7 @@ import com.ggnetworks.service.PackageService;
 import com.ggnetworks.service.SmsService;
 import com.ggnetworks.service.VoucherService;
 import com.ggnetworks.service.ZenoPayService;
+import com.ggnetworks.service.PaymentService;
 import com.ggnetworks.entity.InternetPackage;
 import com.ggnetworks.repository.InternetPackageRepository;
 import java.math.BigDecimal;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -35,6 +37,33 @@ public class CustomerPortalController {
     
     @Autowired
     private VoucherService voucherService;
+    
+    @Autowired
+    private PaymentService paymentService;
+    
+    @Autowired
+    private com.ggnetworks.service.CustomerService customerService;
+    
+    @Autowired
+    private com.ggnetworks.service.EnhancedRadiusService enhancedRadiusService;
+    
+    @Autowired
+    private com.ggnetworks.repository.InternetPackageRepository internetPackageRepository;
+    
+    @Autowired
+    private com.ggnetworks.repository.CustomerRepository customerRepository;
+    
+    @Autowired
+    private com.ggnetworks.repository.PaymentRepository paymentRepository;
+    
+    @Autowired
+    private com.ggnetworks.repository.VoucherRepository voucherRepository;
+    
+    @Autowired
+    private com.ggnetworks.service.InvoiceService invoiceService;
+    
+    @Autowired
+    private com.ggnetworks.repository.InvoiceRepository invoiceRepository;
 
     /**
      * Process customer payment with ZenoPay Mobile Money Tanzania
@@ -160,40 +189,220 @@ public class CustomerPortalController {
             
             // Process based on payment status
             if ("SUCCESS".equals(paymentStatus) || "COMPLETED".equals(paymentStatus)) {
-                System.out.println("🎉 Payment successful! Generating voucher and sending SMS...");
+                System.out.println("🎉 Payment successful! Processing voucher creation...");
                 
-                // Generate voucher
-                String voucherCode = voucherService.generateVoucherCode();
-                System.out.println("🎫 Generated voucher code: " + voucherCode);
+                // Extract package ID from order ID (format: PKG_timestamp_phone)
+                // Or get from webhook data if available
+                String packageIdStr = (String) webhookData.get("package_id");
+                if (packageIdStr == null || packageIdStr.isEmpty()) {
+                    // Try to extract from order ID or use default
+                    packageIdStr = "1"; // Default package, should be passed in webhook
+                    System.out.println("⚠️ Package ID not found in webhook, using default: " + packageIdStr);
+                }
+                Long packageId = Long.parseLong(packageIdStr);
+                
+                // Get or create customer
+                com.ggnetworks.entity.Customer customer = customerRepository.findByPhoneNumber(phoneNumber)
+                    .orElseGet(() -> {
+                        System.out.println("📝 Creating new customer for phone: " + phoneNumber);
+                        com.ggnetworks.entity.Customer newCustomer = new com.ggnetworks.entity.Customer();
+                        newCustomer.setCustomerId("CUST_" + System.currentTimeMillis());
+                        newCustomer.setFirstName((String) webhookData.getOrDefault("customer_name", "Customer"));
+                        newCustomer.setLastName("");
+                        newCustomer.setEmail(phoneNumber + "@ggwifi.co.tz");
+                        newCustomer.setPrimaryPhoneNumber(phoneNumber);
+                        newCustomer.setStatus(com.ggnetworks.entity.Customer.CustomerStatus.ACTIVE);
+                        newCustomer.setAccountType(com.ggnetworks.entity.Customer.AccountType.INDIVIDUAL);
+                        newCustomer.setRegistrationDate(java.time.LocalDateTime.now());
+                        return customerRepository.save(newCustomer);
+                    });
+                
+                // Get package details
+                com.ggnetworks.entity.InternetPackage internetPackage = internetPackageRepository.findById(packageId)
+                    .orElseThrow(() -> new RuntimeException("Internet package not found: " + packageId));
+                
+                // Create invoice first (required for payment)
+                com.ggnetworks.entity.Invoice invoice = new com.ggnetworks.entity.Invoice();
+                invoice.setInvoiceNumber("INV_" + System.currentTimeMillis());
+                invoice.setCustomerId(customer.getId());
+                invoice.setPackageId(packageId);
+                invoice.setAmount(new java.math.BigDecimal(amount));
+                invoice.setTotalAmount(new java.math.BigDecimal(amount));
+                invoice.setCurrency("TZS");
+                invoice.setStatus(com.ggnetworks.entity.Invoice.InvoiceStatus.PAID);
+                invoice.setPaymentMethod(com.ggnetworks.entity.Invoice.PaymentMethod.MOBILE_MONEY);
+                invoice.setPaymentGateway("ZENOPAY");
+                invoice.setPaymentReference(orderId);
+                invoice.setPhoneNumber(phoneNumber);
+                invoice.setEmail(customer.getEmail());
+                invoice.setPaidDate(java.time.LocalDateTime.now());
+                invoice = invoiceService.createInvoice(invoice);
+                
+                // Create payment record
+                com.ggnetworks.entity.Payment payment = new com.ggnetworks.entity.Payment();
+                payment.setPaymentId(orderId);
+                payment.setInvoiceId(invoice.getId()); // Link to invoice
+                payment.setCustomerId(customer.getId());
+                payment.setAmount(new java.math.BigDecimal(amount));
+                payment.setCurrency("TZS");
+                payment.setPaymentMethod(com.ggnetworks.entity.Payment.PaymentMethod.MPESA);
+                payment.setPaymentGateway("ZENOPAY");
+                payment.setStatus(com.ggnetworks.entity.Payment.PaymentStatus.COMPLETED);
+                payment.setPhoneNumber(phoneNumber);
+                payment.setDescription("Internet package payment: " + internetPackage.getName());
+                payment.setGatewayTransactionId((String) webhookData.get("transid"));
+                payment.setGatewayReference((String) webhookData.get("payment_reference"));
+                payment.setConfirmedAt(java.time.LocalDateTime.now());
+                payment.setProcessedAt(java.time.LocalDateTime.now());
+                payment = paymentRepository.save(payment);
+                
+                // Generate voucher code (6-8 alphanumeric: A-Z, a-z, 0-9)
+                String voucherCode = voucherService.generateVoucherCode(packageId);
+                System.out.println("🎫 Generated voucher code (" + voucherCode.length() + " chars): " + voucherCode);
+                
+                // Validate voucher code format (6-8 alphanumeric: A-Z, a-z, 0-9)
+                if (!voucherCode.matches("[A-Za-z0-9]{6,8}")) {
+                    throw new RuntimeException("Invalid voucher code format generated: " + voucherCode + " (must be 6-8 alphanumeric: A-Z, a-z, 0-9)");
+                }
+                System.out.println("✅ Voucher code format validated: " + voucherCode);
+                
+                // Create voucher entity manually to ensure all fields are set
+                com.ggnetworks.entity.Voucher voucher = new com.ggnetworks.entity.Voucher();
+                voucher.setVoucherCode(voucherCode);
+                voucher.setPackageId(packageId);
+                voucher.setAmount(new java.math.BigDecimal(amount));
+                voucher.setCustomerName(customer.getFirstName() + " " + customer.getLastName());
+                voucher.setCustomerPhone(phoneNumber);
+                voucher.setCustomerPhoneNumber(phoneNumber);
+                voucher.setCustomerEmail(customer.getEmail());
+                voucher.setOrderId(orderId); // Set order ID - CRITICAL
+                voucher.setPaymentReference(orderId);
+                voucher.setPaymentChannel("ZENOPAY");
+                voucher.setCurrency("TZS");
+                
+                // Set voucher expiration based on package duration
+                if (internetPackage.getDurationDays() != null) {
+                    voucher.setExpiresAt(java.time.LocalDateTime.now().plusDays(internetPackage.getDurationDays()));
+                } else {
+                    voucher.setExpiresAt(java.time.LocalDateTime.now().plusDays(30)); // Default 30 days
+                }
+                
+                // Set package name if available
+                if (internetPackage.getName() != null) {
+                    voucher.setPackageName(internetPackage.getName());
+                }
+                
+                voucher.setStatus(com.ggnetworks.entity.Voucher.VoucherStatus.ACTIVE);
+                voucher.setUsageStatus(com.ggnetworks.entity.Voucher.UsageStatus.UNUSED);
+                voucher.setActivatedAt(java.time.LocalDateTime.now());
+                voucher.setGeneratedAt(java.time.LocalDateTime.now());
+                voucher.setCreatedBy("system");
+                
+                // Save voucher
+                voucher = voucherRepository.save(voucher);
+                System.out.println("✅ Voucher created successfully with order ID: " + orderId);
+                
+                // Create RADIUS user for internet access
+                System.out.println("🔐 Creating RADIUS user for voucher...");
+                boolean radiusUserCreated = enhancedRadiusService.createRadiusUserAfterPayment(
+                    payment.getId(), phoneNumber, voucherCode);
+                
+                if (!radiusUserCreated) {
+                    System.out.println("⚠️ Warning: RADIUS user creation failed, but voucher is created");
+                }
                 
                 // Send success SMS with voucher
-                Map<String, Object> smsResult = smsService.sendVoucherNotificationSms(
-                    phoneNumber, 
-                    "Customer", // You might want to extract customer name from order
-                    "Internet Package", // Package name
-                    voucherCode,
-                    amount,
-                    "30 Days" // Duration
-                );
+                String packageName = internetPackage.getName();
+                String duration = internetPackage.getDurationDays() != null ? 
+                    internetPackage.getDurationDays() + " Days" : "30 Days";
                 
-                System.out.println("📱 SMS Result: " + smsResult);
+                Map<String, Object> smsResult = new HashMap<>();
+                try {
+                    smsResult = smsService.sendVoucherNotificationSms(
+                        phoneNumber, 
+                        customer.getFirstName(),
+                        packageName,
+                        voucherCode,
+                        amount,
+                        duration
+                    );
+                    System.out.println("📱 SMS Result: " + smsResult);
+                } catch (Exception e) {
+                    System.out.println("⚠️ SMS sending failed (voucher still created): " + e.getMessage());
+                    smsResult.put("status", "error");
+                    smsResult.put("message", "SMS sending failed but voucher created successfully: " + e.getMessage());
+                    // Continue - voucher is already created, SMS failure is non-critical
+                }
                 
                 response.put("status", "success");
-                response.put("message", "Payment processed successfully. Voucher generated and SMS sent.");
+                String smsStatus = (String) smsResult.getOrDefault("status", "error");
+                response.put("message", "Payment processed successfully. Voucher generated" + 
+                    ("success".equals(smsStatus) ? " and SMS sent." : " (SMS service unavailable)."));
                 response.put("voucher_code", voucherCode);
-                response.put("sms_status", smsResult.get("status"));
+                response.put("payment_id", payment.getId());
+                response.put("customer_id", customer.getId());
+                response.put("sms_status", smsStatus);
+                response.put("sms_message", smsResult.getOrDefault("message", "SMS service unavailable"));
+                response.put("radius_user_created", radiusUserCreated);
+                response.put("customer_created", customer.getId());
+                response.put("payment_recorded", payment.getId());
+                response.put("voucher_created", voucher.getVoucherCode());
                 
             } else if ("FAILED".equals(paymentStatus) || "CANCELLED".equals(paymentStatus)) {
-                System.out.println("❌ Payment failed! Sending failure SMS...");
+                System.out.println("❌ Payment failed! Processing failure notification (NO USER CREATION)...");
                 
-                // Send failure SMS
-                Map<String, Object> smsResult = smsService.sendPaymentFailureSms(phoneNumber, "Customer");
+                // IMPORTANT: For failed payments, DO NOT create customer/user
+                // Only send SMS if customer already exists
+                Optional<com.ggnetworks.entity.Customer> existingCustomerOpt = customerRepository.findByPhoneNumber(phoneNumber);
                 
-                System.out.println("📱 Failure SMS Result: " + smsResult);
+                // Send failure SMS only if customer exists
+                Map<String, Object> smsResult = new HashMap<>();
+                if (existingCustomerOpt.isPresent()) {
+                    com.ggnetworks.entity.Customer existingCustomer = existingCustomerOpt.get();
+                    try {
+                        smsResult = smsService.sendPaymentFailureSms(phoneNumber, existingCustomer.getFirstName());
+                        System.out.println("📱 Failure SMS Result: " + smsResult);
+                    } catch (Exception e) {
+                        System.err.println("⚠️ Failure SMS sending failed (non-critical): " + e.getMessage());
+                        smsResult.put("status", "error");
+                        smsResult.put("message", "SMS service unavailable");
+                    }
+                } else {
+                    System.out.println("ℹ️ Customer not found for phone: " + phoneNumber + " - No SMS sent (payment failed, no user created)");
+                    smsResult.put("status", "skipped");
+                    smsResult.put("message", "No customer record exists - no SMS sent");
+                }
                 
+                String smsStatus = (String) smsResult.getOrDefault("status", "skipped");
                 response.put("status", "failed");
-                response.put("message", "Payment failed. Customer notified via SMS.");
-                response.put("sms_status", smsResult.get("status"));
+                response.put("message", "Payment failed. " + 
+                    ("skipped".equals(smsStatus) ? "No user created." : 
+                     ("success".equals(smsStatus) ? "Customer notified via SMS." : " SMS notification unavailable.")));
+                response.put("sms_status", smsStatus);
+                response.put("sms_message", smsResult.getOrDefault("message", "No SMS sent"));
+                response.put("user_created", false);
+                
+                // Create payment record for failed payment
+                try {
+                    com.ggnetworks.entity.Payment failedPayment = new com.ggnetworks.entity.Payment();
+                    failedPayment.setPaymentId("PKG_$(date +%s)_FAIL");
+                    com.ggnetworks.entity.Customer failedCustomer = customerRepository.findByPhoneNumber(phoneNumber)
+                        .orElse(null);
+                    if (failedCustomer != null) {
+                        failedPayment.setCustomerId(failedCustomer.getId());
+                        failedPayment.setAmount(new java.math.BigDecimal(amount));
+                        failedPayment.setCurrency("TZS");
+                        failedPayment.setPaymentMethod(com.ggnetworks.entity.Payment.PaymentMethod.MPESA);
+                        failedPayment.setPaymentGateway("ZENOPAY");
+                        failedPayment.setStatus(com.ggnetworks.entity.Payment.PaymentStatus.FAILED);
+                        failedPayment.setPhoneNumber(phoneNumber);
+                        failedPayment.setDescription("Failed payment: " + paymentStatus);
+                        failedPayment.setFailureReason("Payment " + paymentStatus);
+                        paymentRepository.save(failedPayment);
+                    }
+                } catch (Exception e) {
+                    System.out.println("⚠️ Failed to create payment record: " + e.getMessage());
+                }
             }
             
         } catch (Exception e) {
@@ -414,5 +623,246 @@ public class CustomerPortalController {
         }
         
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Get customer profile and history (self-service)
+     */
+    @GetMapping("/customer/{phoneNumber}/profile")
+    public ResponseEntity<Map<String, Object>> getCustomerProfile(@PathVariable String phoneNumber) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            // Get customer vouchers
+            List<com.ggnetworks.entity.Voucher> vouchers = voucherService.getVouchersByCustomerPhone(phoneNumber);
+            
+            // Get customer payments (if PaymentRepository has findByPhoneNumber)
+            // This would require adding the method to PaymentRepository
+            
+            Map<String, Object> profile = new HashMap<>();
+            profile.put("phoneNumber", phoneNumber);
+            profile.put("totalVouchers", vouchers.size());
+            profile.put("usedVouchers", vouchers.stream().filter(v -> v.isUsed()).count());
+            profile.put("activeVouchers", vouchers.stream().filter(v -> !v.isUsed() && v.getStatus() == com.ggnetworks.entity.Voucher.VoucherStatus.ACTIVE).count());
+            profile.put("vouchers", vouchers);
+            
+            response.put("status", "success");
+            response.put("message", "Customer profile retrieved successfully");
+            response.put("data", profile);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to retrieve customer profile: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    /**
+     * Get customer usage history
+     */
+    @GetMapping("/customer/{phoneNumber}/usage")
+    public ResponseEntity<Map<String, Object>> getCustomerUsageHistory(@PathVariable String phoneNumber) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            List<com.ggnetworks.entity.Voucher> vouchers = voucherService.getVouchersByCustomerPhone(phoneNumber);
+            
+            // Filter used vouchers for usage history
+            List<Map<String, Object>> usageHistory = vouchers.stream()
+                .filter(v -> v.isUsed() && v.getUsedAt() != null)
+                .map(v -> {
+                    Map<String, Object> usage = new HashMap<>();
+                    usage.put("voucherCode", v.getVoucherCode());
+                    usage.put("packageName", v.getPackageName());
+                    usage.put("packageId", v.getPackageId());
+                    usage.put("amount", v.getAmount());
+                    usage.put("usedAt", v.getUsedAt());
+                    usage.put("expiresAt", v.getExpiresAt());
+                    return usage;
+                })
+                .collect(java.util.stream.Collectors.toList());
+            
+            response.put("status", "success");
+            response.put("message", "Usage history retrieved successfully");
+            response.put("data", usageHistory);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to retrieve usage history: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    /**
+     * Get customer payment history
+     */
+    @GetMapping("/customer/{phoneNumber}/payments")
+    public ResponseEntity<Map<String, Object>> getCustomerPaymentHistory(@PathVariable String phoneNumber) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            List<com.ggnetworks.entity.Payment> payments = paymentService.getPaymentsByPhoneNumber(phoneNumber);
+            
+            List<Map<String, Object>> paymentHistory = payments.stream()
+                .map(p -> {
+                    Map<String, Object> payment = new HashMap<>();
+                    payment.put("paymentId", p.getPaymentId());
+                    payment.put("amount", p.getAmount());
+                    payment.put("currency", p.getCurrency());
+                    payment.put("status", p.getStatus());
+                    payment.put("paymentMethod", p.getPaymentMethod());
+                    payment.put("paymentGateway", p.getPaymentGateway());
+                    payment.put("createdAt", p.getCreatedAt());
+                    payment.put("processedAt", p.getProcessedAt());
+                    payment.put("confirmedAt", p.getConfirmedAt());
+                    return payment;
+                })
+                .collect(java.util.stream.Collectors.toList());
+            
+            response.put("status", "success");
+            response.put("message", "Payment history retrieved successfully");
+            response.put("data", paymentHistory);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to retrieve payment history: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+    
+    /**
+     * Get customer dashboard
+     */
+    @GetMapping("/customer/{phoneNumber}/dashboard")
+    public ResponseEntity<Map<String, Object>> getCustomerDashboard(@PathVariable String phoneNumber) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            // Get customer
+            com.ggnetworks.entity.Customer customer = customerRepository.findByPhoneNumber(phoneNumber)
+                .orElseThrow(() -> new RuntimeException("Customer not found"));
+            
+            // Get vouchers
+            List<com.ggnetworks.entity.Voucher> vouchers = voucherService.getVouchersByCustomerPhone(phoneNumber);
+            
+            // Get payments
+            List<com.ggnetworks.entity.Payment> payments = paymentService.getPaymentsByPhoneNumber(phoneNumber);
+            
+            // Prepare dashboard data
+            Map<String, Object> dashboard = new HashMap<>();
+             Map<String, Object> customerInfo = new HashMap<>();
+            customerInfo.put("id", customer.getId());
+            customerInfo.put("name", customer.getFirstName() + " " + (customer.getLastName() != null ? customer.getLastName() : ""));
+            customerInfo.put("phone", customer.getPrimaryPhoneNumber());
+            customerInfo.put("email", customer.getEmail() != null ? customer.getEmail() : "");
+            customerInfo.put("status", customer.getStatus());
+            dashboard.put("customer", customerInfo);
+            
+            dashboard.put("totalVouchers", vouchers.size());
+            dashboard.put("activeVouchers", vouchers.stream()
+                .filter(v -> v.getStatus() == com.ggnetworks.entity.Voucher.VoucherStatus.ACTIVE && !v.isUsed())
+                .count());
+            dashboard.put("usedVouchers", vouchers.stream()
+                .filter(v -> v.isUsed())
+                .count());
+            dashboard.put("totalPayments", payments.size());
+            dashboard.put("successfulPayments", payments.stream()
+                .filter(p -> p.getStatus() == com.ggnetworks.entity.Payment.PaymentStatus.COMPLETED)
+                .count());
+            dashboard.put("totalSpent", payments.stream()
+                .filter(p -> p.getStatus() == com.ggnetworks.entity.Payment.PaymentStatus.COMPLETED)
+                .map(p -> p.getAmount())
+                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add));
+            
+            // Add recent vouchers
+            dashboard.put("recentVouchers", vouchers.stream()
+                .sorted((a, b) -> {
+                    if (a.getCreatedAt() == null) return 1;
+                    if (b.getCreatedAt() == null) return -1;
+                    return b.getCreatedAt().compareTo(a.getCreatedAt());
+                })
+                .limit(5)
+                .map(v -> {
+                    Map<String, Object> vInfo = new HashMap<>();
+                    vInfo.put("code", v.getVoucherCode());
+                    vInfo.put("status", v.getStatus());
+                    vInfo.put("isUsed", v.isUsed());
+                    vInfo.put("createdAt", v.getCreatedAt());
+                    return vInfo;
+                })
+                .collect(java.util.stream.Collectors.toList()));
+            
+            response.put("status", "success");
+            response.put("message", "Dashboard retrieved successfully");
+            response.put("data", dashboard);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to retrieve dashboard: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+    
+    /**
+     * Check voucher validity
+     */
+    @GetMapping("/voucher/{voucherCode}/validate")
+    public ResponseEntity<Map<String, Object>> validateVoucher(@PathVariable String voucherCode) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            Optional<com.ggnetworks.entity.Voucher> voucherOpt = voucherRepository.findByVoucherCode(voucherCode);
+            
+            if (voucherOpt.isEmpty()) {
+                response.put("status", "error");
+                response.put("message", "Voucher code not found");
+                return ResponseEntity.ok(response);
+            }
+            
+            com.ggnetworks.entity.Voucher voucher = voucherOpt.get();
+            
+            // Check if expired
+            if (voucher.getExpiresAt() != null && voucher.getExpiresAt().isBefore(java.time.LocalDateTime.now())) {
+                response.put("status", "error");
+                response.put("message", "Voucher has expired");
+                return ResponseEntity.ok(response);
+            }
+            
+            // Check if used
+            if (voucher.isUsed()) {
+                response.put("status", "error");
+                response.put("message", "Voucher has already been used");
+                return ResponseEntity.ok(response);
+            }
+            
+            // Get package details
+            com.ggnetworks.entity.InternetPackage internetPackage = internetPackageRepository.findById(voucher.getPackageId())
+                .orElse(null);
+            
+            Map<String, Object> packageInfo = new HashMap<>();
+            if (internetPackage != null) {
+                packageInfo.put("name", internetPackage.getName());
+                packageInfo.put("duration", internetPackage.getDurationDays() != null ? internetPackage.getDurationDays() + " Days" : "N/A");
+            }
+            
+            // Build response data
+            Map<String, Object> voucherData = new HashMap<>();
+            voucherData.put("voucherCode", voucher.getVoucherCode());
+            voucherData.put("status", voucher.getStatus());
+            voucherData.put("expiresAt", voucher.getExpiresAt() != null ? voucher.getExpiresAt().toString() : "N/A");
+            voucherData.put("isUsed", voucher.isUsed());
+            voucherData.put("isActive", voucher.getStatus() == com.ggnetworks.entity.Voucher.VoucherStatus.ACTIVE);
+            voucherData.put("package", packageInfo);
+            if (voucher.getAmount() != null) {
+                voucherData.put("amount", voucher.getAmount());
+            }
+            if (voucher.getCreatedAt() != null) {
+                voucherData.put("createdAt", voucher.getCreatedAt().toString());
+            }
+            
+            response.put("status", "success");
+            response.put("message", "Voucher is valid and ready to use");
+            response.put("data", voucherData);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to validate voucher: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
     }
 }

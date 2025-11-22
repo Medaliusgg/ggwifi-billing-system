@@ -115,4 +115,55 @@ public class AuditLogService {
             .limit(limit)
             .toList();
     }
+    
+    public List<AuditLog> getAllAuditLogs() {
+        return auditLogRepository.findAll();
+    }
+    
+    public List<AuditLog> getAuditLogsByDateRange(LocalDateTime startDate, LocalDateTime endDate) {
+        return auditLogRepository.findByCreatedAtBetween(startDate, endDate);
+    }
+    
+    public List<AuditLog> getAuditLogsByRiskLevel(AuditLog.RiskLevel riskLevel) {
+        return auditLogRepository.findByRiskLevel(riskLevel);
+    }
+    
+    public List<AuditLog> getAuditLogsByAction(String action) {
+        return auditLogRepository.findByAction(action);
+    }
+    
+    public List<AuditLog> getAuditLogsByUsername(String username) {
+        return auditLogRepository.findByUsername(username);
+    }
+    
+    public Map<String, Object> getSecurityDashboard() {
+        Map<String, Object> dashboard = new HashMap<>();
+        LocalDateTime last24Hours = LocalDateTime.now().minusHours(24);
+        LocalDateTime last7Days = LocalDateTime.now().minusDays(7);
+        LocalDateTime last30Days = LocalDateTime.now().minusDays(30);
+        
+        dashboard.put("last24Hours", Map.of(
+            "total", auditLogRepository.countByCreatedAtAfter(last24Hours),
+            "highRisk", auditLogRepository.countByRiskLevelAndCreatedAtAfter(AuditLog.RiskLevel.HIGH, last24Hours),
+            "critical", auditLogRepository.countByRiskLevelAndCreatedAtAfter(AuditLog.RiskLevel.CRITICAL, last24Hours),
+            "failedLogins", auditLogRepository.countByActionAndCreatedAtAfter("FAILED_LOGIN", last24Hours)
+        ));
+        
+        dashboard.put("last7Days", Map.of(
+            "total", auditLogRepository.countByCreatedAtAfter(last7Days),
+            "highRisk", auditLogRepository.countByRiskLevelAndCreatedAtAfter(AuditLog.RiskLevel.HIGH, last7Days),
+            "critical", auditLogRepository.countByRiskLevelAndCreatedAtAfter(AuditLog.RiskLevel.CRITICAL, last7Days)
+        ));
+        
+        dashboard.put("last30Days", Map.of(
+            "total", auditLogRepository.countByCreatedAtAfter(last30Days),
+            "highRisk", auditLogRepository.countByRiskLevelAndCreatedAtAfter(AuditLog.RiskLevel.HIGH, last30Days),
+            "critical", auditLogRepository.countByRiskLevelAndCreatedAtAfter(AuditLog.RiskLevel.CRITICAL, last30Days)
+        ));
+        
+        dashboard.put("topActions", auditLogRepository.findTopActionsByCount(10));
+        dashboard.put("topUsers", auditLogRepository.findTopUsersByActionCount(10));
+        
+        return dashboard;
+    }
 }

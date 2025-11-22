@@ -150,7 +150,9 @@ public class AdminController {
             ));
             
             BigDecimal dailyRevenue = paymentRepository.getTotalAmountByDateRange(com.ggnetworks.entity.Payment.PaymentStatus.COMPLETED,startOfDay, now);
+            if (dailyRevenue == null) dailyRevenue = BigDecimal.ZERO;
             BigDecimal yesterdayRevenue = paymentRepository.getTotalAmountByDateRange(com.ggnetworks.entity.Payment.PaymentStatus.COMPLETED,startOfDay.minusDays(1), startOfDay);
+            if (yesterdayRevenue == null) yesterdayRevenue = BigDecimal.ZERO;
             BigDecimal revenueChange = yesterdayRevenue.compareTo(BigDecimal.ZERO) > 0 ? 
                 dailyRevenue.subtract(yesterdayRevenue).divide(yesterdayRevenue, 4, RoundingMode.HALF_UP).multiply(new BigDecimal("100")) : BigDecimal.ZERO;
             kpis.put("dailyRevenue", Map.of(
@@ -164,7 +166,9 @@ public class AdminController {
             ));
             
             BigDecimal monthlyRevenue = paymentRepository.getTotalAmountByDateRange(com.ggnetworks.entity.Payment.PaymentStatus.COMPLETED,startOfMonth, now);
+            if (monthlyRevenue == null) monthlyRevenue = BigDecimal.ZERO;
             BigDecimal lastMonthRevenue = paymentRepository.getTotalAmountByDateRange(com.ggnetworks.entity.Payment.PaymentStatus.COMPLETED,startOfMonth.minusMonths(1), startOfMonth);
+            if (lastMonthRevenue == null) lastMonthRevenue = BigDecimal.ZERO;
             BigDecimal monthlyChange = lastMonthRevenue.compareTo(BigDecimal.ZERO) > 0 ? 
                 monthlyRevenue.subtract(lastMonthRevenue).divide(lastMonthRevenue, 4, RoundingMode.HALF_UP).multiply(new BigDecimal("100")) : BigDecimal.ZERO;
             kpis.put("monthlyRevenue", Map.of(
@@ -473,7 +477,9 @@ public class AdminController {
             
             // Finance-focused KPIs
             BigDecimal dailyRevenue = paymentRepository.getTotalAmountByDateRange(com.ggnetworks.entity.Payment.PaymentStatus.COMPLETED,startOfDay, now);
+            if (dailyRevenue == null) dailyRevenue = BigDecimal.ZERO;
             BigDecimal yesterdayRevenue = paymentRepository.getTotalAmountByDateRange(com.ggnetworks.entity.Payment.PaymentStatus.COMPLETED,startOfDay.minusDays(1), startOfDay);
+            if (yesterdayRevenue == null) yesterdayRevenue = BigDecimal.ZERO;
             BigDecimal revenueChange = yesterdayRevenue.compareTo(BigDecimal.ZERO) > 0 ? 
                 dailyRevenue.subtract(yesterdayRevenue).divide(yesterdayRevenue, 4, RoundingMode.HALF_UP).multiply(new BigDecimal("100")) : BigDecimal.ZERO;
             
@@ -488,7 +494,9 @@ public class AdminController {
             ));
             
             BigDecimal monthlyRevenue = paymentRepository.getTotalAmountByDateRange(com.ggnetworks.entity.Payment.PaymentStatus.COMPLETED,startOfMonth, now);
+            if (monthlyRevenue == null) monthlyRevenue = BigDecimal.ZERO;
             BigDecimal lastMonthRevenue = paymentRepository.getTotalAmountByDateRange(com.ggnetworks.entity.Payment.PaymentStatus.COMPLETED,startOfMonth.minusMonths(1), startOfMonth);
+            if (lastMonthRevenue == null) lastMonthRevenue = BigDecimal.ZERO;
             BigDecimal monthlyChange = lastMonthRevenue.compareTo(BigDecimal.ZERO) > 0 ? 
                 monthlyRevenue.subtract(lastMonthRevenue).divide(lastMonthRevenue, 4, RoundingMode.HALF_UP).multiply(new BigDecimal("100")) : BigDecimal.ZERO;
             
@@ -1022,9 +1030,11 @@ public class AdminController {
     }
     
     /**
-     * Get all routers (ADMIN)
+     * Get all routers (ADMIN) - DEPRECATED: Use /api/v1/admin/routers from RouterController
+     * This endpoint is kept for backward compatibility but should use RouterController instead
      */
-    @GetMapping("/routers")
+    @GetMapping("/routers/legacy")
+    @Deprecated
     public ResponseEntity<Map<String, Object>> getAllRouters() {
         Map<String, Object> response = new HashMap<>();
         

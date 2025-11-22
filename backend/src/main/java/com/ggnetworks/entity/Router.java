@@ -100,6 +100,30 @@ public class Router {
     @Column(name = "is_active")
     private Boolean isActive = true;
 
+    @Column(name = "supports_hotspot")
+    private Boolean supportsHotspot = true;
+
+    @Column(name = "supports_pppoe")
+    private Boolean supportsPppoe = true;
+
+    @Column(name = "supports_wireguard")
+    private Boolean supportsWireguard = true;
+
+    @Column(name = "management_vlan")
+    private String managementVlan;
+
+    @Column(name = "monitoring_enabled")
+    private Boolean monitoringEnabled = true;
+
+    @Column(name = "last_sync_status")
+    private String lastSyncStatus;
+
+    @Column(name = "last_error", columnDefinition = "TEXT")
+    private String lastError;
+
+    @Column(name = "notes", columnDefinition = "TEXT")
+    private String notes;
+
     @Column(name = "last_seen")
     private LocalDateTime lastSeen;
 
@@ -222,6 +246,30 @@ public class Router {
 
     public Boolean getIsActive() { return isActive; }
     public void setIsActive(Boolean isActive) { this.isActive = isActive; }
+
+    public Boolean getSupportsHotspot() { return supportsHotspot; }
+    public void setSupportsHotspot(Boolean supportsHotspot) { this.supportsHotspot = supportsHotspot; }
+
+    public Boolean getSupportsPppoe() { return supportsPppoe; }
+    public void setSupportsPppoe(Boolean supportsPppoe) { this.supportsPppoe = supportsPppoe; }
+
+    public Boolean getSupportsWireguard() { return supportsWireguard; }
+    public void setSupportsWireguard(Boolean supportsWireguard) { this.supportsWireguard = supportsWireguard; }
+
+    public String getManagementVlan() { return managementVlan; }
+    public void setManagementVlan(String managementVlan) { this.managementVlan = managementVlan; }
+
+    public Boolean getMonitoringEnabled() { return monitoringEnabled; }
+    public void setMonitoringEnabled(Boolean monitoringEnabled) { this.monitoringEnabled = monitoringEnabled; }
+
+    public String getLastSyncStatus() { return lastSyncStatus; }
+    public void setLastSyncStatus(String lastSyncStatus) { this.lastSyncStatus = lastSyncStatus; }
+
+    public String getLastError() { return lastError; }
+    public void setLastError(String lastError) { this.lastError = lastError; }
+
+    public String getNotes() { return notes; }
+    public void setNotes(String notes) { this.notes = notes; }
 
     public LocalDateTime getLastSeen() { return lastSeen; }
     public void setLastSeen(LocalDateTime lastSeen) { this.lastSeen = lastSeen; }

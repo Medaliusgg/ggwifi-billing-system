@@ -204,6 +204,45 @@ public class FreeRadiusController {
     }
 
     /**
+     * Get RADIUS analytics for hotspot billing
+     */
+    @GetMapping("/analytics")
+    public ResponseEntity<Map<String, Object>> getRadiusAnalytics(
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate
+    ) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            java.time.LocalDateTime start;
+            java.time.LocalDateTime end;
+            
+            try {
+                start = startDate != null && !startDate.isEmpty() ? 
+                    java.time.LocalDateTime.parse(startDate) : 
+                    java.time.LocalDateTime.now().minusDays(30);
+                end = endDate != null && !endDate.isEmpty() ? 
+                    java.time.LocalDateTime.parse(endDate) : 
+                    java.time.LocalDateTime.now();
+            } catch (Exception e) {
+                // If date parsing fails, use defaults
+                start = java.time.LocalDateTime.now().minusDays(30);
+                end = java.time.LocalDateTime.now();
+            }
+            
+            Map<String, Object> analytics = freeRadiusService.getRadiusAnalytics(start, end);
+            response.put("status", "success");
+            response.put("message", "RADIUS analytics retrieved successfully");
+            response.put("data", analytics);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to get analytics: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    /**
      * Configure NAS (Network Access Server)
      */
     @PostMapping("/nas")

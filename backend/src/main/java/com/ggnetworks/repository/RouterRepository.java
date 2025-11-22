@@ -39,6 +39,12 @@ public interface RouterRepository extends JpaRepository<Router, Long> {
     
     List<Router> findByStatusAndIsActive(Router.RouterStatus status, Boolean isActive);
     
+    List<Router> findByRouterTypeAndIsActive(Router.RouterType routerType, Boolean isActive);
+    
+    List<Router> findBySupportsHotspotAndIsActive(Boolean supportsHotspot, Boolean isActive);
+    
+    List<Router> findBySupportsWireguardAndIsActive(Boolean supportsWireguard, Boolean isActive);
+    
     boolean existsByRouterId(String routerId);
     
     boolean existsByIpAddress(String ipAddress);

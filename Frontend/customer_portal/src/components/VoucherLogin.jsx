@@ -29,6 +29,7 @@ import {
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import apiService from '../services/apiService';
+import { customerPortalAPI } from '../services/customerPortalApi';
 
 const VoucherLogin = ({ onBack, currentLanguage }) => {
   const theme = useTheme();
@@ -43,8 +44,15 @@ const VoucherLogin = ({ onBack, currentLanguage }) => {
       return;
     }
 
-    if (voucherCode.length !== 6) {
-      toast.error('Voucher code must be 6 characters long');
+    // Validate voucher code format (6-8 alphanumeric: A-Z, a-z, 0-9)
+    if (voucherCode.length < 6 || voucherCode.length > 8) {
+      toast.error('Voucher code must be 6-8 characters long');
+      return;
+    }
+    
+    // Validate alphanumeric format
+    if (!/^[A-Za-z0-9]{6,8}$/.test(voucherCode)) {
+      toast.error('Voucher code must contain only letters and numbers (A-Z, a-z, 0-9)');
       return;
     }
 
@@ -54,25 +62,39 @@ const VoucherLogin = ({ onBack, currentLanguage }) => {
     }
 
     setIsLoading(true);
-    toast.loading('Connecting to GG Wi-Fi network...');
+    toast.loading('Validating voucher code...');
 
     try {
       // Format phone number for API
       const formattedPhone = phoneNumber.startsWith('+255') ? phoneNumber : `+255${phoneNumber}`;
       
-      // Use API service for voucher login
-      const response = await apiService.voucherLogin(formattedPhone, voucherCode);
+      // Use correct API endpoint: /voucher/{code}/validate (GET)
+      // Using customerPortalAPI for exact endpoint match
+      const apiResponse = await customerPortalAPI.validateVoucher(voucherCode.toUpperCase());
+      // Axios returns response.data, extract the actual response
+      const response = apiResponse.data || apiResponse;
 
       if (response.status === 'success') {
-        toast.success('Successfully connected to GG Wi-Fi! Welcome to our network.');
-        // TODO: Redirect to dashboard or show connection success
-        console.log('Login successful:', response);
+        const voucherData = response.data;
+        
+        // Check if voucher is valid and active
+        if (voucherData.isActive && !voucherData.isUsed) {
+          toast.success('Voucher is valid! You can now connect to GG Wi-Fi network.');
+          console.log('Voucher validated successfully:', voucherData);
+          // TODO: Redirect to connection page or show connection success
+        } else if (voucherData.isUsed) {
+          toast.error('This voucher has already been used.');
+        } else if (!voucherData.isActive) {
+          toast.error('This voucher is not active.');
+        } else {
+          toast.error('Voucher validation failed.');
+        }
       } else {
-        toast.error(response.message || 'Failed to connect. Please check your voucher code.');
+        toast.error(response.message || 'Failed to validate voucher. Please check your voucher code.');
       }
     } catch (error) {
-      console.error('Voucher login failed:', error);
-      toast.error('Failed to connect. Please check your voucher code and try again.');
+      console.error('Voucher validation failed:', error);
+      toast.error('Failed to validate voucher. Please check your voucher code and try again.');
     } finally {
       setIsLoading(false);
       toast.dismiss();
@@ -80,8 +102,9 @@ const VoucherLogin = ({ onBack, currentLanguage }) => {
   };
 
   const handleVoucherCodeChange = (event) => {
+    // Allow 6-8 alphanumeric characters (A-Z, a-z, 0-9)
     const value = event.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-    if (value.length <= 6) {
+    if (value.length <= 8) {
       setVoucherCode(value);
     }
   };
@@ -241,9 +264,9 @@ const VoucherLogin = ({ onBack, currentLanguage }) => {
                       variant="outlined"
                       value={voucherCode}
                       onChange={handleVoucherCodeChange}
-                      placeholder="Enter 6-character code"
+                      placeholder="Enter 6-8 character code"
                       inputProps={{ 
-                        maxLength: 6,
+                        maxLength: 8,
                         style: { 
                           textAlign: 'center', 
                           fontSize: '1.5rem', 
@@ -378,6 +401,13 @@ const VoucherLogin = ({ onBack, currentLanguage }) => {
               </CardContent>
             </Card>
           </motion.div>
+        </motion.div>
+      </Container>
+    </Box>
+  );
+};
+
+export default VoucherLogin;
         </motion.div>
       </Container>
     </Box>
