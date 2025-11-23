@@ -34,7 +34,12 @@ const CustomerPortalHeader = () => {
   };
 
   const handleLogoClick = () => {
-    window.location.reload(); // Refresh the page
+    // Navigate to home/landing page
+    if (window.location.pathname !== '/') {
+      window.location.href = '/';
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   return (
@@ -58,9 +63,15 @@ const CustomerPortalHeader = () => {
           onClick={handleLogoClick}
         >
           <img
-            src="/logo.svg"
+            src="/gg-logo.png"
             alt="GG Wi-Fi Logo"
-            style={{ height: isMobile ? '30px' : '40px', marginRight: theme.spacing(1) }}
+            onError={(e) => { e.target.src = '/logo.svg'; }}
+            style={{ 
+              height: isMobile ? '35px' : '45px', 
+              width: 'auto',
+              marginRight: theme.spacing(1),
+              filter: 'drop-shadow(0 2px 4px rgba(255, 199, 44, 0.3))'
+            }}
           />
           <Typography
             variant="h6"

@@ -34,6 +34,13 @@ export const customerPortalAPI = {
 
   // Voucher endpoints
   validateVoucher: (voucherCode) => apiClient.get(`/customer-portal/voucher/${voucherCode}/validate`),
+  activateVoucher: (voucherCode, activationData) => apiClient.post(`/customer-portal/voucher/${voucherCode}/activate`, activationData),
+  
+  // Session endpoints
+  getSessionStatus: (voucherCode) => apiClient.get(`/customer-portal/voucher/${voucherCode}/session/status`),
+  recordHeartbeat: (voucherCode, heartbeatData) => apiClient.post(`/customer-portal/voucher/${voucherCode}/session/heartbeat`, heartbeatData),
+  reconnectSession: (voucherCode, reconnectData) => apiClient.post(`/customer-portal/voucher/${voucherCode}/session/reconnect`, reconnectData),
+  reconnectWithToken: (reconnectData) => apiClient.post(`/customer-portal/session/reconnect-token`, reconnectData),
 };
 
 export default customerPortalAPI;

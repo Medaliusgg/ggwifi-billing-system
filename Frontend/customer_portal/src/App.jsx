@@ -5,10 +5,13 @@ import { Box } from '@mui/material';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { Toaster } from 'react-hot-toast';
 import { AnimatePresence, motion } from 'framer-motion';
-import CustomerPortalHeader from './components/CustomerPortalHeader';
+import NavigationBar from './components/NavigationBar';
 import LandingPage from './components/LandingPage';
 import VoucherLogin from './components/VoucherLogin';
 import BuyPackage from './components/BuyPackage';
+import Footer from './components/Footer';
+import LoadingSpinner from './components/LoadingSpinner';
+import AnimatedBackground from './components/AnimatedBackground';
 import theme from './theme';
 
 // Enhanced GGNetworks theme is now imported from theme/index.js
@@ -41,20 +44,35 @@ const AppContent = () => {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh' }}>
-      {/* Fixed Header */}
-      <CustomerPortalHeader />
+    <Box 
+      sx={{ 
+        minHeight: '100vh', 
+        display: 'flex', 
+        flexDirection: 'column',
+        position: 'relative',
+      }}
+    >
+      {/* Animated Background */}
+      <AnimatedBackground variant="default" />
+      
+      {/* Fixed Navigation Bar */}
+      <NavigationBar 
+        currentView={currentView}
+        onNavigateToHome={handleBackToLanding}
+        onNavigateToPackages={handleNavigateToPackages}
+        onNavigateToVoucher={handleNavigateToVoucher}
+      />
       
       {/* Main Content with top padding to account for fixed header */}
-      <Box sx={{ pt: { xs: '56px', md: '64px' } }}>
+      <Box sx={{ pt: { xs: '56px', md: '64px' }, flex: 1, position: 'relative', zIndex: 0 }}>
         <AnimatePresence mode="wait">
           {currentView === 'landing' && (
             <motion.div
               key="landing"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.4 }}
             >
               <LandingPage
                 onNavigateToVoucher={handleNavigateToVoucher}
@@ -67,10 +85,10 @@ const AppContent = () => {
           {currentView === 'voucher' && (
             <motion.div
               key="voucher"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.4 }}
             >
               <VoucherLogin
                 onBack={handleBackToLanding}
@@ -82,10 +100,10 @@ const AppContent = () => {
           {currentView === 'packages' && (
             <motion.div
               key="packages"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.4 }}
             >
               <BuyPackage
                 onBack={handleBackToLanding}
@@ -95,7 +113,10 @@ const AppContent = () => {
           )}
         </AnimatePresence>
       </Box>
-    </Box>
+
+        {/* Footer */}
+        <Footer />
+      </Box>
   );
 };
 

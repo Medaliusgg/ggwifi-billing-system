@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import LoadingSpinner from './LoadingSpinner';
 import {
   Box,
   Typography,
@@ -28,6 +29,9 @@ import {
   Stepper,
   Step,
   StepLabel,
+  Tabs,
+  Tab,
+  Paper,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
@@ -40,6 +44,8 @@ import {
   FlashOn as FlashOnIcon,
   TrendingUp as TrendingUpIcon,
   LocalOffer as LocalOfferIcon,
+  AllInclusive as AllInclusiveIcon,
+  Schedule as ScheduleIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -133,7 +139,13 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                    index === 2 ? '#1ABC9C' : '#FFC72C',
           }));
           
+          // Categorize packages: Universal vs Offer
+          const universal = transformedPackages.filter(pkg => !pkg.isTimeBasedOffer);
+          const offers = transformedPackages.filter(pkg => pkg.isTimeBasedOffer);
+          
           setPackages(transformedPackages);
+          setUniversalPackages(universal);
+          setOfferPackages(offers);
           toast.success('Packages loaded successfully!');
         } else {
           toast.error('Failed to load packages from server');
@@ -664,16 +676,22 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
     <Box
       sx={{
         minHeight: '100vh',
-        background: `
-          linear-gradient(135deg, #FFFFFF 0%, #F8F9FA 100%),
-          radial-gradient(circle at 20% 20%, rgba(255, 199, 44, 0.08) 0%, transparent 50%),
-          radial-gradient(circle at 80% 80%, rgba(0, 114, 206, 0.08) 0%, transparent 50%)
-        `,
-        py: 4,
         position: 'relative',
+        overflow: 'hidden',
+        py: 4,
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(26, 26, 26, 0.3) 100%)',
+          zIndex: 0,
+        },
       }}
     >
-      <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3, md: 4 } }}>
+      <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3, md: 4 }, position: 'relative', zIndex: 1, minHeight: 'calc(100vh - 64px)' }}>
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -685,9 +703,10 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
               onClick={onBack}
               sx={{
                 mb: { xs: 2, md: 3 },
-                background: 'rgba(255, 255, 255, 0.8)',
+                background: 'rgba(0, 0, 0, 0.6)',
                 backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(0, 0, 0, 0.1)',
+                border: '1px solid rgba(255, 199, 44, 0.3)',
+                color: '#FFFFFF',
                 '&:hover': {
                   background: 'rgba(255, 199, 44, 0.1)',
                   transform: 'translateX(-4px)',
@@ -703,22 +722,29 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
           <motion.div variants={itemVariants}>
             <Box sx={{ textAlign: 'center', mb: 6 }}>
               <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.6 }}
+                style={{ marginBottom: '1.5rem' }}
               >
                 <Avatar
+                  src="/gg-logo.png"
+                  alt="GG Wi-Fi Logo"
                   sx={{
-                    width: 80,
-                    height: 80,
-                    background: 'linear-gradient(135deg, #0072CE 0%, #0056A3 100%)',
+                    width: { xs: 80, sm: 100 },
+                    height: { xs: 80, sm: 100 },
                     mx: 'auto',
-                    mb: 3,
-                    boxShadow: '0 12px 40px rgba(0, 114, 206, 0.4)',
+                    border: '4px solid #FFC72C',
+                    boxShadow: '0 8px 30px rgba(255, 199, 44, 0.6), 0 0 40px rgba(255, 199, 44, 0.3)',
+                    background: 'linear-gradient(135deg, rgba(255, 199, 44, 0.3) 0%, rgba(0, 114, 206, 0.2) 100%)',
+                    filter: 'brightness(1.1)',
+                    '& img': {
+                      objectFit: 'contain',
+                      padding: '4px',
+                      filter: 'brightness(1.25) contrast(1.1) drop-shadow(0 2px 6px rgba(255, 199, 44, 0.5))',
+                    },
                   }}
-                >
-                  <ShoppingCartIcon sx={{ fontSize: 40, color: '#FFFFFF' }} />
-                </Avatar>
+                />
               </motion.div>
 
               <Typography
@@ -753,9 +779,10 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                     icon={feature.icon}
                     label={feature.text}
                     sx={{
-                      background: 'rgba(255, 255, 255, 0.8)',
+                      background: `rgba(0, 0, 0, 0.6)`,
                       color: feature.color,
-                      border: `1px solid ${feature.color}40`,
+                      border: `1px solid ${feature.color}60`,
+                      backdropFilter: 'blur(10px)',
                       fontWeight: 600,
                       '& .MuiChip-icon': {
                         color: feature.color,
@@ -769,17 +796,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
 
           {/* Loading State */}
           {isLoadingPackages && (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
-              <Box sx={{ textAlign: 'center' }}>
-                <CircularProgress size={60} sx={{ color: '#0072CE', mb: 2 }} />
-                <Typography variant="h6" sx={{ color: 'text.secondary', fontWeight: 600 }}>
-                  Loading packages...
-                </Typography>
-                <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1 }}>
-                  Please wait while we fetch available packages
-                </Typography>
-              </Box>
-            </Box>
+            <LoadingSpinner message="Loading packages..." fullScreen={false} />
           )}
 
           {/* Packages Grid */}
@@ -809,13 +826,13 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                       sx={{
                         height: '100%',
                         cursor: 'pointer',
-                        background: 'rgba(255, 255, 255, 0.95)',
+                        background: 'rgba(0, 0, 0, 0.75)',
                         backdropFilter: 'blur(20px)',
                         borderRadius: { xs: 3, md: 4 },
                         border: `3px solid ${
                           selectedPackage?.id === pkg.id 
                             ? pkg.color 
-                            : 'rgba(255, 255, 255, 0.2)'
+                            : 'rgba(255, 199, 44, 0.3)'
                         }`,
                         boxShadow: selectedPackage?.id === pkg.id 
                           ? `0 20px 60px ${pkg.color}40`
@@ -945,7 +962,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                           variant="h5"
                           sx={{
                             fontWeight: 800,
-                            color: 'text.primary',
+                            color: '#FFFFFF',
                             mb: 1,
                           }}
                         >
@@ -1083,7 +1100,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                               <Typography
                                 variant="body2"
                                 sx={{
-                                  color: 'text.primary',
+                                  color: 'rgba(255, 255, 255, 0.9)',
                                   fontWeight: 500,
                                 }}
                               >
@@ -1141,11 +1158,11 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
             >
               <Card
                 sx={{
-                  background: 'rgba(255, 255, 255, 0.95)',
+                  background: 'rgba(0, 0, 0, 0.8)',
                   backdropFilter: 'blur(20px)',
                   borderRadius: 4,
-                  border: `2px solid ${selectedPackage.color}40`,
-                  boxShadow: `0 16px 48px ${selectedPackage.color}20`,
+                  border: `2px solid ${selectedPackage.color}60`,
+                  boxShadow: `0 16px 48px ${selectedPackage.color}40`,
                 }}
               >
                 <CardContent sx={{ p: 4 }}>
@@ -1154,13 +1171,13 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                       variant="h5"
                       sx={{
                         fontWeight: 700,
-                        color: 'text.primary',
+                        color: '#FFFFFF',
                         mb: 2,
                       }}
                     >
                       Ready to Purchase
                     </Typography>
-                    <Typography variant="body1" sx={{ color: 'text.secondary' }}>
+                    <Typography variant="body1" sx={{ color: 'rgba(255, 255, 255, 0.8)' }}>
                       You've selected the {selectedPackage.name} package
                     </Typography>
                   </Box>
@@ -1180,10 +1197,10 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                           {selectedPackage.icon}
                         </Avatar>
                         <Box>
-                          <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary' }}>
+                          <Typography variant="h6" sx={{ fontWeight: 700, color: '#FFFFFF' }}>
                             {selectedPackage.name}
                           </Typography>
-                          <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                          <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
                             {selectedPackage.duration} • {selectedPackage.description}
                           </Typography>
                         </Box>
@@ -1202,7 +1219,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                         >
                           TZS {selectedPackage.price.toLocaleString()}
                         </Typography>
-                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                        <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
                           One-time payment
                         </Typography>
                       </Box>
@@ -1278,15 +1295,15 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
             PaperProps={{
               sx: {
                 borderRadius: 4,
-                background: 'rgba(255, 255, 255, 0.95)',
+                background: 'rgba(0, 0, 0, 0.85)',
                 backdropFilter: 'blur(20px)',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
+                border: '1px solid rgba(255, 199, 44, 0.3)',
               }
             }}
           >
-            <DialogTitle sx={{ textAlign: 'center', pb: 2, fontWeight: 700, color: 'text.primary' }}>
+            <DialogTitle sx={{ textAlign: 'center', pb: 2, fontWeight: 700, color: '#FFFFFF' }}>
               Complete Your Purchase
-              <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1, fontWeight: 400 }}>
+              <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)', mt: 1, fontWeight: 400 }}>
                 Fill in your details to proceed with payment
               </Typography>
             </DialogTitle>
@@ -1301,10 +1318,10 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                         {selectedPackage.icon}
                       </Avatar>
                       <Box sx={{ flex: 1 }}>
-                        <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                        <Typography variant="h6" sx={{ fontWeight: 700, color: '#FFFFFF' }}>
                           {selectedPackage.name}
                         </Typography>
-                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                        <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
                           {selectedPackage.duration}
                         </Typography>
                       </Box>
@@ -1346,6 +1363,26 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: 3,
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        color: '#FFFFFF',
+                        '&:hover': {
+                          background: 'rgba(255, 255, 255, 0.15)',
+                        },
+                        '&.Mui-focused': {
+                          background: 'rgba(255, 255, 255, 0.15)',
+                        },
+                        '& .MuiOutlinedInput-notchedOutline': {
+                          borderColor: 'rgba(255, 255, 255, 0.3)',
+                        },
+                      },
+                      '& .MuiInputLabel-root': {
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        '&.Mui-focused': {
+                          color: '#FFC72C',
+                        },
+                      },
+                      '& .MuiInputBase-input': {
+                        color: '#FFFFFF',
                       },
                     }}
                   />
@@ -1368,18 +1405,70 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                     sx={{
                       '& .MuiOutlinedInput-root': {
                         borderRadius: 3,
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        color: '#FFFFFF',
+                        '&:hover': {
+                          background: 'rgba(255, 255, 255, 0.15)',
+                        },
+                        '&.Mui-focused': {
+                          background: 'rgba(255, 255, 255, 0.15)',
+                        },
+                        '& .MuiOutlinedInput-notchedOutline': {
+                          borderColor: 'rgba(255, 255, 255, 0.3)',
+                        },
+                      },
+                      '& .MuiInputLabel-root': {
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        '&.Mui-focused': {
+                          color: '#FFC72C',
+                        },
+                      },
+                      '& .MuiInputBase-input': {
+                        color: '#FFFFFF',
                       },
                     }}
                   />
 
                   <FormControl fullWidth required>
-                    <InputLabel>Location</InputLabel>
+                    <InputLabel sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>Location</InputLabel>
                     <Select
                       value={customerDetails.location}
                       onChange={(e) => handleCustomerDetailsChange('location', e.target.value)}
                       label="Location"
                       sx={{
                         borderRadius: 3,
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        color: '#FFFFFF',
+                        '&:hover': {
+                          background: 'rgba(255, 255, 255, 0.15)',
+                        },
+                        '& .MuiOutlinedInput-notchedOutline': {
+                          borderColor: 'rgba(255, 255, 255, 0.3)',
+                        },
+                        '&.Mui-focused': {
+                          background: 'rgba(255, 255, 255, 0.15)',
+                          '& .MuiOutlinedInput-notchedOutline': {
+                            borderColor: '#FFC72C',
+                          },
+                        },
+                        '& .MuiSvgIcon-root': {
+                          color: 'rgba(255, 255, 255, 0.7)',
+                        },
+                      }}
+                      MenuProps={{
+                        PaperProps: {
+                          sx: {
+                            background: 'rgba(0, 0, 0, 0.9)',
+                            backdropFilter: 'blur(20px)',
+                            border: '1px solid rgba(255, 199, 44, 0.3)',
+                            '& .MuiMenuItem-root': {
+                              color: '#FFFFFF',
+                              '&:hover': {
+                                background: 'rgba(255, 199, 44, 0.2)',
+                              },
+                            },
+                          },
+                        },
                       }}
                     >
                       {tanzaniaLocations.map((location) => (
