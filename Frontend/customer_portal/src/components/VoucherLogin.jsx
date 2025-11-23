@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -30,6 +30,9 @@ import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import apiService from '../services/apiService';
 import { customerPortalAPI } from '../services/customerPortalApi';
+import { generateDeviceFingerprint, getStoredFingerprintHash } from '../utils/deviceFingerprint';
+import { useSessionManager } from '../hooks/useSessionManager';
+import SessionStatus from './SessionStatus';
 
 const VoucherLogin = ({ onBack, currentLanguage }) => {
   const theme = useTheme();
@@ -37,6 +40,20 @@ const VoucherLogin = ({ onBack, currentLanguage }) => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  
+  // Session management
+  const {
+    sessionStatus,
+    isConnected,
+    remainingTime,
+    isReconnecting,
+    checkSessionStatus,
+    reconnectSession,
+    startHeartbeat,
+    startStatusMonitoring,
+    formatRemainingTime,
+    getStoredSession,
+  } = useSessionManager();
 
   const handleLogin = async () => {
     if (!voucherCode || !phoneNumber) {
@@ -62,44 +79,73 @@ const VoucherLogin = ({ onBack, currentLanguage }) => {
     }
 
     setIsLoading(true);
-    toast.loading('Validating voucher code...');
+    toast.loading('Connecting to GG Wi-Fi...');
 
     try {
       // Format phone number for API
       const formattedPhone = phoneNumber.startsWith('+255') ? phoneNumber : `+255${phoneNumber}`;
       
-      // Use correct API endpoint: /voucher/{code}/validate (GET)
-      // Using customerPortalAPI for exact endpoint match
-      const apiResponse = await customerPortalAPI.validateVoucher(voucherCode.toUpperCase());
-      // Axios returns response.data, extract the actual response
+      // Generate device fingerprint (for MAC randomization immunity)
+      const fingerprint = await generateDeviceFingerprint();
+      const fingerprintHash = fingerprint.hash;
+      
+      // Get client MAC and IP (simplified - in production, get from network)
+      const macAddress = '00:00:00:00:00:00'; // Will be detected by backend
+      const ipAddress = '0.0.0.0'; // Will be detected by backend
+      
+      // Activate voucher with device fingerprinting
+      const activationData = {
+        phoneNumber: formattedPhone,
+        macAddress: macAddress,
+        ipAddress: ipAddress,
+        deviceFingerprintHash: fingerprintHash
+      };
+      
+      const apiResponse = await customerPortalAPI.activateVoucher(
+        voucherCode.toUpperCase(), 
+        activationData
+      );
+      
       const response = apiResponse.data || apiResponse;
 
       if (response.status === 'success') {
-        const voucherData = response.data;
-        
-        // Check if voucher is valid and active
-        if (voucherData.isActive && !voucherData.isUsed) {
-          toast.success('Voucher is valid! You can now connect to GG Wi-Fi network.');
-          console.log('Voucher validated successfully:', voucherData);
-          // TODO: Redirect to connection page or show connection success
-        } else if (voucherData.isUsed) {
-          toast.error('This voucher has already been used.');
-        } else if (!voucherData.isActive) {
-          toast.error('This voucher is not active.');
-        } else {
-          toast.error('Voucher validation failed.');
+        // Store session token for seamless reconnection
+        if (response.sessionToken) {
+          localStorage.setItem('ggwifi_session_token', response.sessionToken);
+          localStorage.setItem('ggwifi_voucher_code', voucherCode.toUpperCase());
         }
+        
+        toast.success('Connected successfully! Enjoy your internet access.');
+        console.log('Voucher activated successfully:', response);
+        
+        // Start heartbeat and status monitoring
+        if (response.heartbeatIntervalSeconds) {
+          startHeartbeat(voucherCode.toUpperCase(), response.heartbeatIntervalSeconds);
+        }
+        startStatusMonitoring(voucherCode.toUpperCase());
+        
+        // Check session status immediately
+        await checkSessionStatus(voucherCode.toUpperCase());
       } else {
-        toast.error(response.message || 'Failed to validate voucher. Please check your voucher code.');
+        toast.error(response.message || 'Failed to activate voucher. Please check your voucher code.');
       }
     } catch (error) {
-      console.error('Voucher validation failed:', error);
-      toast.error('Failed to validate voucher. Please check your voucher code and try again.');
+      console.error('Voucher activation failed:', error);
+      toast.error(error.response?.data?.message || 'Failed to connect. Please check your voucher code and try again.');
     } finally {
       setIsLoading(false);
       toast.dismiss();
     }
   };
+  
+  // Check for existing session on mount
+  useEffect(() => {
+    const { voucherCode: storedCode } = getStoredSession();
+    if (storedCode) {
+      setVoucherCode(storedCode);
+      checkSessionStatus(storedCode);
+    }
+  }, [getStoredSession, checkSessionStatus]);
 
   const handleVoucherCodeChange = (event) => {
     // Allow 6-8 alphanumeric characters (A-Z, a-z, 0-9)
@@ -143,16 +189,22 @@ const VoucherLogin = ({ onBack, currentLanguage }) => {
     <Box
       sx={{
         minHeight: '100vh',
-        background: `
-          linear-gradient(135deg, #FFFFFF 0%, #F8F9FA 100%),
-          radial-gradient(circle at 20% 20%, rgba(255, 199, 44, 0.08) 0%, transparent 50%),
-          radial-gradient(circle at 80% 80%, rgba(0, 114, 206, 0.08) 0%, transparent 50%)
-        `,
-        py: 4,
         position: 'relative',
+        overflow: 'hidden',
+        py: 4,
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(26, 26, 26, 0.3) 100%)',
+          zIndex: 0,
+        },
       }}
     >
-      <Container maxWidth="sm">
+      <Container maxWidth="sm" sx={{ position: 'relative', zIndex: 1 }}>
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -182,11 +234,11 @@ const VoucherLogin = ({ onBack, currentLanguage }) => {
           <motion.div variants={itemVariants}>
             <Card
               sx={{
-                background: 'rgba(255, 255, 255, 0.95)',
+                background: 'rgba(0, 0, 0, 0.75)',
                 backdropFilter: 'blur(20px)',
                 borderRadius: 4,
-                boxShadow: '0 20px 60px rgba(0, 0, 0, 0.1)',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
+                boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
+                border: '1px solid rgba(255, 199, 44, 0.3)',
                 overflow: 'hidden',
               }}
             >
@@ -194,22 +246,29 @@ const VoucherLogin = ({ onBack, currentLanguage }) => {
                 {/* Header */}
                 <Box sx={{ textAlign: 'center', mb: 4 }}>
                   <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ duration: 0.5, delay: 0.2 }}
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.6 }}
+                    style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'center' }}
                   >
                     <Avatar
+                      src="/gg-logo.png"
+                      alt="GG Wi-Fi Logo"
+                      onError={(e) => { e.target.src = '/logo.svg'; }}
                       sx={{
-                        width: 80,
-                        height: 80,
-                        background: 'linear-gradient(135deg, #FFC72C 0%, #FFB300 100%)',
-                        mx: 'auto',
-                        mb: 3,
-                        boxShadow: '0 12px 40px rgba(255, 199, 44, 0.4)',
+                        width: { xs: 80, sm: 100 },
+                        height: { xs: 80, sm: 100 },
+                        border: '4px solid #FFC72C',
+                        boxShadow: '0 8px 30px rgba(255, 199, 44, 0.6), 0 0 40px rgba(255, 199, 44, 0.3)',
+                        background: 'linear-gradient(135deg, rgba(255, 199, 44, 0.3) 0%, rgba(0, 114, 206, 0.2) 100%)',
+                        filter: 'brightness(1.1)',
+                        '& img': {
+                          objectFit: 'contain',
+                          padding: '4px',
+                          filter: 'brightness(1.25) contrast(1.1) drop-shadow(0 2px 6px rgba(255, 199, 44, 0.5))',
+                        },
                       }}
-                    >
-                      <WifiIcon sx={{ fontSize: 40, color: '#000000' }} />
-                    </Avatar>
+                    />
                   </motion.div>
 
                   <Typography
@@ -240,9 +299,10 @@ const VoucherLogin = ({ onBack, currentLanguage }) => {
                         label={feature.text}
                         size="small"
                         sx={{
-                          background: 'rgba(255, 255, 255, 0.8)',
+                          background: 'rgba(0, 0, 0, 0.6)',
                           color: feature.color,
-                          border: `1px solid ${feature.color}40`,
+                          border: `1px solid ${feature.color}60`,
+                          backdropFilter: 'blur(10px)',
                           '& .MuiChip-icon': {
                             color: feature.color,
                           },
@@ -253,6 +313,19 @@ const VoucherLogin = ({ onBack, currentLanguage }) => {
                 </Box>
 
                 <Divider sx={{ mb: 4 }} />
+
+                {/* Session Status */}
+                {sessionStatus && (
+                  <Box sx={{ mb: 3 }}>
+                    <SessionStatus
+                      sessionStatus={sessionStatus}
+                      isConnected={isConnected}
+                      remainingTime={remainingTime}
+                      onRefresh={() => checkSessionStatus(voucherCode.toUpperCase())}
+                      formatRemainingTime={formatRemainingTime}
+                    />
+                  </Box>
+                )}
 
                 {/* Form */}
                 <Stack spacing={3}>
@@ -278,24 +351,34 @@ const VoucherLogin = ({ onBack, currentLanguage }) => {
                       sx={{
                         '& .MuiOutlinedInput-root': {
                           borderRadius: 3,
-                          background: 'rgba(255, 255, 255, 0.8)',
+                          background: 'rgba(255, 255, 255, 0.1)',
+                          color: '#FFFFFF',
                           '&:hover': {
+                            background: 'rgba(255, 255, 255, 0.15)',
                             '& .MuiOutlinedInput-notchedOutline': {
                               borderColor: '#FFC72C',
                             },
                           },
                           '&.Mui-focused': {
+                            background: 'rgba(255, 255, 255, 0.15)',
                             '& .MuiOutlinedInput-notchedOutline': {
                               borderColor: '#FFC72C',
                               borderWidth: 2,
                             },
                           },
+                          '& .MuiOutlinedInput-notchedOutline': {
+                            borderColor: 'rgba(255, 255, 255, 0.3)',
+                          },
                         },
                         '& .MuiInputLabel-root': {
                           fontWeight: 600,
+                          color: 'rgba(255, 255, 255, 0.7)',
                           '&.Mui-focused': {
                             color: '#FFC72C',
                           },
+                        },
+                        '& .MuiInputBase-input': {
+                          color: '#FFFFFF',
                         },
                       }}
                     />
@@ -321,24 +404,34 @@ const VoucherLogin = ({ onBack, currentLanguage }) => {
                       sx={{
                         '& .MuiOutlinedInput-root': {
                           borderRadius: 3,
-                          background: 'rgba(255, 255, 255, 0.8)',
+                          background: 'rgba(255, 255, 255, 0.1)',
+                          color: '#FFFFFF',
                           '&:hover': {
+                            background: 'rgba(255, 255, 255, 0.15)',
                             '& .MuiOutlinedInput-notchedOutline': {
                               borderColor: '#0072CE',
                             },
                           },
                           '&.Mui-focused': {
+                            background: 'rgba(255, 255, 255, 0.15)',
                             '& .MuiOutlinedInput-notchedOutline': {
                               borderColor: '#0072CE',
                               borderWidth: 2,
                             },
                           },
+                          '& .MuiOutlinedInput-notchedOutline': {
+                            borderColor: 'rgba(255, 255, 255, 0.3)',
+                          },
                         },
                         '& .MuiInputLabel-root': {
                           fontWeight: 600,
+                          color: 'rgba(255, 255, 255, 0.7)',
                           '&.Mui-focused': {
                             color: '#0072CE',
                           },
+                        },
+                        '& .MuiInputBase-input': {
+                          color: '#FFFFFF',
                         },
                       }}
                     />
@@ -401,13 +494,6 @@ const VoucherLogin = ({ onBack, currentLanguage }) => {
               </CardContent>
             </Card>
           </motion.div>
-        </motion.div>
-      </Container>
-    </Box>
-  );
-};
-
-export default VoucherLogin;
         </motion.div>
       </Container>
     </Box>
