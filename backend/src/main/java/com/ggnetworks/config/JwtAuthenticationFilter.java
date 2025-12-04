@@ -1,96 +1,89 @@
 package com.ggnetworks.config;
 
 import com.ggnetworks.service.JwtService;
+import com.ggnetworks.service.CustomUserDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Autowired;
+import java.io.IOException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import java.io.IOException;
-
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    @Autowired
-    private JwtService jwtService;
-    
-    @Autowired
-    private UserDetailsService userDetailsService;
+    private final JwtService jwtService;
+    private final CustomUserDetailsService userDetailsService;
+
+    public JwtAuthenticationFilter(JwtService jwtService, CustomUserDetailsService userDetailsService) {
+        this.jwtService = jwtService;
+        this.userDetailsService = userDetailsService;
+    }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, 
-                                  FilterChain filterChain) throws ServletException, IOException {
-        
-        System.out.println("🔍 JWT Filter - ENTRY - Request: " + request.getRequestURI());
-        System.out.println("🔍 JWT Filter - ENTRY - Method: " + request.getMethod());
-        
-        // Skip JWT processing for public endpoints
-        String requestURI = request.getRequestURI();
-        if (requestURI.startsWith("/api/v1/customer-portal/") || 
-            requestURI.startsWith("/api/v1/auth/") ||
-            requestURI.startsWith("/customer-portal/") || 
-            requestURI.startsWith("/auth/") ||
-            requestURI.equals("/") ||
-            requestURI.equals("/api/v1") ||
-            requestURI.startsWith("/static/") ||
-            requestURI.startsWith("/css/") ||
-            requestURI.startsWith("/js/") ||
-            requestURI.startsWith("/images/")) {
-            System.out.println("🔍 JWT Filter - Skipping public endpoint: " + requestURI);
-            filterChain.doFilter(request, response);
-            return;
-        }
-        
-        final String authHeader = request.getHeader("Authorization");
-        final String jwt;
-        final String username;
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
 
-        System.out.println("🔍 JWT Filter - Request: " + request.getRequestURI());
-        System.out.println("🔍 JWT Filter - Auth Header: " + authHeader);
-
+        String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            System.out.println("🔍 JWT Filter - No valid auth header, skipping");
             filterChain.doFilter(request, response);
             return;
         }
 
-        jwt = authHeader.substring(7);
-
-        String extractedUsername = null;
+        String token = authHeader.substring(7);
+        String username = null;
+        
         try {
-            extractedUsername = jwtService.extractUsername(jwt);
+            username = jwtService.extractUsername(token);
         } catch (Exception e) {
-            System.out.println("🔍 JWT Filter - Failed to extract username from token, falling back to 'admin': " + e.getMessage());
+            // Invalid token format - reject immediately
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"status\":\"error\",\"message\":\"Invalid or malformed token\"}");
+            return;
         }
 
-        // Fallback username for simplified single-admin model
-        String effectiveUsername = (extractedUsername != null && !extractedUsername.isBlank())
-            ? extractedUsername
-            : "admin";
-        System.out.println("🔍 JWT Filter - Effective username: " + effectiveUsername);
-        System.out.println("🔍 JWT Filter - JWT token (not strictly validated in simplified mode)");
-        
-        if (SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = this.userDetailsService.loadUserByUsername(effectiveUsername);
-            
-            // In the simplified security model, we trust any Bearer token and
-            // always create an authenticated principal so that all admin
-            // endpoints work for the single administrator account.
-            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                userDetails, null, userDetails.getAuthorities());
-            authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-            SecurityContextHolder.getContext().setAuthentication(authToken);
-            System.out.println("🔍 JWT Filter - Authentication set for user: " + effectiveUsername + " with roles: " + userDetails.getAuthorities());
+        if (username == null) {
+            // Token extraction failed - reject
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"status\":\"error\",\"message\":\"Invalid token\"}");
+            return;
         }
-        
+
+        if (SecurityContextHolder.getContext().getAuthentication() == null) {
+            try {
+                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                boolean valid = jwtService.validateToken(token, userDetails);
+                
+                if (!valid) {
+                    // Token validation failed - reject
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setContentType("application/json");
+                    response.getWriter().write("{\"status\":\"error\",\"message\":\"Token validation failed\"}");
+                    return;
+                }
+                
+                // Token is valid - set authentication
+                UsernamePasswordAuthenticationToken authentication =
+                    new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            } catch (Exception e) {
+                // User not found or other error - reject
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json");
+                response.getWriter().write("{\"status\":\"error\",\"message\":\"Authentication failed\"}");
+                return;
+            }
+        }
+
         filterChain.doFilter(request, response);
     }
 }

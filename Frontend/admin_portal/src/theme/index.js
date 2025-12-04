@@ -1,132 +1,107 @@
 import { createTheme } from '@mui/material/styles';
 
-// GG Wi-Fi Brand Colors - Official Brand Palette
-const primaryColors = {
-  main: '#FFC72C', // Golden Yellow - Primary Brand Color (Call-to-action buttons, key highlights)
-  light: '#FFD700', // Bright Golden Yellow - Highlight Variant
-  dark: '#E6B800', // Darker Golden Yellow
-};
-
-const secondaryColors = {
-  main: '#0072CE', // Blue - Secondary Accent Color (Subtle accents, links, minor highlights)
-  light: '#4A9EFF', // Light Blue
-  dark: '#0056A3', // Dark Blue
-};
-
-const accentColors = {
-  main: '#000000', // Black - Main text, headings, overlays
-  light: '#333333', // Dark Gray
-  dark: '#000000', // Pure Black
-};
-
-const successColors = {
-  main: '#4CAF50', // Green
-  light: '#81C784',
-  dark: '#388E3C',
-};
-
-const errorColors = {
-  main: '#F44336', // Red
-  light: '#E57373',
-  dark: '#D32F2F',
-};
-
-const warningColors = {
-  main: '#FF9800', // Orange
-  light: '#FFB74D',
-  dark: '#F57C00',
-};
-
-const infoColors = {
-  main: '#2196F3', // Blue
-  light: '#64B5F6',
-  dark: '#1976D2',
-};
-
-const greyColors = {
-  50: '#fafafa',
-  100: '#f5f5f5',
-  200: '#eeeeee',
-  300: '#e0e0e0',
-  400: '#bdbdbd',
-  500: '#9e9e9e',
-  600: '#757575',
-  700: '#616161',
-  800: '#424242',
-  900: '#212121',
+const palette = {
+  gold: '#F2C94C',
+  goldStrong: '#E0B335',
+  black: '#0A0A0A',
+  white: '#FFFFFF',
+  neutral100: '#F6F6F6',
+  neutral200: '#F0F0F0',
+  neutral300: '#E8E8E8',
+  neutral500: '#9F9F9F',
+  neutral700: '#4B4B4B',
 };
 
 // Create the GGNetworks theme
 const theme = createTheme({
   palette: {
-    primary: primaryColors,
-    secondary: secondaryColors,
-    success: successColors,
-    error: errorColors,
-    warning: warningColors,
-    info: infoColors,
-    grey: greyColors,
+    primary: {
+      main: palette.gold,
+      light: '#F8DEA1',
+      dark: palette.goldStrong,
+      contrastText: palette.black,
+    },
+    secondary: {
+      main: palette.black,
+      contrastText: palette.white,
+    },
+    success: {
+      main: '#2E7D32',
+      contrastText: palette.white,
+    },
+    error: {
+      main: '#C62828',
+      contrastText: palette.white,
+    },
+    warning: {
+      main: '#E65100',
+      contrastText: palette.white,
+    },
+    info: {
+      main: '#424242',
+      contrastText: palette.white,
+    },
+    grey: {
+      50: palette.white,
+      100: palette.neutral100,
+      200: palette.neutral200,
+      300: palette.neutral300,
+      500: palette.neutral500,
+      700: palette.neutral700,
+      900: palette.black,
+    },
     background: {
-      default: '#FFFFFF', // Pure White - Clean layout areas
-      paper: '#FFFFFF', // Pure White - Clean layout areas
+      default: palette.neutral100,
+      paper: palette.white,
     },
     text: {
-      primary: '#000000', // Black - Main text, headings, overlays
-      secondary: '#333333', // Dark Gray for secondary text
+      primary: palette.black,
+      secondary: palette.neutral700,
     },
   },
   typography: {
     fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
     h1: {
-      fontSize: '2.5rem',
-      fontWeight: 700,
-      lineHeight: 1.2,
-      letterSpacing: '-0.02em',
-    },
-    h2: {
-      fontSize: '2rem',
-      fontWeight: 600,
-      lineHeight: 1.3,
-      letterSpacing: '-0.01em',
-    },
-    h3: {
       fontSize: '1.75rem',
       fontWeight: 600,
-      lineHeight: 1.4,
-      letterSpacing: '-0.01em',
+      lineHeight: 1.25,
     },
-    h4: {
+    h2: {
       fontSize: '1.5rem',
       fontWeight: 600,
-      lineHeight: 1.4,
-      letterSpacing: '-0.005em',
+      lineHeight: 1.3,
     },
-    h5: {
+    h3: {
       fontSize: '1.25rem',
       fontWeight: 600,
-      lineHeight: 1.5,
-      letterSpacing: '-0.005em',
+      lineHeight: 1.35,
     },
-    h6: {
+    h4: {
       fontSize: '1.125rem',
       fontWeight: 600,
-      lineHeight: 1.5,
-      letterSpacing: '-0.005em',
+      lineHeight: 1.4,
+    },
+    h5: {
+      fontSize: '1rem',
+      fontWeight: 600,
+      lineHeight: 1.45,
+    },
+    h6: {
+      fontSize: '0.95rem',
+      fontWeight: 600,
+      lineHeight: 1.45,
     },
     body1: {
       fontSize: '1rem',
       lineHeight: 1.6,
-      letterSpacing: '0.01em',
     },
     body2: {
-      fontSize: '0.875rem',
-      lineHeight: 1.6,
-      letterSpacing: '0.01em',
+      fontSize: '0.9rem',
+      lineHeight: 1.55,
     },
     caption: {
       fontSize: '0.75rem',
       lineHeight: 1.4,
-      letterSpacing: '0.02em',
     },
     button: {
       textTransform: 'none',
@@ -135,37 +110,35 @@ const theme = createTheme({
     },
   },
   shape: {
-    borderRadius: 8,
+    borderRadius: 16,
   },
   spacing: 8,
   components: {
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: 8,
-          padding: '8px 24px',
+          borderRadius: 12,
+          padding: '12px 20px',
           fontWeight: 600,
           textTransform: 'none',
           boxShadow: 'none',
           '&:hover': {
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+            boxShadow: '0 8px 24px rgba(10, 10, 10, 0.12)',
           },
         },
         contained: {
           '&.MuiButton-containedPrimary': {
-            background: `linear-gradient(135deg, ${primaryColors.main} 0%, ${primaryColors.light} 100%)`,
-            color: '#000000', // Black text on golden background
-            fontWeight: 700,
+            backgroundColor: palette.gold,
+            color: palette.black,
             '&:hover': {
-              background: `linear-gradient(135deg, ${primaryColors.light} 0%, ${primaryColors.main} 100%)`,
-              boxShadow: `0 8px 32px ${primaryColors.main}40`,
+              backgroundColor: palette.goldStrong,
             },
           },
           '&.MuiButton-containedSecondary': {
-            background: `linear-gradient(135deg, ${secondaryColors.main} 0%, ${secondaryColors.dark} 100%)`,
-            color: '#FFFFFF', // White text on gray background
+            backgroundColor: palette.black,
+            color: palette.white,
             '&:hover': {
-              background: `linear-gradient(135deg, ${secondaryColors.dark} 0%, ${secondaryColors.main} 100%)`,
+              backgroundColor: '#1F1F1F',
             },
           },
         },
@@ -174,10 +147,11 @@ const theme = createTheme({
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 12,
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+          borderRadius: 16,
+          boxShadow: '0 6px 18px rgba(10, 10, 10, 0.06)',
+          border: `1px solid ${palette.neutral300}`,
           '&:hover': {
-            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.15)',
+            boxShadow: '0 14px 32px rgba(10, 10, 10, 0.08)',
           },
         },
       },
@@ -193,28 +167,26 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           '& .MuiOutlinedInput-root': {
-            borderRadius: 8,
+            borderRadius: 12,
+            backgroundColor: palette.white,
             '&.Mui-focused': {
               '& .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#F5B700', // GG Wi-Fi Golden Yellow focus
-                borderWidth: '2px',
+                borderColor: palette.gold,
+                borderWidth: 2,
               },
             },
             '&:hover': {
               '& .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#FFCB00', // Bright Amber hover
+                borderColor: palette.gold,
               },
             },
             '& .MuiOutlinedInput-input': {
-              caretColor: '#F5B700 !important', // GG Wi-Fi golden cursor
-              '&::selection': {
-                backgroundColor: '#F5B70040 !important', // Golden selection
-              },
+              caretColor: palette.gold,
             },
           },
           '& .MuiInputLabel-root': {
             '&.Mui-focused': {
-              color: '#F5B700', // GG Wi-Fi Golden Yellow label focus
+              color: palette.goldStrong,
             },
           },
         },
@@ -231,20 +203,20 @@ const theme = createTheme({
     MuiAppBar: {
       styleOverrides: {
         root: {
-          background: '#FFFFFF', // Pure White background
-          color: '#2E2E2E', // Warm Gray text
-          borderBottom: '2px solid #F5B700', // GG Wi-Fi Golden Yellow accent
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+          background: palette.white,
+          color: palette.black,
+          borderBottom: `1px solid ${palette.neutral300}`,
+          boxShadow: '0 8px 20px rgba(10, 10, 10, 0.06)',
         },
       },
     },
     MuiDrawer: {
       styleOverrides: {
         paper: {
-          background: '#FFFFFF', // Pure White sidebar
-          color: '#2E2E2E', // Warm Gray text
-          borderRight: '2px solid #F5B700', // GG Wi-Fi Golden Yellow accent
-          boxShadow: '2px 0 8px rgba(0, 0, 0, 0.1)',
+          background: palette.white,
+          color: palette.black,
+          borderRight: `1px solid ${palette.neutral300}`,
+          boxShadow: '4px 0 12px rgba(10, 10, 10, 0.05)',
         },
       },
     },

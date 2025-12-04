@@ -1,3 +1,50 @@
+// System Settings API
+export const systemSettingsAPI = {
+  getAllSettings: () => apiClient.get('/system-settings'),
+  getHotspotSettings: () => apiClient.get('/system-settings/hotspot'),
+  setHotspotDomain: (domain) => apiClient.post('/system-settings/hotspot/domain', null, { params: { domain } }),
+  getApiKeys: () => apiClient.get('/system-settings/api-keys'),
+  setApiKey: (service, key) => apiClient.post(`/system-settings/api-keys/${service}`, null, { params: { key } }),
+  getNotificationTemplates: () => apiClient.get('/system-settings/notifications'),
+  setNotificationTemplate: (type, template) => apiClient.post(`/system-settings/notifications/${type}`, null, { params: { template } }),
+  getVoucherSettings: () => apiClient.get('/system-settings/voucher'),
+  getLoyaltySettings: () => apiClient.get('/system-settings/loyalty'),
+  getBrandingSettings: () => apiClient.get('/system-settings/branding'),
+  setBrandingSetting: (key, value) => apiClient.post(`/system-settings/branding/${key}`, null, { params: { value } }),
+  getConfigValue: (key) => apiClient.get(`/system-settings/config/${key}`),
+  setConfigValue: ({ key, value, description }) =>
+    apiClient.post('/system-settings/config', null, {
+      params: {
+        key,
+        value,
+        description,
+      },
+    }),
+};
+
+// Reports & Analytics API
+export const reportsAnalyticsAPI = {
+  getReportStats: () => apiClient.get('/admin/reports-analytics/reports/statistics'),
+  getReports: (params = {}) => apiClient.get('/admin/reports-analytics/reports', { params }),
+  createReport: (payload) => apiClient.post('/admin/reports-analytics/reports', payload),
+  updateReport: (reportId, payload) => apiClient.put(`/admin/reports-analytics/reports/${reportId}`, payload),
+  deleteReport: (reportId) => apiClient.delete(`/admin/reports-analytics/reports/${reportId}`),
+  generateFinancialReport: (params) =>
+    apiClient.get('/admin/reports-analytics/reports/generate/financial', { params }),
+  generateCustomerReport: (params) =>
+    apiClient.get('/admin/reports-analytics/reports/generate/customer', { params }),
+  generateNetworkReport: () => apiClient.get('/admin/reports-analytics/reports/generate/network'),
+  generateSalesReport: (params) =>
+    apiClient.get('/admin/reports-analytics/reports/generate/sales', { params }),
+  getUsagePerPlan: (params = {}) => apiClient.get('/admin/reports-analytics/usage-per-plan', { params }),
+  getTopCustomersUsage: (params = {}) => apiClient.get('/admin/reports-analytics/top-customers-usage', { params }),
+  getRouterUptime: () => apiClient.get('/admin/reports-analytics/router-uptime'),
+  getSessionDurationDistribution: () =>
+    apiClient.get('/admin/reports-analytics/session-duration-distribution'),
+  getPeakUsageTimes: () => apiClient.get('/admin/reports-analytics/peak-usage-times'),
+  getFailedLoginTrends: () => apiClient.get('/admin/reports-analytics/failed-login-trends'),
+  getDeviceTypeDistribution: () => apiClient.get('/admin/reports-analytics/device-type-distribution'),
+};
 import axios from 'axios';
 
 const API_BASE_URL = (
@@ -80,6 +127,7 @@ export const voucherAPI = {
   createVoucher: (voucherData) => apiClient.post('/admin/vouchers', voucherData),
   updateVoucher: (voucherId, voucherData) => apiClient.put(`/admin/vouchers/${voucherId}`, voucherData),
   deleteVoucher: (voucherId) => apiClient.delete(`/admin/vouchers/${voucherId}`),
+  createBulkVouchers: (bulkData) => apiClient.post('/admin/vouchers/bulk', bulkData),
   // Additional voucher operations
   getVoucherByCode: (code) => apiClient.get(`/admin/vouchers/code/${code}`),
 };
@@ -89,22 +137,19 @@ export const routerAPI = {
   getAllRouters: () => apiClient.get('/admin/routers'),
   getRouterStatus: () => apiClient.get('/admin/routers/status'),
   // Configure via technician controller route available in backend
-  configureRouter: (routerId) => apiClient.post(`/api/v1/technician/routers/${routerId}/configure`),
+  configureRouter: (routerId) => apiClient.post(`/technician/routers/${routerId}/configure`),
+  createRouter: (routerData) => apiClient.post('/admin/routers', routerData),
+  updateRouter: (routerId, routerData) => apiClient.put(`/admin/routers/${routerId}`, routerData),
+  deleteRouter: (routerId) => apiClient.delete(`/admin/routers/${routerId}`),
+  testConnection: (routerId) => apiClient.post(`/admin/routers/${routerId}/test-connection`),
 };
 
 // RADIUS Management API
 export const radiusAPI = {
   getHealth: () => apiClient.get('/radius/health'),
-  getAllUsers: () => apiClient.get('/radius/users'),
-  createUser: (userData) => apiClient.post('/radius/users', userData),
-  deleteUser: (username) => apiClient.delete(`/radius/users/${username}`),
-  authenticate: (payload) => apiClient.post('/radius/authenticate', payload),
-  getSessions: () => apiClient.get('/radius/sessions'),
+  getActiveSessions: () => apiClient.get('/sessions/active'),
+  terminateSession: (sessionId) => apiClient.post(`/sessions/${sessionId}/terminate`),
   getSessionStatistics: () => apiClient.get('/radius/statistics'),
-  configureNas: (payload) => apiClient.post('/radius/nas', payload),
-  listNas: () => apiClient.get('/radius/nas'),
-  startAccounting: (payload) => apiClient.post('/radius/accounting/start', payload),
-  stopAccounting: (payload) => apiClient.post('/radius/accounting/stop', payload),
 };
 
 // Payment Management API
@@ -145,19 +190,48 @@ export const customerAPI = {
   getCustomerByEmail: (email) => apiClient.get(`/admin/customers/email/${email}`),
   getActiveCustomers: () => apiClient.get('/admin/customers/active'),
   getCustomerStatistics: () => apiClient.get('/admin/customers/statistics'),
+  createCustomer: (customerData) => apiClient.post('/admin/customers', customerData),
+  updateCustomer: (customerId, customerData) => apiClient.put(`/admin/customers/${customerId}`, customerData),
+  deleteCustomer: (customerId) => apiClient.delete(`/admin/customers/${customerId}`),
 };
 
-// Loyalty Management API - Not implemented in backend yet
+// Loyalty Management API
 export const loyaltyAPI = {
-  // Placeholder - will be implemented in future
-  getAllLoyaltyPrograms: () => Promise.resolve({ data: [] }),
-  getLoyaltyProgramById: (programId) => Promise.resolve({ data: null }),
-  createLoyaltyProgram: (programData) => Promise.reject({ message: 'Not implemented yet' }),
-  updateLoyaltyProgram: (programId, programData) => Promise.reject({ message: 'Not implemented yet' }),
-  deleteLoyaltyProgram: (programId) => Promise.reject({ message: 'Not implemented yet' }),
-  getCustomerLoyalty: (customerId) => Promise.resolve({ data: null }),
-  updateCustomerLoyalty: (customerId, loyaltyData) => Promise.reject({ message: 'Not implemented yet' }),
-  getLoyaltyStatistics: () => Promise.resolve({ data: {} }),
+  getCustomerSnapshotByPhone: (phoneNumber) => apiClient.get(`/loyalty/customer/phone/${phoneNumber}/snapshot`),
+  getCustomerLoyaltyInfo: (customerId) => apiClient.get(`/loyalty/customer/${customerId}`),
+  getCustomerRewards: (customerId) => apiClient.get(`/loyalty/customer/${customerId}/rewards`),
+  redeemReward: (customerId, rewardId) => apiClient.post(`/loyalty/customer/${customerId}/redeem/${rewardId}`),
+  redeemRewardWithDelivery: (customerId, payload) => apiClient.post(`/loyalty/customer/${customerId}/redeem`, payload),
+  getCustomerProgress: (customerId) => apiClient.get(`/loyalty/customer/${customerId}/progress`),
+  getCustomerProgressByPhone: (phoneNumber) => apiClient.get(`/loyalty/progress/${phoneNumber}`),
+  getTransactionHistory: (customerId) => apiClient.get(`/loyalty/customer/${customerId}/transactions`),
+  getRedemptionHistory: (customerId) => apiClient.get(`/loyalty/customer/${customerId}/redemptions`),
+  getCustomerSnapshot: (phoneNumber) => apiClient.get(`/loyalty/customer/phone/${phoneNumber}/snapshot`),
+  getAllRewards: (params = {}) => apiClient.get('/loyalty/rewards/all', { params }),
+  getAvailableRewards: (params = {}) => apiClient.get('/loyalty/rewards', { params }),
+  getRewardById: (rewardId) => apiClient.get(`/loyalty/rewards/${rewardId}`),
+  createReward: (reward) => apiClient.post('/loyalty/rewards', reward),
+  updateReward: (rewardId, reward) => apiClient.put(`/loyalty/rewards/${rewardId}`, reward),
+  deleteReward: (rewardId) => apiClient.delete(`/loyalty/rewards/${rewardId}`),
+  getTopCustomers: (limit = 10) => apiClient.get('/loyalty/top-customers', { params: { limit } }),
+  getRedemptions: (params = {}) => apiClient.get('/loyalty/redemptions', { params }),
+  getPendingRedemptions: (params = {}) => apiClient.get('/loyalty/redemptions/pending', { params }),
+  approveRedemption: (redemptionId, technicianAssigned) =>
+    apiClient.post(`/loyalty/redemptions/${redemptionId}/approve`, null, {
+      params: technicianAssigned ? { technicianAssigned } : {},
+    }),
+  markRedemptionDelivered: (redemptionId) => apiClient.post(`/loyalty/redemptions/${redemptionId}/deliver`),
+  rejectRedemption: (redemptionId, reason) =>
+    apiClient.post(`/loyalty/redemptions/${redemptionId}/reject`, { reason }),
+  getPointRules: () => apiClient.get('/loyalty/point-rules'),
+  savePointRule: (rule) => apiClient.post('/loyalty/point-rules', rule),
+  deletePointRule: (ruleId) => apiClient.delete(`/loyalty/point-rules/${ruleId}`),
+  getTierConfigs: (params = {}) => apiClient.get('/loyalty/tiers', { params }),
+  saveTierConfig: (config) => apiClient.post('/loyalty/tiers', config),
+  updateTierConfig: (tierId, config) => apiClient.put(`/loyalty/tiers/${tierId}`, config),
+  deleteTierConfig: (tierId) => apiClient.delete(`/loyalty/tiers/${tierId}`),
+  getInventory: (params = {}) => apiClient.get('/loyalty/inventory', { params }),
+  upsertInventory: (payload) => apiClient.post('/loyalty/inventory', payload),
 };
 
 // Dashboard API
@@ -181,25 +255,54 @@ export const applicationAPI = {
   getApplicationStatistics: () => Promise.resolve({ data: {} }),
 };
 
-// Finance Management API - Use dashboard finance endpoint for now
+// Finance Management API
 export const financeAPI = {
-  getFinancialReports: (params = {}) => apiClient.get('/admin/finance/reports', { params }),
-  getRevenueStatistics: () => apiClient.get('/admin/dashboard/finance'),
-  getExpenseStatistics: () => apiClient.get('/admin/dashboard/finance'),
-  getProfitLossReport: (params = {}) => apiClient.get('/admin/dashboard/finance', { params }),
-  createFinancialReport: (reportData) => apiClient.post('/admin/finance/reports', reportData),
-  updateFinancialReport: (reportId, reportData) => apiClient.put(`/admin/finance/reports/${reportId}`, reportData),
+  getOverview: () => apiClient.get('/admin/finance/overview'),
+  getTransactions: () => apiClient.get('/admin/finance/transactions'),
+  createTransaction: (payload) => apiClient.post('/admin/finance/transactions', payload),
+  updateTransaction: (transactionId, payload) => apiClient.put(`/admin/finance/transactions/${transactionId}`, payload),
+  deleteTransaction: (transactionId) => apiClient.delete(`/admin/finance/transactions/${transactionId}`),
+  getBudgets: () => apiClient.get('/admin/finance/budgets'),
 };
 
 // Marketing Management API
 export const marketingAPI = {
-  getAllCampaigns: () => apiClient.get('/admin/marketing/campaigns'),
-  getCampaignById: (campaignId) => apiClient.get(`/admin/marketing/campaigns/${campaignId}`),
-  createCampaign: (campaignData) => apiClient.post('/admin/marketing/campaigns', campaignData),
-  updateCampaign: (campaignId, campaignData) => apiClient.put(`/admin/marketing/campaigns/${campaignId}`, campaignData),
-  deleteCampaign: (campaignId) => apiClient.delete(`/admin/marketing/campaigns/${campaignId}`),
-  sendCampaign: (campaignId) => apiClient.post(`/admin/marketing/campaigns/${campaignId}/send`),
-  getCampaignStatistics: (campaignId) => apiClient.get(`/admin/marketing/campaigns/${campaignId}/statistics`),
+  // Campaigns
+  getCampaigns: () => apiClient.get('/marketing/campaigns'),
+  createCampaign: (campaignData) => apiClient.post('/marketing/campaigns', campaignData),
+  updateCampaign: (campaignId, campaignData) => apiClient.put(`/marketing/campaigns/${campaignId}`, campaignData),
+  deleteCampaign: (campaignId) => apiClient.delete(`/marketing/campaigns/${campaignId}`),
+  sendCampaign: (campaignId) => apiClient.post(`/marketing/campaigns/${campaignId}/send`),
+  processScheduledCampaigns: () => apiClient.post('/marketing/campaigns/process-scheduled'),
+  getLogs: (campaignId) => apiClient.get('/marketing/logs', {
+    params: campaignId ? { campaignId } : {},
+  }),
+
+  // Audience segments
+  getSegments: () => apiClient.get('/marketing/segments'),
+  saveSegment: (segment) => apiClient.post('/marketing/segments', segment),
+  deleteSegment: (segmentId) => apiClient.delete(`/marketing/segments/${segmentId}`),
+
+  // SMS templates
+  getTemplates: () => apiClient.get('/marketing/templates'),
+  saveTemplate: (template) => apiClient.post('/marketing/templates', template),
+  deleteTemplate: (templateId) => apiClient.delete(`/marketing/templates/${templateId}`),
+
+  // Portal media campaigns
+  getMediaCampaigns: () => apiClient.get('/marketing/media'),
+  saveMediaCampaign: (mediaCampaign) => apiClient.post('/marketing/media', mediaCampaign),
+  getActiveMedia: (device = 'generic') => apiClient.get('/marketing/media/active', { params: { device } }),
+  recordImpression: (payload) => apiClient.post('/marketing/media/impressions', payload),
+
+  // Scheduler config
+  getSchedules: () => apiClient.get('/marketing/schedules'),
+  saveSchedule: (config) => apiClient.post('/marketing/schedules', config),
+  pauseSchedule: (scheduleId) => apiClient.post(`/marketing/schedules/${scheduleId}/pause`),
+
+  // Automation triggers
+  getAutomationTriggers: () => apiClient.get('/marketing/automation'),
+  saveAutomationTrigger: (trigger) => apiClient.post('/marketing/automation', trigger),
+  deleteAutomationTrigger: (triggerId) => apiClient.delete(`/marketing/automation/${triggerId}`),
 };
 
 // Blog Management API

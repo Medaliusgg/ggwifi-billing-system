@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { Box } from '@mui/material';
@@ -9,6 +9,7 @@ import NavigationBar from './components/NavigationBar';
 import LandingPage from './components/LandingPage';
 import VoucherLogin from './components/VoucherLogin';
 import BuyPackage from './components/BuyPackage';
+import CustomerAccess from './components/customer/CustomerAccess';
 import Footer from './components/Footer';
 import LoadingSpinner from './components/LoadingSpinner';
 import AnimatedBackground from './components/AnimatedBackground';
@@ -30,6 +31,20 @@ const queryClient = new QueryClient({
 const AppContent = () => {
   const [currentView, setCurrentView] = useState('landing');
   const [currentLanguage, setCurrentLanguage] = useState('en');
+  const [customerSession, setCustomerSession] = useState(() => {
+    const stored = localStorage.getItem('customerSession');
+    return stored ? JSON.parse(stored) : null;
+  });
+
+  useEffect(() => {
+    if (customerSession?.token) {
+      localStorage.setItem('customerSession', JSON.stringify(customerSession));
+      localStorage.setItem('authToken', customerSession.token);
+      if (customerSession.refreshToken) {
+        localStorage.setItem('customerRefreshToken', customerSession.refreshToken);
+      }
+    }
+  }, [customerSession]);
 
   const handleNavigateToVoucher = () => {
     setCurrentView('voucher');
@@ -39,7 +54,29 @@ const AppContent = () => {
     setCurrentView('packages');
   };
 
+  const handleNavigateToCustomer = () => {
+    setCurrentView('customer');
+  };
+
   const handleBackToLanding = () => {
+    setCurrentView('landing');
+  };
+
+  const handleCustomerLoginSuccess = (payload) => {
+    setCustomerSession({
+      token: payload.token,
+      refreshToken: payload.refreshToken,
+      account: payload.account,
+      phoneNumber: payload.phoneNumber || payload.account?.phoneNumber,
+    });
+    setCurrentView('customer');
+  };
+
+  const handleCustomerLogout = () => {
+    setCustomerSession(null);
+    localStorage.removeItem('customerSession');
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('customerRefreshToken');
     setCurrentView('landing');
   };
 
@@ -61,6 +98,7 @@ const AppContent = () => {
         onNavigateToHome={handleBackToLanding}
         onNavigateToPackages={handleNavigateToPackages}
         onNavigateToVoucher={handleNavigateToVoucher}
+        onNavigateToCustomer={handleNavigateToCustomer}
       />
       
       {/* Main Content with top padding to account for fixed header */}
@@ -108,6 +146,23 @@ const AppContent = () => {
               <BuyPackage
                 onBack={handleBackToLanding}
                 currentLanguage={currentLanguage}
+              />
+            </motion.div>
+          )}
+
+          {currentView === 'customer' && (
+            <motion.div
+              key="customer"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.4 }}
+            >
+              <CustomerAccess
+                session={customerSession}
+                onLoginSuccess={handleCustomerLoginSuccess}
+                onLogout={handleCustomerLogout}
+                onBack={handleBackToLanding}
               />
             </motion.div>
           )}

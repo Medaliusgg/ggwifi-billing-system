@@ -25,7 +25,13 @@ export default defineConfig({
     'process.env': {}
   },
   optimizeDeps: {
-    include: ['react', 'react-dom', '@mui/material', '@mui/icons-material', 'framer-motion']
+    include: ['react', 'react-dom', '@mui/material', '@mui/icons-material', 'framer-motion'],
+    // Ensure Vite's dependency scanner treats .js files with JSX correctly
+    esbuildOptions: {
+      loader: {
+        '.js': 'jsx',
+      },
+    },
   },
   esbuild: {
     loader: 'jsx',

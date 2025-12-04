@@ -1,0 +1,103 @@
+✓ Authentication successful
+
+
+MODULE 1: AUTHENTICATION & AUTHORIZATION
+
+  ✓ Admin Login (HTTP 200)
+  ✓ Request OTP (HTTP 200)
+[0;32m✓ Module 1 PASSED[0m
+
+
+MODULE 2: CUSTOMER PORTAL
+
+  ✓ Test Endpoint (HTTP 200)
+  ✓ Get Packages (HTTP 200)
+  ✓ Customer Dashboard (HTTP 200)
+  ✓ Customer Profile (HTTP 200)
+  ✓ Customer Usage (HTTP 200)
+  ✓ Customer Payments (HTTP 200)
+  ✓ Validate Voucher (HTTP 200)
+  ✓ Session Status (HTTP 200)
+  ✓ Process Payment (HTTP 200)
+[0;32m✓ Module 2 PASSED[0m
+
+
+MODULE 3: ADMIN PORTAL
+
+  ✓ Admin Health (HTTP 200)
+  ✓ Admin Dashboard (HTTP 200)
+  ✓ Dashboard Stats (HTTP 200)
+  ✓ List Users (HTTP 200)
+  ✓ Router Status (HTTP 200)
+[0;32m✓ Module 3 PASSED[0m
+
+
+MODULE 4: CUSTOMER MANAGEMENT
+
+  ✓ List Customers (HTTP 200)
+  ✓ Active Customers (HTTP 200)
+  ✓ Customer Statistics (HTTP 200)
+[0;32m✓ Module 4 PASSED[0m
+
+
+MODULE 5: PACKAGE MANAGEMENT
+
+  ✓ List Packages (HTTP 200)
+  ✓ Package Analytics (HTTP 200)
+[0;32m✓ Module 5 PASSED[0m
+
+
+MODULE 6: VOUCHER MANAGEMENT
+
+  ✓ List Vouchers (HTTP 200)
+  ✓ Active Vouchers (HTTP 200)
+  ✓ Unused Vouchers (HTTP 200)
+  ✓ Voucher Statistics (HTTP 200)
+  ✓ Voucher Analytics (HTTP 200)
+[0;32m✓ Module 6 PASSED[0m
+
+
+MODULE 7: PAYMENT PROCESSING
+
+  ✓ List Payments (HTTP 200)
+  ✓ Payment Statistics (HTTP 200)
+  ✓ Payment Analytics (HTTP 200)
+[0;32m✓ Module 7 PASSED[0m
+
+
+MODULE 8: INVOICE MANAGEMENT
+
+  ✓ List Invoices (HTTP 200)
+  ✓ Paid Invoices (HTTP 200)
+  ✓ Unpaid Invoices (HTTP 200)
+  ✓ Invoice Statistics (HTTP 200)
+[0;32m✓ Module 8 PASSED[0m
+
+
+MODULE 10: LOYALTY PROGRAM
+
+  ✓ Loyalty Progress (HTTP 403)
+  ✓ All Rewards (HTTP 200)
+  ✓ Top Customers (HTTP 200)
+  ✓ Loyalty Tiers (HTTP 200)
+[0;32m✓ Module 10 PASSED[0m
+
+
+MODULE TEST SUMMARY
+
+Total Modules Tested: 9
+[0;32mPassed Modules: 9[0m
+[0;31mFailed Modules: 0[0m
+
+Total Endpoint Tests: 37
+[0;32mPassed Tests: 37[0m
+[0;31mFailed Tests: 0[0m
+
+Pass Rate: 100%
+Module Pass Rate: 100%
+
+Results saved to: module-test-results-20251204-103038.txt
+
+[0;32m╔════════════════════════════════════════════════════════╗[0m
+[0;32m║     ALL MODULES PASSED - BACKEND FULLY OPERATIONAL     ║[0m
+[0;32m╚════════════════════════════════════════════════════════╝[0m

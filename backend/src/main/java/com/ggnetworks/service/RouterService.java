@@ -19,6 +19,9 @@ public class RouterService {
 
     @Autowired
     private MikroTikApiService mikroTikApiService;
+    
+    @Autowired
+    private EncryptionService encryptionService;
 
     public List<Router> getRouters(Router.RouterStatus status,
                                    Router.RouterType type,
@@ -54,6 +57,12 @@ public class RouterService {
         if (router.getIsActive() == null) {
             router.setIsActive(true);
         }
+        
+        // Encrypt password before saving
+        if (router.getPassword() != null && !encryptionService.isEncrypted(router.getPassword())) {
+            router.setPassword(encryptionService.encrypt(router.getPassword()));
+        }
+        
         return routerRepository.save(router);
     }
 
@@ -68,7 +77,16 @@ public class RouterService {
         existing.setSshPort(updatedRouter.getSshPort());
         existing.setWinboxPort(updatedRouter.getWinboxPort());
         existing.setUsername(updatedRouter.getUsername());
-        existing.setPassword(updatedRouter.getPassword());
+        
+        // Encrypt password if provided and not already encrypted
+        if (updatedRouter.getPassword() != null) {
+            if (encryptionService.isEncrypted(updatedRouter.getPassword())) {
+                existing.setPassword(updatedRouter.getPassword()); // Already encrypted
+            } else {
+                existing.setPassword(encryptionService.encrypt(updatedRouter.getPassword()));
+            }
+        }
+        
         existing.setLocation(updatedRouter.getLocation());
         existing.setRouterType(updatedRouter.getRouterType());
         existing.setSupportsHotspot(updatedRouter.getSupportsHotspot());
@@ -88,11 +106,18 @@ public class RouterService {
     public Map<String, Object> testConnection(Long id) {
         Router router = getRouter(id);
         Map<String, Object> result = new HashMap<>();
+        
+        // Decrypt password for connection
+        String decryptedPassword = router.getPassword();
+        if (encryptionService.isEncrypted(router.getPassword())) {
+            decryptedPassword = encryptionService.decrypt(router.getPassword());
+        }
+        
         boolean connected = mikroTikApiService.connectToRouter(
                 router.getRouterId(),
                 router.getIpAddress(),
                 router.getUsername(),
-                router.getPassword(),
+                decryptedPassword,
                 router.getApiPort() != null ? router.getApiPort() : 8728
         );
 

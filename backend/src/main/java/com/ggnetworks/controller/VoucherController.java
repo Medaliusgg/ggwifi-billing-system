@@ -1,10 +1,13 @@
 package com.ggnetworks.controller;
 
 import com.ggnetworks.entity.Voucher;
+import com.ggnetworks.dto.VoucherDTO;
+import com.ggnetworks.util.VoucherMapper;
 import com.ggnetworks.service.VoucherService;
 import com.ggnetworks.service.PermissionService;
 import com.ggnetworks.service.FreeRadiusService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -16,6 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/admin/vouchers")
@@ -31,8 +35,25 @@ public class VoucherController {
     @Autowired
     private FreeRadiusService freeRadiusService;
 
+    @Value("${app.security.enabled:true}")
+    private boolean securityEnabled;
+
     private ResponseEntity<Map<String, Object>> checkPermission(String permission) {
+        // Bypass permission check if security is disabled (testing scenario)
+        if (!securityEnabled) {
+            return null; // Allow access when security is disabled
+        }
+        
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getName() == null || 
+            "anonymousUser".equals(authentication.getName()) || 
+            !authentication.isAuthenticated()) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("status", "error");
+            response.put("message", "Authentication required");
+            return ResponseEntity.status(401).body(response);
+        }
+        
         Map<String, Object> response = new HashMap<>();
         if (!permissionService.hasPermission(authentication.getName(), permission)) {
             response.put("status", "error");
@@ -50,13 +71,22 @@ public class VoucherController {
 
         try {
             List<Voucher> vouchers = voucherService.getAllVouchers();
+            
+            // Convert vouchers to DTOs to avoid Hibernate proxy serialization issues
+            List<VoucherDTO> voucherList = vouchers.stream()
+                .map(VoucherMapper::toDTO)
+                .filter(dto -> dto != null)
+                .collect(Collectors.toList());
+            
             response.put("status", "success");
             response.put("message", "Vouchers retrieved successfully");
-            response.put("data", vouchers);
+            response.put("data", voucherList);
+            response.put("count", voucherList.size());
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             response.put("status", "error");
             response.put("message", "Failed to retrieve vouchers: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.status(500).body(response);
         }
     }

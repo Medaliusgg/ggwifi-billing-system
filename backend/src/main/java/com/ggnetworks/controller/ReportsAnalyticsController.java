@@ -5,6 +5,7 @@ import com.ggnetworks.service.ReportService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -191,6 +192,142 @@ public class ReportsAnalyticsController {
     @FunctionalInterface
     private interface ReportSupplier {
         Map<String, Object> get();
+    }
+
+    /**
+     * Get usage per plan (hotspot vs PPPoE)
+     * GET /api/v1/admin/reports-analytics/usage-per-plan
+     */
+    @GetMapping("/usage-per-plan")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    public ResponseEntity<Map<String, Object>> getUsagePerPlan(
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            response.put("status", "success");
+            response.put("data", reportService.getUsagePerPlan(startDate, endDate));
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    /**
+     * Get top customers by data usage
+     * GET /api/v1/admin/reports-analytics/top-customers-usage
+     */
+    @GetMapping("/top-customers-usage")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    public ResponseEntity<Map<String, Object>> getTopCustomersByUsage(
+            @RequestParam(defaultValue = "10") int limit) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            response.put("status", "success");
+            response.put("data", reportService.getTopCustomersByUsage(limit));
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    /**
+     * Get router uptime reports
+     * GET /api/v1/admin/reports-analytics/router-uptime
+     */
+    @GetMapping("/router-uptime")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TECHNICIAN')")
+    public ResponseEntity<Map<String, Object>> getRouterUptimeReports() {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            response.put("status", "success");
+            response.put("data", reportService.getRouterUptimeReports());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    /**
+     * Get session duration distribution
+     * GET /api/v1/admin/reports-analytics/session-duration-distribution
+     */
+    @GetMapping("/session-duration-distribution")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    public ResponseEntity<Map<String, Object>> getSessionDurationDistribution() {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            response.put("status", "success");
+            response.put("data", reportService.getSessionDurationDistribution());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    /**
+     * Get peak usage times
+     * GET /api/v1/admin/reports-analytics/peak-usage-times
+     */
+    @GetMapping("/peak-usage-times")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    public ResponseEntity<Map<String, Object>> getPeakUsageTimes() {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            response.put("status", "success");
+            response.put("data", reportService.getPeakUsageTimes());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    /**
+     * Get failed login trends
+     * GET /api/v1/admin/reports-analytics/failed-login-trends
+     */
+    @GetMapping("/failed-login-trends")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    public ResponseEntity<Map<String, Object>> getFailedLoginTrends() {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            response.put("status", "success");
+            response.put("data", reportService.getFailedLoginTrends());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    /**
+     * Get device type distribution
+     * GET /api/v1/admin/reports-analytics/device-type-distribution
+     */
+    @GetMapping("/device-type-distribution")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    public ResponseEntity<Map<String, Object>> getDeviceTypeDistribution() {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            response.put("status", "success");
+            response.put("data", reportService.getDeviceTypeDistribution());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
     }
 }
 

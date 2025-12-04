@@ -115,15 +115,17 @@ public class VoucherService {
                                String customerName, String customerPhone, String customerEmail) {
         Voucher voucher = new Voucher();
         voucher.setVoucherCode(voucherCode);
+        voucher.setOrderId("ORD-" + System.currentTimeMillis()); // Generate order ID
         voucher.setPackageId(packageId);
         voucher.setAmount(amount);
         voucher.setCustomerName(customerName);
         voucher.setCustomerPhone(customerPhone);
         voucher.setCustomerEmail(customerEmail);
-        voucher.setIsUsed(false);
-        voucher.setIsActive(true);
-        voucher.setCreatedAt(LocalDateTime.now());
-        voucher.setUpdatedAt(LocalDateTime.now());
+        voucher.setStatus(Voucher.VoucherStatus.GENERATED);
+        voucher.setUsageStatus(Voucher.UsageStatus.UNUSED);
+        voucher.setGeneratedAt(LocalDateTime.now());
+        voucher.setExpiresAt(LocalDateTime.now().plusDays(30)); // Default 30 days expiry
+        voucher.setCreatedBy("system");
         
         return voucherRepository.save(voucher);
     }

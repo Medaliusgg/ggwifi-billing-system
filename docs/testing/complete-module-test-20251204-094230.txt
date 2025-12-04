@@ -1,0 +1,64 @@
+⚠ Authentication failed
+
+
+MODULE 1: Authentication & Authorization
+
+  ✗ Admin Login (Expected 200, got HTTP 000)
+  ✗ Request OTP (Expected 200, got HTTP 000)
+[0;31m✗ Module 1 FAILED[0m
+
+
+MODULE 2: Customer Portal
+
+  ✓ Test Endpoint (HTTP 200)
+  ✓ Get Packages (HTTP 200)
+  ✓ Customer Dashboard (HTTP 200)
+  ✗ Customer Profile (Expected , got HTTP 500)
+    Error: Type definition error: [simple type, class org.hibernate.proxy.pojo.bytebuddy.ByteBuddyInterceptor]
+  ✓ Customer Usage (HTTP 200)
+  ✓ Customer Payments (HTTP 200)
+  ✓ Validate Voucher (HTTP 200)
+  ✓ Session Status (HTTP 200)
+  ✓ Process Payment (HTTP 200)
+[0;31m✗ Module 2 FAILED[0m
+
+
+MODULE 10: Loyalty Program
+
+  ✗ Loyalty Progress (Expected 200, got HTTP 403)
+  ✓ All Rewards (HTTP 403)
+[0;31m✗ Module 10 FAILED[0m
+
+
+MODULE 18: Support Tickets
+
+  ✗ Ticket Statistics (Expected 200, got HTTP 403)
+[0;31m✗ Module 18 FAILED[0m
+
+
+COMPLETE MODULE TEST SUMMARY
+
+Total Modules Tested: 4
+[0;32mPassed Modules: 0[0m
+[0;31mFailed Modules: 4[0m
+
+Total Endpoint Tests: 14
+[0;32mPassed Tests: 9[0m
+[0;31mFailed Tests: 5[0m
+
+Pass Rate: 64%
+Module Pass Rate: 0%
+
+
+MODULE RESULTS
+
+[0;31m✗ Support Tickets: FAILED[0m
+[0;31m✗ Loyalty Program: FAILED[0m
+[0;31m✗ Customer Portal: FAILED[0m
+[0;31m✗ Authentication & Authorization: FAILED[0m
+
+Results saved to: docs/testing/complete-module-test-20251204-094230.txt
+
+[1;33m╔════════════════════════════════════════════════════════╗[0m
+[1;33m║     SOME MODULES FAILED - REVIEW RESULTS              ║[0m
+[1;33m╚════════════════════════════════════════════════════════╝[0m

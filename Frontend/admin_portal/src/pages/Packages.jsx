@@ -59,7 +59,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSnackbar } from 'notistack';
 import useAuthStore from '/src/store/authStore.js';
-import apiClient from '/src/api/client.js';
+import { packageAPI } from '/src/services/api.js';
 
 const InternetPackageManagement = () => {
   console.log('🔍 Packages component rendered');
@@ -92,12 +92,42 @@ const InternetPackageManagement = () => {
     features: [],
   });
 
+  const extractPayload = (response) => response?.data?.data ?? response?.data ?? response;
+
+  const mapFormToPayload = (data) => ({
+    name: data.name,
+    description: data.description,
+    packageType: data.type,
+    price: data.price ? Number(data.price) : 0,
+    durationDays: data.duration ? Number(data.duration) : null,
+    duration: data.duration || null,
+    dataLimitMb: data.dataLimit ? Number(data.dataLimit) : null,
+    dataLimit: data.dataLimit || null,
+    downloadSpeedMbps: data.speed ? Number(data.speed) : null,
+    uploadSpeedMbps: data.speed ? Number(data.speed) : null,
+    isActive: data.isActive,
+    targetAudience: data.targetAudience,
+    status: data.isActive ? 'ACTIVE' : 'INACTIVE',
+  });
+
   // Fetch packages with React Query
   const { data: packagesData, isLoading, error, refetch } = useQuery({
     queryKey: ['packages', page, rowsPerPage, searchTerm, typeFilter, statusFilter],
     queryFn: async () => {
-      const response = await apiClient.get('/admin/packages');
-      return response.data;
+      const response = await packageAPI.getAllPackages({
+        page,
+        size: rowsPerPage,
+      });
+      const payload = extractPayload(response) || {};
+      return {
+        packages: payload.packages || [],
+        pagination: {
+          totalElements: payload.totalElements ?? payload.packages?.length ?? 0,
+          totalPages: payload.totalPages ?? 1,
+          currentPage: payload.currentPage ?? page,
+          size: payload.size ?? rowsPerPage,
+        },
+      };
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -105,7 +135,7 @@ const InternetPackageManagement = () => {
   // Create package mutation
   const createPackageMutation = useMutation({
     mutationFn: async (packageData) => {
-      const response = await apiClient.post('/packages', packageData);
+      const response = await packageAPI.createPackage(packageData);
       return response.data;
     },
     onSuccess: () => {
@@ -121,7 +151,7 @@ const InternetPackageManagement = () => {
   // Update package mutation
   const updatePackageMutation = useMutation({
     mutationFn: async ({ id, packageData }) => {
-      const response = await apiClient.put(`/packages/${id}`, packageData);
+      const response = await packageAPI.updatePackage(id, packageData);
       return response.data;
     },
     onSuccess: () => {
@@ -137,7 +167,7 @@ const InternetPackageManagement = () => {
   // Delete package mutation
   const deletePackageMutation = useMutation({
     mutationFn: async (packageId) => {
-      const response = await apiClient.delete(`/packages/${packageId}`);
+      const response = await packageAPI.deletePackage(packageId);
       return response.data;
     },
     onSuccess: () => {
@@ -237,10 +267,10 @@ const InternetPackageManagement = () => {
     if (editingPackage) {
       updatePackageMutation.mutate({
         id: editingPackage.id,
-        packageData: formData
+        packageData: mapFormToPayload(formData)
       });
     } else {
-      createPackageMutation.mutate(formData);
+      createPackageMutation.mutate(mapFormToPayload(formData));
     }
   };
 

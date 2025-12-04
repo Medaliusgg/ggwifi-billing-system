@@ -88,7 +88,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSnackbar } from 'notistack';
 import useAuthStore from '/src/store/authStore.js';
-import apiClient from '/src/api/client.js';
+import { radiusAPI } from '/src/services/api.js';
 
 const SessionManagement = () => {
   console.log('🔍 Sessions component rendered');
@@ -129,11 +129,14 @@ const SessionManagement = () => {
   });
 
   // Fetch sessions with React Query
-  const { data: sessionsData, isLoading, error, refetch } = useQuery({
-    queryKey: ['sessions', page, rowsPerPage, searchTerm, statusFilter],
+  const { data: sessionsResponse, isLoading, error, refetch } = useQuery({
+    queryKey: ['sessions'],
     queryFn: async () => {
-      const response = await apiClient.get('/radius/sessions');
-      return response.data;
+      const response = await radiusAPI.getActiveSessions();
+      // Active sessions endpoint returns a flat array
+      if (Array.isArray(response.data)) return response.data;
+      if (Array.isArray(response.data?.data)) return response.data.data;
+      return [];
     },
     staleTime: 30 * 1000, // 30 seconds
     refetchInterval: 30 * 1000, // Auto-refresh every 30 seconds
@@ -143,7 +146,7 @@ const SessionManagement = () => {
   const { data: sessionStats } = useQuery({
     queryKey: ['session-stats'],
     queryFn: async () => {
-      const response = await apiClient.get('/radius/statistics');
+      const response = await radiusAPI.getSessionStatistics();
       return response.data;
     },
     staleTime: 30 * 1000,
@@ -153,7 +156,7 @@ const SessionManagement = () => {
   // Terminate session mutation
   const terminateSessionMutation = useMutation({
     mutationFn: async (sessionId) => {
-      const response = await apiClient.post(`/sessions/${sessionId}/terminate`);
+      const response = await radiusAPI.terminateSession(sessionId);
       return response.data;
     },
     onSuccess: () => {
@@ -168,9 +171,9 @@ const SessionManagement = () => {
 
   // Filter and paginate sessions
   const filteredSessions = React.useMemo(() => {
-    if (!sessionsData?.sessions) return [];
+    if (!sessionsResponse?.length) return [];
     
-    let filtered = sessionsData.sessions;
+    let filtered = sessionsResponse;
     
     // Filter by search term
     if (searchTerm) {
@@ -187,7 +190,7 @@ const SessionManagement = () => {
     }
     
     return filtered;
-  }, [sessionsData?.sessions, searchTerm, statusFilter]);
+  }, [sessionsResponse, searchTerm, statusFilter]);
 
   const paginatedSessions = React.useMemo(() => {
     const startIndex = page * rowsPerPage;
@@ -393,7 +396,7 @@ const SessionManagement = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
                     <Typography variant="h4" sx={{ fontWeight: 700, color: '#2196F3' }}>
-                      {sessionStats?.totalSessions || 0}
+                      {sessionsResponse?.length || 0}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       Total Sessions

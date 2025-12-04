@@ -73,7 +73,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSnackbar } from 'notistack';
 import useAuthStore from '/src/store/authStore.js';
-import apiClient from '/src/api/client.js';
+import { customerAPI, transactionAPI } from '/src/services/api.js';
 
 const CustomerManagement = () => {
   console.log('🔍 Customers component rendered');
@@ -109,28 +109,28 @@ const CustomerManagement = () => {
   });
 
   // Fetch customers with React Query
-  const { data: customersData, isLoading, error, refetch } = useQuery({
-    queryKey: ['customers', page, rowsPerPage, searchTerm, statusFilter, typeFilter],
+  const { data: customersResponse, isLoading, error, refetch } = useQuery({
+    queryKey: ['customers'],
     queryFn: async () => {
-      const response = await apiClient.get('/admin/customers');
-      return response.data;
+      const response = await customerAPI.getAllCustomers();
+      return response.data?.data || response.data || [];
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 
   // Fetch customer transactions
-  const { data: transactionsData } = useQuery({
+  const { data: transactionsResponse } = useQuery({
     queryKey: ['customer-transactions'],
     queryFn: async () => {
-      const response = await apiClient.get('/admin/transactions');
-      return response.data;
+      const response = await transactionAPI.getAllTransactions();
+      return response.data?.data || response.data || [];
     },
   });
 
   // Create customer mutation
   const createCustomerMutation = useMutation({
     mutationFn: async (customerData) => {
-      const response = await apiClient.post('/customers', customerData);
+      const response = await customerAPI.createCustomer(customerData);
       return response.data;
     },
     onSuccess: () => {
@@ -146,7 +146,7 @@ const CustomerManagement = () => {
   // Update customer mutation
   const updateCustomerMutation = useMutation({
     mutationFn: async ({ id, customerData }) => {
-      const response = await apiClient.put(`/customers/${id}`, customerData);
+      const response = await customerAPI.updateCustomer(id, customerData);
       return response.data;
     },
     onSuccess: () => {
@@ -162,13 +162,14 @@ const CustomerManagement = () => {
   // Block/Unblock customer mutation
   const toggleCustomerStatusMutation = useMutation({
     mutationFn: async ({ id, isActive }) => {
-      const response = await apiClient.patch(`/customers/${id}/status`, { isActive });
+      const status = isActive ? 'ACTIVE' : 'INACTIVE';
+      const response = await customerAPI.updateCustomer(id, { status });
       return response.data;
     },
-    onSuccess: (data) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries(['customers']);
       enqueueSnackbar(
-        data.isActive ? 'Customer unblocked successfully' : 'Customer blocked successfully', 
+        variables.isActive ? 'Customer unblocked successfully' : 'Customer blocked successfully', 
         { variant: 'success' }
       );
     },
@@ -178,10 +179,13 @@ const CustomerManagement = () => {
   });
 
   // Filter and paginate customers
+  const customersList = customersResponse || [];
+  const transactionsList = transactionsResponse || [];
+
   const filteredCustomers = React.useMemo(() => {
-    if (!customersData?.customers) return [];
+    if (!customersList.length) return [];
     
-    let filtered = customersData.customers;
+    let filtered = customersList;
     
     // Filter by search term
     if (searchTerm) {
@@ -204,7 +208,7 @@ const CustomerManagement = () => {
     }
     
     return filtered;
-  }, [customersData?.customers, searchTerm, statusFilter, typeFilter]);
+  }, [customersList, searchTerm, statusFilter, typeFilter]);
 
   const paginatedCustomers = React.useMemo(() => {
     const startIndex = page * rowsPerPage;
@@ -293,7 +297,7 @@ const CustomerManagement = () => {
   };
 
   const getCustomerTransactions = (customerId) => {
-    return transactionsData?.transactions?.filter(t => t.customerId === customerId) || [];
+    return transactionsList.filter(t => t.customerId === customerId);
   };
 
   const getTotalSpent = (customerId) => {
@@ -388,7 +392,7 @@ const CustomerManagement = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
                     <Typography variant="h4" sx={{ fontWeight: 700, color: '#F5B700' }}>
-                      {customersData?.customers?.length || 0}
+                      {customersList.length}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       Total Customers
@@ -417,7 +421,7 @@ const CustomerManagement = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
                     <Typography variant="h4" sx={{ fontWeight: 700, color: '#4CAF50' }}>
-                      {customersData?.customers?.filter(c => c.isActive).length || 0}
+                      {customersList.filter(c => c.isActive).length}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       Active Customers
@@ -446,7 +450,7 @@ const CustomerManagement = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
                     <Typography variant="h4" sx={{ fontWeight: 700, color: '#2196F3' }}>
-                      {customersData?.customers?.filter(c => c.customerType === 'INDIVIDUAL').length || 0}
+                      {customersList.filter(c => c.customerType === 'INDIVIDUAL').length}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       Individual Customers
@@ -475,7 +479,7 @@ const CustomerManagement = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
                     <Typography variant="h4" sx={{ fontWeight: 700, color: '#FF9800' }}>
-                      {customersData?.customers?.filter(c => c.customerType === 'BUSINESS').length || 0}
+                      {customersList.filter(c => c.customerType === 'BUSINESS').length}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       Business Customers

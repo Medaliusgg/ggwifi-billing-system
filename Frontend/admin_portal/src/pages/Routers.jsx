@@ -80,7 +80,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSnackbar } from 'notistack';
 import useAuthStore from '/src/store/authStore.js';
-import apiClient from '/src/api/client.js';
+import { routerAPI } from '/src/services/api.js';
 
 const RouterManagement = () => {
   console.log('🔍 Routers component rendered');
@@ -125,28 +125,28 @@ const RouterManagement = () => {
   });
 
   // Fetch routers with React Query
-  const { data: routersData, isLoading, error, refetch } = useQuery({
-    queryKey: ['routers', page, rowsPerPage, searchTerm, statusFilter, locationFilter],
+  const { data: routersResponse, isLoading, error, refetch } = useQuery({
+    queryKey: ['routers'],
     queryFn: async () => {
-      const response = await apiClient.get('/admin/routers');
-      return response.data;
+      const response = await routerAPI.getAllRouters();
+      return response.data?.data || response.data || [];
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 
   // Fetch router configurations
-  const { data: configsData } = useQuery({
+  const { data: statusResponse } = useQuery({
     queryKey: ['router-configs'],
     queryFn: async () => {
-      const response = await apiClient.get('/admin/routers/status');
-      return response.data;
+      const response = await routerAPI.getRouterStatus();
+      return response.data?.data || response.data || {};
     },
   });
 
   // Create router mutation
   const createRouterMutation = useMutation({
     mutationFn: async (routerData) => {
-      const response = await apiClient.post('/routers', routerData);
+      const response = await routerAPI.createRouter(routerData);
       return response.data;
     },
     onSuccess: () => {
@@ -162,7 +162,7 @@ const RouterManagement = () => {
   // Update router mutation
   const updateRouterMutation = useMutation({
     mutationFn: async ({ id, routerData }) => {
-      const response = await apiClient.put(`/routers/${id}`, routerData);
+      const response = await routerAPI.updateRouter(id, routerData);
       return response.data;
     },
     onSuccess: () => {
@@ -178,7 +178,7 @@ const RouterManagement = () => {
   // Delete router mutation
   const deleteRouterMutation = useMutation({
     mutationFn: async (routerId) => {
-      const response = await apiClient.delete(`/routers/${routerId}`);
+      const response = await routerAPI.deleteRouter(routerId);
       return response.data;
     },
     onSuccess: () => {
@@ -193,7 +193,7 @@ const RouterManagement = () => {
   // Test router connection mutation
   const testConnectionMutation = useMutation({
     mutationFn: async (routerId) => {
-      const response = await apiClient.post(`/routers/${routerId}/test-connection`);
+      const response = await routerAPI.testConnection(routerId);
       return response.data;
     },
     onSuccess: (data) => {
@@ -205,10 +205,13 @@ const RouterManagement = () => {
   });
 
   // Filter and paginate routers
+  const routersList = routersResponse || [];
+  const routerStatus = statusResponse || {};
+
   const filteredRouters = React.useMemo(() => {
-    if (!routersData?.routers) return [];
+    if (!routersList.length) return [];
     
-    let filtered = routersData.routers;
+    let filtered = routersList;
     
     // Filter by search term
     if (searchTerm) {
@@ -231,7 +234,7 @@ const RouterManagement = () => {
     }
     
     return filtered;
-  }, [routersData?.routers, searchTerm, statusFilter, locationFilter]);
+  }, [routersList, searchTerm, statusFilter, locationFilter]);
 
   const paginatedRouters = React.useMemo(() => {
     const startIndex = page * rowsPerPage;
@@ -439,7 +442,7 @@ const RouterManagement = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
                     <Typography variant="h4" sx={{ fontWeight: 700, color: '#F5B700' }}>
-                      {routersData?.routers?.length || 0}
+                      {routersList.length}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                       Total Routers
@@ -468,7 +471,7 @@ const RouterManagement = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
                     <Typography variant="h4" sx={{ fontWeight: 700, color: '#4CAF50' }}>
-                      {routersData?.routers?.filter(r => r.isActive).length || 0}
+                      {routersList.filter(r => r.isActive).length}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                       Active Routers
@@ -497,7 +500,7 @@ const RouterManagement = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
                     <Typography variant="h4" sx={{ fontWeight: 700, color: '#2196F3' }}>
-                      {routersData?.routers?.reduce((sum, r) => sum + (r.connectedUsers || 0), 0) || 0}
+                      {routersList.reduce((sum, r) => sum + (r.connectedUsers || 0), 0)}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                       Connected Users
@@ -526,7 +529,7 @@ const RouterManagement = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
                     <Typography variant="h4" sx={{ fontWeight: 700, color: '#FF9800' }}>
-                      {routersData?.routers?.filter(r => r.cpuUsage > 80).length || 0}
+                      {routersList.filter(r => r.cpuUsage > 80).length}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                       High CPU Usage
@@ -584,7 +587,7 @@ const RouterManagement = () => {
                   label="Location Filter"
                 >
                   <MenuItem value="ALL">All Locations</MenuItem>
-                  {Array.from(new Set(routersData?.routers?.map(r => r.location).filter(Boolean))).map(location => (
+                  {Array.from(new Set(routersList.map(r => r.location).filter(Boolean))).map(location => (
                     <MenuItem key={location} value={location}>
                       {location}
                     </MenuItem>

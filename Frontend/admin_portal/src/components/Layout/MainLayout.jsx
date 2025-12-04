@@ -56,6 +56,15 @@ import { motion, AnimatePresence } from 'framer-motion';
 import useAuthStore from '/src/store/authStore.js';
 import ggwifiTheme from '/src/theme/ggwifiTheme.js';
 
+const palette = {
+  gold: 'var(--gg-gold)',
+  goldStrong: 'var(--gg-gold-strong)',
+  black: 'var(--gg-black)',
+  white: 'var(--gg-white)',
+  neutral100: 'var(--gg-neutral-100)',
+  neutral300: 'var(--gg-neutral-300)',
+};
+
 const drawerWidth = 280;
 const collapsedWidth = 72;
 
@@ -216,9 +225,9 @@ const MainLayout = () => {
         <Box
           sx={{
             height: '100%',
-            background: ggwifiTheme.colors.contrast, // White background
-            color: ggwifiTheme.colors.neutral, // Black text
-            borderRight: `1px solid #E0E0E0`, // Light border
+            background: palette.white,
+            color: palette.black,
+            borderRight: `1px solid ${palette.neutral300}`,
           }}
         >
       {/* GG Wi-Fi Logo and Branding */}
@@ -226,7 +235,7 @@ const MainLayout = () => {
         sx={{
           p: 3,
           textAlign: 'center',
-          borderBottom: `1px solid ${ggwifiTheme.colors.neutral}`,
+          borderBottom: `1px solid ${palette.neutral300}`,
         }}
       >
         <motion.div
@@ -240,7 +249,7 @@ const MainLayout = () => {
                 width: 60,
                 height: 60,
                 background: ggwifiTheme.gradients.primary,
-                color: ggwifiTheme.colors.secondary,
+                color: palette.black,
                 fontSize: '1.5rem',
                 fontWeight: 'bold',
                 boxShadow: ggwifiTheme.shadows.golden,
@@ -269,7 +278,7 @@ const MainLayout = () => {
           <Typography
             variant="caption"
             sx={{
-              color: ggwifiTheme.colors.neutral,
+              color: palette.black,
               fontStyle: 'italic',
               fontSize: ggwifiTheme.typography.fontSize.xs,
               display: { xs: 'inline', md: desktopCollapsed ? 'none' : 'inline' },
@@ -293,25 +302,35 @@ const MainLayout = () => {
             <ListItemButton
                 onClick={() => handleNavigation(item.path)}
                 sx={{
+                  position: 'relative',
                   borderRadius: ggwifiTheme.borderRadius.md,
                   mb: 0.5,
+                  px: desktopCollapsed ? 1 : 2,
                   backgroundColor: location.pathname === item.path 
-                    ? `rgba(255, 199, 44, 0.15)` 
+                    ? palette.gold 
                     : 'transparent',
-                  border: location.pathname === item.path 
-                    ? `1px solid #FFC72C` 
-                    : '1px solid transparent',
+                  color: location.pathname === item.path ? palette.black : palette.black,
                   transition: ggwifiTheme.transitions.normal,
-                justifyContent: { md: desktopCollapsed ? 'center' : 'flex-start' },
+                  justifyContent: { md: desktopCollapsed ? 'center' : 'flex-start' },
+                  '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    left: desktopCollapsed ? '50%' : 0,
+                    top: 10,
+                    bottom: 10,
+                    width: 3,
+                    borderRadius: 999,
+                    backgroundColor: location.pathname === item.path ? palette.black : 'transparent',
+                    transform: desktopCollapsed ? 'translateX(-50%)' : 'none',
+                  },
                   '&:hover': {
-                    backgroundColor: `rgba(255, 199, 44, 0.1)`, // Golden yellow hover background
-                    borderColor: '#FFC72C', // Golden yellow border
-                    transform: { xs: 'translateX(4px)', md: desktopCollapsed ? 'none' : 'translateX(4px)' },
+                    backgroundColor: location.pathname === item.path ? palette.gold : 'rgba(242,201,76,0.2)',
+                    transform: desktopCollapsed ? 'none' : 'translateX(2px)',
                     '& .MuiListItemIcon-root': {
-                      color: '#FFC72C', // Golden yellow icon on hover
+                      color: palette.goldStrong,
                     },
                     '& .MuiListItemText-primary': {
-                      color: '#FFC72C', // Golden yellow text on hover
+                      color: palette.goldStrong,
                     },
                   },
                 }}
@@ -319,8 +338,8 @@ const MainLayout = () => {
                 <ListItemIcon
                   sx={{
                     color: location.pathname === item.path 
-                      ? '#FFC72C' 
-                      : '#000000', // Black color for visibility
+                      ? palette.black
+                      : palette.black,
                     minWidth: { xs: 40, md: desktopCollapsed ? 'auto' : 40 },
                     justifyContent: 'center',
                   }}
@@ -336,8 +355,8 @@ const MainLayout = () => {
                         ? ggwifiTheme.typography.fontWeight.semibold 
                         : ggwifiTheme.typography.fontWeight.normal,
                       color: location.pathname === item.path 
-                        ? '#FFC72C' 
-                        : '#000000', // Black color for visibility
+                        ? palette.black
+                        : palette.black,
                       fontSize: ggwifiTheme.typography.fontSize.sm,
                       display: { md: desktopCollapsed ? 'none' : 'inline' },
                     },
@@ -357,16 +376,16 @@ const MainLayout = () => {
           left: 0,
           right: 0,
           p: 2,
-          borderTop: `1px solid ${ggwifiTheme.colors.neutral}`,
-          background: `rgba(0, 0, 0, 0.5)`,
+          borderTop: `1px solid ${palette.neutral300}`,
+          background: palette.neutral100,
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-          <SecurityIcon sx={{ fontSize: 16, color: ggwifiTheme.colors.primary }} />
+          <SecurityIcon sx={{ fontSize: 16, color: palette.goldStrong }} />
           <Typography
             variant="caption"
             sx={{
-              color: ggwifiTheme.colors.neutral,
+              color: palette.black,
               fontSize: ggwifiTheme.typography.fontSize.xs,
             }}
           >
@@ -376,7 +395,7 @@ const MainLayout = () => {
         <Typography
           variant="caption"
           sx={{
-            color: ggwifiTheme.colors.neutral,
+            color: palette.black,
             fontSize: ggwifiTheme.typography.fontSize.xs,
           }}
         >
@@ -394,10 +413,10 @@ const MainLayout = () => {
         sx={{
           width: { md: `calc(100% - ${(desktopCollapsed ? collapsedWidth : drawerWidth)}px)` },
           ml: { md: `${desktopCollapsed ? collapsedWidth : drawerWidth}px` },
-          background: '#000000', // Black background
-          color: '#FFFFFF', // White text
-          boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
-          borderBottom: `1px solid #FFC72C`, // Golden yellow border
+          background: palette.white,
+          color: palette.black,
+          boxShadow: '0 4px 12px rgba(10,10,10,0.08)',
+          borderBottom: `1px solid ${palette.neutral300}`,
         }}
       >
         <Toolbar>
@@ -408,10 +427,10 @@ const MainLayout = () => {
             onClick={handleDrawerToggle}
             sx={{ 
               mr: 2,
-              color: '#FFFFFF', // White icon
+              color: palette.black,
               '&:hover': {
-                color: '#FFC72C', // Golden yellow on hover
-                backgroundColor: 'rgba(255, 199, 44, 0.1)',
+                color: palette.goldStrong,
+                backgroundColor: 'rgba(242, 201, 76, 0.15)',
               }
             }}
           >
@@ -426,7 +445,7 @@ const MainLayout = () => {
               flexGrow: 1,
               fontFamily: ggwifiTheme.typography.fontFamily.primary,
               fontWeight: ggwifiTheme.typography.fontWeight.semibold,
-              color: '#FFFFFF', // White text
+              color: palette.black,
             }}
           >
             {navigationItems.find(item => item.path === location.pathname)?.text || 'Dashboard'}
@@ -437,11 +456,11 @@ const MainLayout = () => {
             size="large"
             aria-label="show notifications"
             sx={{ 
-              color: '#FFFFFF', // White icon
+              color: palette.black,
               mr: 1,
               '&:hover': {
-                color: '#FFC72C', // Golden yellow on hover
-                backgroundColor: 'rgba(255, 199, 44, 0.1)',
+                color: palette.goldStrong,
+                backgroundColor: 'rgba(242, 201, 76, 0.15)',
               }
             }}
           >
@@ -457,9 +476,9 @@ const MainLayout = () => {
               label={user?.role || 'User'}
               size="small"
               sx={{
-                backgroundColor: `rgba(245, 183, 0, 0.1)`,
-                color: ggwifiTheme.colors.primary,
-                border: `1px solid ${ggwifiTheme.colors.primary}`,
+                backgroundColor: 'rgba(242, 201, 76, 0.18)',
+                color: palette.black,
+                border: `1px solid ${palette.gold}`,
                 fontFamily: ggwifiTheme.typography.fontFamily.primary,
                 fontWeight: ggwifiTheme.typography.fontWeight.medium,
               }}
@@ -471,10 +490,10 @@ const MainLayout = () => {
               aria-haspopup="true"
               onClick={handleProfileMenuOpen}
               sx={{ 
-                color: '#FFFFFF', // White icon
+                color: palette.black,
                 '&:hover': {
-                  color: '#FFC72C', // Golden yellow on hover
-                  backgroundColor: 'rgba(255, 199, 44, 0.1)',
+                  color: palette.goldStrong,
+                  backgroundColor: 'rgba(242, 201, 76, 0.15)',
                 }
               }}
             >
@@ -483,7 +502,7 @@ const MainLayout = () => {
                   width: 32,
                   height: 32,
                   background: ggwifiTheme.gradients.primary,
-                  color: ggwifiTheme.colors.secondary,
+                  color: palette.black,
                   fontSize: '0.875rem',
                   fontWeight: 'bold',
                 }}
@@ -548,8 +567,8 @@ const MainLayout = () => {
                   '& .MuiDrawer-paper': {
                     boxSizing: 'border-box',
                     width: drawerWidth,
-                    background: ggwifiTheme.colors.contrast, // White background
-                    borderRight: `1px solid #E0E0E0`, // Light border
+                    background: palette.white,
+                    borderRight: `1px solid ${palette.neutral300}`,
                   },
                 }}
         >
@@ -562,8 +581,8 @@ const MainLayout = () => {
             '& .MuiDrawer-paper': {
               boxSizing: 'border-box',
               width: desktopCollapsed ? collapsedWidth : drawerWidth,
-              background: ggwifiTheme.colors.contrast, // White background
-              borderRight: `1px solid #E0E0E0`, // Light border
+              background: palette.white,
+              borderRight: `1px solid ${palette.neutral300}`,
             },
           }}
           open
@@ -580,7 +599,7 @@ const MainLayout = () => {
           p: 3,
           width: { md: `calc(100% - ${(desktopCollapsed ? collapsedWidth : drawerWidth)}px)` },
           mt: 8, // Account for AppBar height
-          background: ggwifiTheme.colors.contrast, // White background
+          background: palette.neutral100,
           minHeight: 'calc(100vh - 64px)',
         }}
       >

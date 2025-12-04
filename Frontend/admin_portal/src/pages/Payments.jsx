@@ -81,7 +81,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSnackbar } from 'notistack';
 import useAuthStore from '/src/store/authStore.js';
-import apiClient from '/src/api/client.js';
+import { paymentAPI, customerAPI } from '/src/services/api.js';
 
 const PaymentManagement = () => {
   console.log('🔍 Payments component rendered');
@@ -104,50 +104,55 @@ const PaymentManagement = () => {
   // Form state
   const [formData, setFormData] = useState({
     customerId: '',
+    invoiceId: '',
     amount: '',
-    paymentMethod: 'MOBILE_MONEY',
-    gateway: 'ZENOPAY',
-    reference: '',
-    description: '',
-    status: 'PENDING',
-    transactionId: '',
-    fees: 0,
     currency: 'TZS',
-    metadata: {},
+    description: '',
+    paymentMethod: 'MOBILE_MONEY',
+    paymentGateway: 'ZENOPAY',
+    status: 'PENDING',
+    gatewayTransactionId: '',
+    gatewayReference: '',
+    phoneNumber: '',
+    notes: '',
   });
 
   // Fetch payments with React Query
-  const { data: paymentsData, isLoading, error, refetch } = useQuery({
-    queryKey: ['payments', page, rowsPerPage, searchTerm, statusFilter, methodFilter],
+  const { data: paymentsResponse, isLoading, error, refetch } = useQuery({
+    queryKey: ['payments'],
     queryFn: async () => {
-      const response = await apiClient.get('/admin/payments');
-      return response.data;
+      const response = await paymentAPI.getAllPayments();
+      return response.data?.data || response.data || [];
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: paymentStatsResponse } = useQuery({
+    queryKey: ['payment-stats'],
+    queryFn: async () => {
+      const response = await paymentAPI.getPaymentStatistics();
+      return response.data?.data || response.data || {};
+    },
+    staleTime: 5 * 60 * 1000,
   });
 
   // Fetch customers for dropdown
-  const { data: customersData } = useQuery({
+  const { data: customersResponse } = useQuery({
     queryKey: ['customers'],
     queryFn: async () => {
-      const response = await apiClient.get('/admin/customers');
-      return response.data;
+      const response = await customerAPI.getAllCustomers();
+      return response.data?.data || response.data || [];
     },
   });
 
-  // Fetch payment gateways
-  const { data: gatewaysData } = useQuery({
-    queryKey: ['payment-gateways'],
-    queryFn: async () => {
-      const response = await apiClient.get('/admin/payments/gateways');  // or remove if endpoint doesn't exist
-      return response.data;
-    },
-  });
+  const paymentsList = paymentsResponse || [];
+  const paymentStats = paymentStatsResponse || {};
+  const customersList = customersResponse || [];
 
   // Create payment mutation
   const createPaymentMutation = useMutation({
     mutationFn: async (paymentData) => {
-      const response = await apiClient.post('/payments', paymentData);
+      const response = await paymentAPI.createPayment(paymentData);
       return response.data;
     },
     onSuccess: () => {
@@ -163,7 +168,7 @@ const PaymentManagement = () => {
   // Update payment mutation
   const updatePaymentMutation = useMutation({
     mutationFn: async ({ id, paymentData }) => {
-      const response = await apiClient.put(`/payments/${id}`, paymentData);
+      const response = await paymentAPI.updatePayment(id, paymentData);
       return response.data;
     },
     onSuccess: () => {
@@ -176,48 +181,20 @@ const PaymentManagement = () => {
     },
   });
 
-  // Process payment mutation
-  const processPaymentMutation = useMutation({
-    mutationFn: async (paymentId) => {
-      const response = await apiClient.post(`/payments/${paymentId}/process`);
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['payments']);
-      enqueueSnackbar('Payment processed successfully', { variant: 'success' });
-    },
-    onError: (error) => {
-      enqueueSnackbar(error.response?.data?.message || 'Failed to process payment', { variant: 'error' });
-    },
-  });
-
-  // Refund payment mutation
-  const refundPaymentMutation = useMutation({
-    mutationFn: async ({ id, refundData }) => {
-      const response = await apiClient.post(`/payments/${id}/refund`, refundData);
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['payments']);
-      enqueueSnackbar('Payment refunded successfully', { variant: 'success' });
-    },
-    onError: (error) => {
-      enqueueSnackbar(error.response?.data?.message || 'Failed to refund payment', { variant: 'error' });
-    },
-  });
 
   // Filter and paginate payments
   const filteredPayments = React.useMemo(() => {
-    if (!paymentsData?.payments) return [];
+    if (!paymentsList.length) return [];
     
-    let filtered = paymentsData.payments;
+    let filtered = paymentsList;
     
     // Filter by search term
     if (searchTerm) {
+      const term = searchTerm.toLowerCase();
       filtered = filtered.filter(payment =>
-        payment.reference?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        payment.transactionId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        payment.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        payment.gatewayReference?.toLowerCase().includes(term) ||
+        payment.gatewayTransactionId?.toLowerCase().includes(term) ||
+        payment.description?.toLowerCase().includes(term) ||
         payment.customerId?.toString().includes(searchTerm)
       );
     }
@@ -233,7 +210,7 @@ const PaymentManagement = () => {
     }
     
     return filtered;
-  }, [paymentsData?.payments, searchTerm, statusFilter, methodFilter]);
+  }, [paymentsList, searchTerm, statusFilter, methodFilter]);
 
   const paginatedPayments = React.useMemo(() => {
     const startIndex = page * rowsPerPage;
@@ -245,31 +222,33 @@ const PaymentManagement = () => {
       setEditingPayment(payment);
       setFormData({
         customerId: payment.customerId || '',
+        invoiceId: payment.invoiceId || '',
         amount: payment.amount || '',
-        paymentMethod: payment.paymentMethod || 'MOBILE_MONEY',
-        gateway: payment.gateway || 'ZENOPAY',
-        reference: payment.reference || '',
-        description: payment.description || '',
-        status: payment.status || 'PENDING',
-        transactionId: payment.transactionId || '',
-        fees: payment.fees || 0,
         currency: payment.currency || 'TZS',
-        metadata: payment.metadata || {},
+        description: payment.description || '',
+        paymentMethod: payment.paymentMethod || 'MOBILE_MONEY',
+        paymentGateway: payment.paymentGateway || 'ZENOPAY',
+        status: payment.status || 'PENDING',
+        gatewayTransactionId: payment.gatewayTransactionId || '',
+        gatewayReference: payment.gatewayReference || '',
+        phoneNumber: payment.phoneNumber || '',
+        notes: payment.notes || '',
       });
     } else {
       setEditingPayment(null);
       setFormData({
         customerId: '',
+        invoiceId: '',
         amount: '',
-        paymentMethod: 'MOBILE_MONEY',
-        gateway: 'ZENOPAY',
-        reference: '',
-        description: '',
-        status: 'PENDING',
-        transactionId: '',
-        fees: 0,
         currency: 'TZS',
-        metadata: {},
+        description: '',
+        paymentMethod: 'MOBILE_MONEY',
+        paymentGateway: 'ZENOPAY',
+        status: 'PENDING',
+        gatewayTransactionId: '',
+        gatewayReference: '',
+        phoneNumber: '',
+        notes: '',
       });
     }
     setOpenDialog(true);
@@ -280,43 +259,44 @@ const PaymentManagement = () => {
     setEditingPayment(null);
     setFormData({
       customerId: '',
+      invoiceId: '',
       amount: '',
-      paymentMethod: 'MOBILE_MONEY',
-      gateway: 'ZENOPAY',
-      reference: '',
-      description: '',
-      status: 'PENDING',
-      transactionId: '',
-      fees: 0,
       currency: 'TZS',
-      metadata: {},
+      description: '',
+      paymentMethod: 'MOBILE_MONEY',
+      paymentGateway: 'ZENOPAY',
+      status: 'PENDING',
+      gatewayTransactionId: '',
+      gatewayReference: '',
+      phoneNumber: '',
+      notes: '',
     });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+    const payload = {
+      customerId: formData.customerId ? Number(formData.customerId) : null,
+      invoiceId: formData.invoiceId ? Number(formData.invoiceId) : null,
+      amount: formData.amount ? Number(formData.amount) : 0,
+      currency: formData.currency,
+      description: formData.description,
+      paymentMethod: formData.paymentMethod,
+      paymentGateway: formData.paymentGateway,
+      status: formData.status,
+      gatewayTransactionId: formData.gatewayTransactionId,
+      gatewayReference: formData.gatewayReference,
+      phoneNumber: formData.phoneNumber,
+      notes: formData.notes,
+    };
+
     if (editingPayment) {
       updatePaymentMutation.mutate({
         id: editingPayment.id,
-        paymentData: formData
+        paymentData: payload
       });
     } else {
-      createPaymentMutation.mutate(formData);
-    }
-  };
-
-  const handleProcessPayment = (paymentId) => {
-    processPaymentMutation.mutate(paymentId);
-  };
-
-  const handleRefundPayment = (paymentId) => {
-    const refundAmount = window.prompt('Enter refund amount:');
-    if (refundAmount) {
-      refundPaymentMutation.mutate({
-        id: paymentId,
-        refundData: { amount: parseFloat(refundAmount) }
-      });
+      createPaymentMutation.mutate(payload);
     }
   };
 
@@ -371,6 +351,20 @@ const PaymentManagement = () => {
       default:
         return <PaymentIcon />;
     }
+  };
+
+  const formatCurrencyValue = (value) => {
+    if (value === null || value === undefined) return '0';
+    if (typeof value === 'number') return value.toLocaleString();
+    const numeric = Number(value);
+    return Number.isNaN(numeric) ? String(value) : numeric.toLocaleString();
+  };
+
+  const getCustomerLabel = (customerId) => {
+    if (!customerId) return 'Unassigned';
+    const customer = customersList.find(c => c.id === customerId);
+    if (!customer) return `Customer #${customerId}`;
+    return `${customer.firstName || ''} ${customer.lastName || ''}`.trim() || `Customer #${customerId}`;
   };
 
   const getMethodColor = (method) => {
@@ -460,7 +454,7 @@ const PaymentManagement = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
                     <Typography variant="h4" sx={{ fontWeight: 700, color: '#F5B700' }}>
-                      {paymentsData?.payments?.length || 0}
+                      {paymentStats.totalPayments ?? paymentsList.length}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       Total Payments
@@ -489,7 +483,7 @@ const PaymentManagement = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
                     <Typography variant="h4" sx={{ fontWeight: 700, color: '#4CAF50' }}>
-                      TZS {paymentsData?.totalAmount?.toLocaleString() || '0'}
+                      TZS {formatCurrencyValue(paymentStats.totalAmount)}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       Total Amount
@@ -518,7 +512,7 @@ const PaymentManagement = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
                     <Typography variant="h4" sx={{ fontWeight: 700, color: '#FF9800' }}>
-                      {paymentsData?.payments?.filter(p => p.status === 'PENDING').length || 0}
+                      {paymentStats.pendingPayments ?? paymentsList.filter(p => p.status === 'PENDING').length}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       Pending Payments
@@ -547,7 +541,7 @@ const PaymentManagement = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
                     <Typography variant="h4" sx={{ fontWeight: 700, color: '#F44336' }}>
-                      {paymentsData?.payments?.filter(p => p.status === 'FAILED').length || 0}
+                      {paymentStats.failedPayments ?? paymentsList.filter(p => p.status === 'FAILED').length}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       Failed Payments
@@ -687,30 +681,35 @@ const PaymentManagement = () => {
                             {getMethodIcon(payment.paymentMethod)}
                           </Avatar>
                           <Box>
-                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                              {payment.reference}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              {payment.transactionId}
-                            </Typography>
+                          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                            {payment.paymentId || payment.gatewayReference || '—'}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {payment.gatewayTransactionId || '—'}
+                          </Typography>
                           </Box>
                         </Box>
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                          Customer #{payment.customerId}
+                          {getCustomerLabel(payment.customerId)}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          {payment.description}
+                          {payment.phoneNumber || payment.description || 'No contact'}
                         </Typography>
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2" sx={{ fontWeight: 600 }}>
                           TZS {payment.amount?.toLocaleString() || '0'}
                         </Typography>
-                        {payment.fees > 0 && (
+                        {payment.feeAmount > 0 && (
                           <Typography variant="caption" color="text.secondary">
-                            Fees: TZS {payment.fees.toLocaleString()}
+                            Fees: TZS {payment.feeAmount.toLocaleString()}
+                          </Typography>
+                        )}
+                        {payment.netAmount > 0 && (
+                          <Typography variant="caption" color="text.secondary">
+                            Net: TZS {payment.netAmount.toLocaleString()}
                           </Typography>
                         )}
                       </TableCell>
@@ -726,7 +725,7 @@ const PaymentManagement = () => {
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2">
-                          {payment.gateway}
+                          {payment.paymentGateway || '—'}
                         </Typography>
                       </TableCell>
                       <TableCell>
@@ -761,39 +760,15 @@ const PaymentManagement = () => {
                             </IconButton>
                           </Tooltip>
                           {canManagePayments && (
-                            <>
-                              {payment.status === 'PENDING' && (
-                                <Tooltip title="Process Payment">
-                                  <IconButton 
-                                    size="small" 
-                                    color="success"
-                                    onClick={() => handleProcessPayment(payment.id)}
-                                  >
-                                    <CheckIcon />
-                                  </IconButton>
-                                </Tooltip>
-                              )}
-                              {payment.status === 'COMPLETED' && (
-                                <Tooltip title="Refund Payment">
-                                  <IconButton 
-                                    size="small" 
-                                    color="warning"
-                                    onClick={() => handleRefundPayment(payment.id)}
-                                  >
-                                    <ReceiptIcon />
-                                  </IconButton>
-                                </Tooltip>
-                              )}
-                              <Tooltip title="Edit Payment">
-                                <IconButton 
-                                  size="small" 
-                                  color="primary"
-                                  onClick={() => handleOpenDialog(payment)}
-                                >
-                                  <EditIcon />
-                                </IconButton>
-                              </Tooltip>
-                            </>
+                            <Tooltip title="Edit Payment">
+                              <IconButton 
+                                size="small" 
+                                color="primary"
+                                onClick={() => handleOpenDialog(payment)}
+                              >
+                                <EditIcon />
+                              </IconButton>
+                            </Tooltip>
                           )}
                         </Box>
                       </TableCell>
@@ -842,7 +817,7 @@ const PaymentManagement = () => {
                     onChange={handleInputChange}
                     label="Customer"
                   >
-                    {customersData?.customers?.map(customer => (
+                    {customersList.map(customer => (
                       <MenuItem key={customer.id} value={customer.id}>
                         {customer.firstName} {customer.lastName} - {customer.phoneNumber}
                       </MenuItem>
@@ -881,8 +856,8 @@ const PaymentManagement = () => {
                 <FormControl fullWidth>
                   <InputLabel>Payment Gateway</InputLabel>
                   <Select
-                    name="gateway"
-                    value={formData.gateway}
+                    name="paymentGateway"
+                    value={formData.paymentGateway}
                     onChange={handleInputChange}
                     label="Payment Gateway"
                   >
@@ -897,20 +872,19 @@ const PaymentManagement = () => {
               <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
-                  label="Reference"
-                  name="reference"
-                  value={formData.reference}
+                  label="Gateway Reference"
+                  name="gatewayReference"
+                  value={formData.gatewayReference}
                   onChange={handleInputChange}
-                  required
                   placeholder="e.g., PAY-001"
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
-                  label="Transaction ID"
-                  name="transactionId"
-                  value={formData.transactionId}
+                  label="Gateway Transaction ID"
+                  name="gatewayTransactionId"
+                  value={formData.gatewayTransactionId}
                   onChange={handleInputChange}
                   placeholder="External transaction ID"
                 />
@@ -918,11 +892,11 @@ const PaymentManagement = () => {
               <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
-                  label="Fees (TZS)"
-                  name="fees"
-                  type="number"
-                  value={formData.fees}
+                  label="Customer Phone"
+                  name="phoneNumber"
+                  value={formData.phoneNumber}
                   onChange={handleInputChange}
+                  placeholder="+255..."
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -947,6 +921,17 @@ const PaymentManagement = () => {
                   label="Description"
                   name="description"
                   value={formData.description}
+                  onChange={handleInputChange}
+                  multiline
+                  rows={2}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Notes"
+                  name="notes"
+                  value={formData.notes}
                   onChange={handleInputChange}
                   multiline
                   rows={2}

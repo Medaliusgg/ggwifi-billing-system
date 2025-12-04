@@ -51,7 +51,17 @@ public class ZenoPayService {
     @Autowired
     private VoucherService voucherService;
     
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
+    
+    public ZenoPayService() {
+        this.restTemplate = new RestTemplate();
+        // Configure timeout for ZenoPay API calls
+        org.springframework.http.client.SimpleClientHttpRequestFactory factory = 
+            new org.springframework.http.client.SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(10000); // 10 seconds connection timeout
+        factory.setReadTimeout(60000); // 60 seconds read timeout (increased for payment processing)
+        this.restTemplate.setRequestFactory(factory);
+    }
     
     /**
      * Create a payment order with ZenoPay Mobile Money Tanzania
@@ -71,25 +81,49 @@ public class ZenoPayService {
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.set("x-api-key", zenopayApiKey);
             
+            // Format phone number for ZenoPay (remove + sign, ensure 255XXXXXXXXX format)
+            String formattedPhone = buyerPhone.replaceAll("[^0-9]", "");
+            if (formattedPhone.startsWith("0")) {
+                formattedPhone = "255" + formattedPhone.substring(1);
+            } else if (!formattedPhone.startsWith("255")) {
+                formattedPhone = "255" + formattedPhone;
+            }
+            
             // Prepare request body according to ZenoPay API specification
             Map<String, Object> requestBody = new HashMap<>();
             requestBody.put("order_id", orderId);
             requestBody.put("buyer_email", buyerEmail);
             requestBody.put("buyer_name", buyerName);
-            requestBody.put("buyer_phone", buyerPhone);
+            requestBody.put("buyer_phone", formattedPhone); // ZenoPay expects 255XXXXXXXXX format (no +)
             requestBody.put("amount", amount.intValue()); // ZenoPay expects integer amount
+            requestBody.put("currency", currency); // Add currency (TZS)
+            requestBody.put("country", country); // Add country (TZ)
             
-            // Add webhook URL for payment notifications
+            System.out.println("📱 ZenoPay Request Details:");
+            System.out.println("   Original Phone: " + buyerPhone);
+            System.out.println("   Formatted Phone: " + formattedPhone);
+            System.out.println("   Order ID: " + orderId);
+            System.out.println("   Amount: " + amount.intValue());
+            System.out.println("   Currency: " + currency);
+            System.out.println("   Country: " + country);
+            
+            // Add webhook URL for payment notifications (must be publicly accessible)
             String webhookUrl = getWebhookUrl();
-            if (webhookUrl != null) {
+            if (webhookUrl != null && !webhookUrl.contains("localhost")) {
                 requestBody.put("webhook_url", webhookUrl);
+                System.out.println("   Webhook URL: " + webhookUrl);
+            } else {
+                System.out.println("   ⚠️  Webhook URL not set or is localhost - using default");
             }
+            
+            System.out.println("   📤 Full Request Body: " + requestBody);
             
             // Create HTTP entity
             HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestBody, headers);
             
             // Make API call to ZenoPay
-            ResponseEntity<Map> apiResponse = restTemplate.exchange(
+            @SuppressWarnings("unchecked")
+            ResponseEntity<Map<String, Object>> apiResponse = (ResponseEntity<Map<String, Object>>) (ResponseEntity<?>) restTemplate.exchange(
                 zenopayBaseUrl + mobileMoneyEndpoint,
                 HttpMethod.POST,
                 requestEntity,
@@ -101,6 +135,9 @@ public class ZenoPayService {
                 Map<String, Object> responseBody = apiResponse.getBody();
                 
                 if (responseBody != null) {
+                    // Log full ZenoPay response for debugging
+                    System.out.println("📱 ZenoPay API Full Response: " + responseBody);
+                    
                     response.put("status", "success");
                     response.put("order_id", orderId);
                     response.put("payment_reference", responseBody.get("payment_reference"));
@@ -111,8 +148,11 @@ public class ZenoPayService {
                     System.out.println("✅ ZenoPay Order Created Successfully:");
                     System.out.println("   Order ID: " + orderId);
                     System.out.println("   Payment Reference: " + responseBody.get("payment_reference"));
+                    System.out.println("   Payment URL: " + responseBody.get("payment_url"));
+                    System.out.println("   Full Response Keys: " + responseBody.keySet());
                     System.out.println("   Amount: " + amount + " " + currency);
                     System.out.println("   Customer: " + buyerName + " (" + buyerPhone + ")");
+                    System.out.println("   ⚠️  USSD push should be sent by ZenoPay to: " + buyerPhone);
                 } else {
                     response.put("status", "error");
                     response.put("message", "Empty response from ZenoPay API");
@@ -162,7 +202,8 @@ public class ZenoPayService {
             HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestBody, headers);
             
             // Make API call to ZenoPay
-            ResponseEntity<Map> apiResponse = restTemplate.exchange(
+            @SuppressWarnings("unchecked")
+            ResponseEntity<Map<String, Object>> apiResponse = (ResponseEntity<Map<String, Object>>) (ResponseEntity<?>) restTemplate.exchange(
                 zenopayBaseUrl + orderStatusEndpoint,
                 HttpMethod.POST,
                 requestEntity,
@@ -267,7 +308,7 @@ public class ZenoPayService {
             System.err.println("❌ Error getting webhook URL: " + e.getMessage());
         }
         
-        // Default webhook URL
-        return "http://localhost:8080/api/v1/customer-portal/webhook/zenopay";
+        // Default webhook URL (must be publicly accessible)
+        return "https://api.ggwifi.co.tz/api/v1/customer-portal/webhook/zenopay";
     }
 }

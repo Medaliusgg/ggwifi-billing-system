@@ -20,9 +20,17 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     
     Optional<Payment> findByGatewayReference(String gatewayReference);
     
-    List<Payment> findByInvoiceId(Long invoiceId);
+    List<Payment> findByInvoice_Id(Long invoiceId);
+
+    default List<Payment> findByInvoiceId(Long invoiceId) {
+        return findByInvoice_Id(invoiceId);
+    }
     
-    List<Payment> findByCustomerId(Long customerId);
+    List<Payment> findByCustomer_Id(Long customerId);
+
+    default List<Payment> findByCustomerId(Long customerId) {
+        return findByCustomer_Id(customerId);
+    }
     
     List<Payment> findByStatus(Payment.PaymentStatus status);
     
@@ -48,7 +56,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     
     long countByStatus(Payment.PaymentStatus status);
     
-    @Query("SELECT p FROM Payment p WHERE p.customerId = :customerId AND p.status = :status ORDER BY p.createdAt DESC")
+    @Query("SELECT p FROM Payment p WHERE p.customer.id = :customerId AND p.status = :status ORDER BY p.createdAt DESC")
     List<Payment> findByCustomerIdAndStatusOrderByCreatedAtDesc(@Param("customerId") Long customerId, @Param("status") Payment.PaymentStatus status);
     
     @Query("SELECT p FROM Payment p WHERE p.status = :status AND p.createdAt >= :startDate ORDER BY p.createdAt DESC")

@@ -83,7 +83,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSnackbar } from 'notistack';
 import useAuthStore from '/src/store/authStore.js';
-import apiClient from '/src/api/client.js';
+import { reportsAnalyticsAPI } from '/src/services/api.js';
 
 const AnalyticsReports = () => {
   console.log('🔍 Analytics component rendered');
@@ -114,46 +114,167 @@ const AnalyticsReports = () => {
     recipients: [],
   });
 
-  // Fetch analytics data with React Query
-  const { data: analyticsData, isLoading, error, refetch } = useQuery({
-    queryKey: ['analytics', dateRange],
+  const rangeParams = React.useMemo(() => {
+    const end = new Date();
+    const start = new Date();
+    switch (dateRange) {
+      case 'LAST_7_DAYS':
+        start.setDate(end.getDate() - 7);
+        break;
+      case 'LAST_30_DAYS':
+        start.setDate(end.getDate() - 30);
+        break;
+      case 'LAST_90_DAYS':
+        start.setDate(end.getDate() - 90);
+        break;
+      case 'LAST_YEAR':
+        start.setFullYear(end.getFullYear() - 1);
+        break;
+      default:
+        start.setDate(end.getDate() - 30);
+        break;
+    }
+    return {
+      startDate: start.toISOString(),
+      endDate: end.toISOString(),
+    };
+  }, [dateRange]);
+
+  const {
+    data: analyticsStatsResponse,
+    isLoading: isStatsLoading,
+    error,
+    refetch: refetchStats,
+  } = useQuery({
+    queryKey: ['analytics-stats'],
     queryFn: async () => {
-      const response = await apiClient.get(`/analytics?range=${dateRange}`);
-      return response.data;
+      const response = await reportsAnalyticsAPI.getReportStats();
+      return response.data?.data || response.data || {};
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
+  const analyticsStats = analyticsStatsResponse || {};
 
-  // Fetch reports
-  const { data: reportsData } = useQuery({
+  const {
+    data: reportsResponse,
+    isLoading: isReportsLoading,
+    refetch: refetchReports,
+  } = useQuery({
     queryKey: ['reports'],
     queryFn: async () => {
-      const response = await apiClient.get('/reports');
-      return response.data;
+      const response = await reportsAnalyticsAPI.getReports();
+      return response.data?.data || response.data || [];
     },
   });
+  const reportsList = reportsResponse || [];
 
-  // Generate report mutation
-  const generateReportMutation = useMutation({
+  const {
+    data: usagePerPlanResponse,
+    refetch: refetchUsagePerPlan,
+  } = useQuery({
+    queryKey: ['usage-per-plan', rangeParams.startDate, rangeParams.endDate],
+    queryFn: async () => {
+      const response = await reportsAnalyticsAPI.getUsagePerPlan(rangeParams);
+      return response.data?.data || response.data || {};
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+  const usagePerPlan = usagePerPlanResponse || {};
+
+  const {
+    data: topCustomersResponse,
+  } = useQuery({
+    queryKey: ['top-customers-usage'],
+    queryFn: async () => {
+      const response = await reportsAnalyticsAPI.getTopCustomersUsage({ limit: 5 });
+      return response.data?.data || response.data || [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+  const topCustomers = topCustomersResponse || [];
+
+  const {
+    data: routerUptimeResponse,
+  } = useQuery({
+    queryKey: ['router-uptime'],
+    queryFn: async () => {
+      const response = await reportsAnalyticsAPI.getRouterUptime();
+      return response.data?.data || response.data || {};
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+  const routerUptime = routerUptimeResponse?.routers || [];
+
+  const {
+    data: sessionDistributionResponse,
+  } = useQuery({
+    queryKey: ['session-duration-distribution'],
+    queryFn: async () => {
+      const response = await reportsAnalyticsAPI.getSessionDurationDistribution();
+      return response.data?.data || response.data || {};
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+  const sessionDistribution = sessionDistributionResponse || {};
+
+  const refetchAll = () => {
+    refetchStats();
+    refetchReports();
+    refetchUsagePerPlan();
+  };
+
+  const isLoading = isStatsLoading;
+  const isRefreshing = isStatsLoading || isReportsLoading;
+
+  const createReportMutation = useMutation({
     mutationFn: async (reportData) => {
-      const response = await apiClient.post('/reports/generate', reportData);
+      const response = await reportsAnalyticsAPI.createReport(reportData);
       return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['reports']);
-      enqueueSnackbar('Report generated successfully', { variant: 'success' });
+      enqueueSnackbar('Report saved successfully', { variant: 'success' });
       handleCloseDialog();
     },
     onError: (error) => {
-      enqueueSnackbar(error.response?.data?.message || 'Failed to generate report', { variant: 'error' });
+      enqueueSnackbar(error.response?.data?.message || 'Failed to save report', { variant: 'error' });
+    },
+  });
+
+  const updateReportMutation = useMutation({
+    mutationFn: async ({ id, reportData }) => {
+      const response = await reportsAnalyticsAPI.updateReport(id, reportData);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['reports']);
+      enqueueSnackbar('Report updated successfully', { variant: 'success' });
+      handleCloseDialog();
+    },
+    onError: (error) => {
+      enqueueSnackbar(error.response?.data?.message || 'Failed to update report', { variant: 'error' });
+    },
+  });
+
+  const deleteReportMutation = useMutation({
+    mutationFn: async (reportId) => {
+      const response = await reportsAnalyticsAPI.deleteReport(reportId);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['reports']);
+      enqueueSnackbar('Report deleted successfully', { variant: 'success' });
+    },
+    onError: (error) => {
+      enqueueSnackbar(error.response?.data?.message || 'Failed to delete report', { variant: 'error' });
     },
   });
 
   // Filter and paginate reports
   const filteredReports = React.useMemo(() => {
-    if (!reportsData?.reports) return [];
+    if (!reportsList.length) return [];
     
-    let filtered = reportsData.reports;
+    let filtered = reportsList;
     
     // Filter by search term
     if (searchTerm) {
@@ -169,7 +290,7 @@ const AnalyticsReports = () => {
     }
     
     return filtered;
-  }, [reportsData?.reports, searchTerm, typeFilter]);
+  }, [reportsList, searchTerm, typeFilter]);
 
   const paginatedReports = React.useMemo(() => {
     const startIndex = page * rowsPerPage;
@@ -219,7 +340,11 @@ const AnalyticsReports = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    generateReportMutation.mutate(formData);
+    if (editingReport) {
+      updateReportMutation.mutate({ id: editingReport.id, reportData: formData });
+    } else {
+      createReportMutation.mutate(formData);
+    }
   };
 
   const handleInputChange = (e) => {
@@ -228,6 +353,12 @@ const AnalyticsReports = () => {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
+  };
+
+  const handleDeleteReport = (reportId) => {
+    if (window.confirm('Are you sure you want to delete this report?')) {
+      deleteReportMutation.mutate(reportId);
+    }
   };
 
   const getTypeIcon = (type) => {
@@ -266,13 +397,20 @@ const AnalyticsReports = () => {
 
   const canManageReports = hasPermission('MANAGE_REPORTS');
 
+  const formatMegabytes = (value) => {
+    if (value === undefined || value === null || Number.isNaN(Number(value))) {
+      return '0 MB';
+    }
+    return `${Number(value).toFixed(1)} MB`;
+  };
+
   if (error) {
     return (
       <Box sx={{ p: 3 }}>
         <Alert severity="error" sx={{ mb: 2 }}>
           Failed to load analytics data: {error.message}
         </Alert>
-        <Button onClick={() => refetch()} startIcon={<RefreshIcon />}>
+        <Button onClick={refetchAll} startIcon={<RefreshIcon />}>
           Retry
         </Button>
       </Box>
@@ -336,10 +474,10 @@ const AnalyticsReports = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
                     <Typography variant="h4" sx={{ fontWeight: 700, color: '#F5B700' }}>
-                      {analyticsData?.totalRevenue?.toLocaleString() || '0'}
+                      {analyticsStats?.totalReports?.toLocaleString() || '0'}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Total Revenue (TZS)
+                      Total Reports
                     </Typography>
                   </Box>
                   <Avatar sx={{ bgcolor: '#F5B700', color: '#000000' }}>
@@ -365,10 +503,10 @@ const AnalyticsReports = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
                     <Typography variant="h4" sx={{ fontWeight: 700, color: '#4CAF50' }}>
-                      {analyticsData?.totalCustomers?.toLocaleString() || '0'}
+                      {analyticsStats?.activeReports?.toLocaleString() || '0'}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Total Customers
+                      Active Reports
                     </Typography>
                   </Box>
                   <Avatar sx={{ bgcolor: '#4CAF50', color: '#FFFFFF' }}>
@@ -394,10 +532,10 @@ const AnalyticsReports = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
                     <Typography variant="h4" sx={{ fontWeight: 700, color: '#2196F3' }}>
-                      {analyticsData?.activeSessions?.toLocaleString() || '0'}
+                      {analyticsStats?.scheduledReports?.toLocaleString() || '0'}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Active Sessions
+                      Scheduled Reports
                     </Typography>
                   </Box>
                   <Avatar sx={{ bgcolor: '#2196F3', color: '#FFFFFF' }}>
@@ -423,10 +561,13 @@ const AnalyticsReports = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
                     <Typography variant="h4" sx={{ fontWeight: 700, color: '#FF9800' }}>
-                      {analyticsData?.networkUtilization?.toLocaleString() || '0'}%
+                      {usagePerPlan?.total?.toLocaleString() || '0'}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Network Utilization
+                      Sessions (Hotspot vs PPPoE)
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Hotspot: {usagePerPlan?.hotspot || 0} · PPPoE: {usagePerPlan?.pppoe || 0}
                     </Typography>
                   </Box>
                   <Avatar sx={{ bgcolor: '#FF9800', color: '#FFFFFF' }}>
@@ -478,34 +619,26 @@ const AnalyticsReports = () => {
             </Card>
           </Grid>
 
-          {/* Top Packages */}
+          {/* Top Customers by Usage */}
           <Grid item xs={12} md={6}>
             <Card>
               <CardContent>
-                <Typography variant="h6" gutterBottom>Top Packages</Typography>
-                <List>
-                  <ListItem>
-                    <ListItemIcon><ReceiptIcon /></ListItemIcon>
-                    <ListItemText 
-                      primary="Premium Package" 
-                      secondary="TZS 50,000 - 150 sales" 
-                    />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemIcon><ReceiptIcon /></ListItemIcon>
-                    <ListItemText 
-                      primary="Standard Package" 
-                      secondary="TZS 25,000 - 200 sales" 
-                    />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemIcon><ReceiptIcon /></ListItemIcon>
-                    <ListItemText 
-                      primary="Basic Package" 
-                      secondary="TZS 10,000 - 300 sales" 
-                    />
-                  </ListItem>
-                </List>
+                <Typography variant="h6" gutterBottom>Top Customers by Usage</Typography>
+                {topCustomers.length === 0 ? (
+                  <Typography color="text.secondary">Usage data not available.</Typography>
+                ) : (
+                  <List>
+                    {topCustomers.map((customer, index) => (
+                      <ListItem key={`${customer.username || 'user'}-${index}`}>
+                        <ListItemIcon><PeopleIcon /></ListItemIcon>
+                        <ListItemText 
+                          primary={`${index + 1}. ${customer.username || 'Unknown User'}`}
+                          secondary={`${formatMegabytes(customer.totalMB ?? (customer.totalBytes || 0) / (1024 * 1024))} consumed`}
+                        />
+                      </ListItem>
+                    ))}
+                  </List>
+                )}
               </CardContent>
             </Card>
           </Grid>
@@ -515,29 +648,27 @@ const AnalyticsReports = () => {
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom>Network Status</Typography>
-                <List>
-                  <ListItem>
-                    <ListItemIcon><CheckIcon color="success" /></ListItemIcon>
-                    <ListItemText 
-                      primary="Router A" 
-                      secondary="Online - 45 users connected" 
-                    />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemIcon><CheckIcon color="success" /></ListItemIcon>
-                    <ListItemText 
-                      primary="Router B" 
-                      secondary="Online - 32 users connected" 
-                    />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemIcon><WarningIcon color="warning" /></ListItemIcon>
-                    <ListItemText 
-                      primary="Router C" 
-                      secondary="High CPU Usage - 85%" 
-                    />
-                  </ListItem>
-                </List>
+                {routerUptime.length === 0 ? (
+                  <Typography color="text.secondary">Router health data not available.</Typography>
+                ) : (
+                  <List>
+                    {routerUptime.slice(0, 5).map((router) => (
+                      <ListItem key={router.routerId}>
+                        <ListItemIcon>
+                          {router.status === 'ONLINE' ? (
+                            <CheckIcon color="success" />
+                          ) : (
+                            <WarningIcon color="warning" />
+                          )}
+                        </ListItemIcon>
+                        <ListItemText 
+                          primary={router.routerName || `Router #${router.routerId}`}
+                          secondary={`Status: ${router.status || 'UNKNOWN'} · Uptime: ${router.uptime || '—'}`}
+                        />
+                      </ListItem>
+                    ))}
+                  </List>
+                )}
               </CardContent>
             </Card>
           </Grid>
@@ -628,10 +759,22 @@ const AnalyticsReports = () => {
           <Grid item xs={12} md={6}>
             <Card>
               <CardContent>
-                <Typography variant="h6" gutterBottom>System Performance</Typography>
-                <Box sx={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Typography color="text.secondary">Performance chart will be implemented here</Typography>
-                </Box>
+                <Typography variant="h6" gutterBottom>Session Duration Distribution</Typography>
+                {Object.keys(sessionDistribution).length === 0 ? (
+                  <Typography color="text.secondary">Session analytics not available.</Typography>
+                ) : (
+                  <List>
+                    {Object.entries(sessionDistribution).map(([range, count]) => (
+                      <ListItem key={range}>
+                        <ListItemIcon><TimelineIcon /></ListItemIcon>
+                        <ListItemText 
+                          primary={`${range}`}
+                          secondary={`${count} sessions`}
+                        />
+                      </ListItem>
+                    ))}
+                  </List>
+                )}
               </CardContent>
             </Card>
           </Grid>
@@ -707,8 +850,8 @@ const AnalyticsReports = () => {
                     <Button
                       variant="outlined"
                       startIcon={<RefreshIcon />}
-                      onClick={() => refetch()}
-                      disabled={isLoading}
+                      onClick={refetchAll}
+                      disabled={isRefreshing}
                     >
                       Refresh
                     </Button>
@@ -734,7 +877,7 @@ const AnalyticsReports = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {isLoading ? (
+                    {isReportsLoading ? (
                       <TableRow>
                         <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
                           <CircularProgress />
@@ -832,6 +975,15 @@ const AnalyticsReports = () => {
                                   <Tooltip title="Share Report">
                                     <IconButton size="small" color="secondary">
                                       <ShareIcon />
+                                    </IconButton>
+                                  </Tooltip>
+                                  <Tooltip title="Delete Report">
+                                    <IconButton 
+                                      size="small" 
+                                      color="error"
+                                      onClick={() => handleDeleteReport(report.id)}
+                                    >
+                                      <DeleteIcon />
                                     </IconButton>
                                   </Tooltip>
                                 </>
@@ -952,7 +1104,7 @@ const AnalyticsReports = () => {
             <Button
               type="submit"
               variant="contained"
-              disabled={generateReportMutation.isPending}
+                disabled={createReportMutation.isPending || updateReportMutation.isPending}
               sx={{
                 background: 'linear-gradient(45deg, #F5B700 30%, #FFCB00 90%)',
                 color: '#000000',
@@ -962,7 +1114,7 @@ const AnalyticsReports = () => {
                 }
               }}
             >
-              {generateReportMutation.isPending ? (
+              {(createReportMutation.isPending || updateReportMutation.isPending) ? (
                 <CircularProgress size={20} />
               ) : (
                 editingReport ? 'Update Report' : 'Generate Report'

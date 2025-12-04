@@ -1348,45 +1348,6 @@ class FinanceController {
 }
 
 @RestController
-@RequestMapping("/api/v1/marketing")
-@CrossOrigin(origins = "*")
-class MarketingController {
-    
-    @Autowired
-    private PermissionService permissionService;
-    
-    /**
-     * Send marketing campaign (MARKETING or ADMIN)
-     */
-    @PostMapping("/campaigns/send")
-    public ResponseEntity<Map<String, Object>> sendCampaign(@RequestBody Map<String, Object> campaignData) {
-        Map<String, Object> response = new HashMap<>();
-        
-        try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String username = authentication.getName();
-            
-            // Check if user has MARKETING_SEND permission
-            if (!permissionService.hasPermission(username, "MARKETING_SEND")) {
-                response.put("status", "error");
-                response.put("message", "Insufficient permissions to send marketing campaigns");
-                return ResponseEntity.status(403).body(response);
-            }
-            
-            response.put("status", "success");
-            response.put("message", "Marketing campaign sent successfully");
-            response.put("campaignId", "CAMP_" + System.currentTimeMillis());
-            
-        } catch (Exception e) {
-            response.put("status", "error");
-            response.put("message", "Failed to send campaign: " + e.getMessage());
-        }
-        
-        return ResponseEntity.ok(response);
-    }
-}
-
-@RestController
 @RequestMapping("/api/v1/sales")
 @CrossOrigin(origins = "*")
 class SalesController {

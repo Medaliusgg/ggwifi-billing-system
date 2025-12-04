@@ -19,6 +19,8 @@ import SettingsConfiguration from './pages/Settings';
 import SessionManagement from './pages/Sessions';
 import TransactionManagement from './pages/Transactions';
 import InvoiceManagement from './pages/Invoices';
+import MarketingManagement from './pages/Marketing';
+import LoyaltyManagement from './pages/Loyalty';
 
 // Placeholder pages for other routes
 const Finance = () => (
@@ -27,14 +29,6 @@ const Finance = () => (
     <p>Financial management will be implemented here.</p>
   </div>
 );
-
-const Loyalty = () => (
-  <div className="text-gg-text-primary">
-    <h1>Loyalty Page</h1>
-    <p>Loyalty program management will be implemented here.</p>
-  </div>
-);
-
 
 const Unauthorized = () => (
   <div className="min-h-screen bg-gg-black flex items-center justify-center">
@@ -192,7 +186,7 @@ function App() {
           </ProtectedRoute>
         }
       >
-        <Route index element={<Loyalty />} />
+        <Route index element={<LoyaltyManagement />} />
       </Route>
 
       <Route
@@ -237,6 +231,28 @@ function App() {
         }
       >
         <Route index element={<InvoiceManagement />} />
+      </Route>
+
+      <Route
+        path="/marketing"
+        element={
+          <ProtectedRoute>
+            <MainLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<MarketingManagement />} />
+      </Route>
+
+      <Route
+        path="/marketing/campaigns"
+        element={
+          <ProtectedRoute>
+            <MainLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<MarketingManagement />} />
       </Route>
 
       {/* Error Routes */}

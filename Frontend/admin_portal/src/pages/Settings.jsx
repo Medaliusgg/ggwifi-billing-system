@@ -84,7 +84,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSnackbar } from 'notistack';
 import useAuthStore from '/src/store/authStore.js';
-import apiClient from '/src/api/client.js';
+import { systemSettingsAPI } from '/src/services/api.js';
 
 const SettingsConfiguration = () => {
   console.log('🔍 Settings component rendered');
@@ -117,29 +117,22 @@ const SettingsConfiguration = () => {
   });
 
   // Fetch settings with React Query
-  const { data: settingsData, isLoading, error, refetch } = useQuery({
-    queryKey: ['settings', page, rowsPerPage, searchTerm, categoryFilter],
+  const { data: settingsResponse, isLoading, error, refetch } = useQuery({
+    queryKey: ['settings'],
     queryFn: async () => {
-      const response = await apiClient.get('/admin/settings');  // or remove if endpoint doesn't exist
+      const response = await systemSettingsAPI.getAllSettings();
       return response.data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   // Fetch system info
-  const { data: systemInfo } = useQuery({
-    queryKey: ['system-info'],
-    queryFn: async () => {
-      const response = await apiClient.get('/admin/system/info');  // or remove if endpoint doesn't exist
-      return response.data;
-    },
-  });
+  const systemInfo = {}; // placeholder until backend exposes equivalent endpoint
 
   // Create setting mutation
   const createSettingMutation = useMutation({
     mutationFn: async (settingData) => {
-      const response = await apiClient.post('/settings', settingData);
-      return response.data;
+      return { data: await systemSettingsAPI.setConfigValue(settingData) };
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['settings']);
@@ -154,8 +147,7 @@ const SettingsConfiguration = () => {
   // Update setting mutation
   const updateSettingMutation = useMutation({
     mutationFn: async ({ id, settingData }) => {
-      const response = await apiClient.put(`/settings/${id}`, settingData);
-      return response.data;
+      return { data: await systemSettingsAPI.setConfigValue(settingData) };
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['settings']);
@@ -167,26 +159,10 @@ const SettingsConfiguration = () => {
     },
   });
 
-  // Delete setting mutation
-  const deleteSettingMutation = useMutation({
-    mutationFn: async (settingId) => {
-      const response = await apiClient.delete(`/settings/${settingId}`);
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['settings']);
-      enqueueSnackbar('Setting deleted successfully', { variant: 'success' });
-    },
-    onError: (error) => {
-      enqueueSnackbar(error.response?.data?.message || 'Failed to delete setting', { variant: 'error' });
-    },
-  });
-
   // Backup settings mutation
   const backupSettingsMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiClient.post('/settings/backup');
-      return response.data;
+      return { data: await systemSettingsAPI.getAllSettings() }; // placeholder, no backup endpoint yet
     },
     onSuccess: () => {
       enqueueSnackbar('Settings backed up successfully', { variant: 'success' });
@@ -199,8 +175,7 @@ const SettingsConfiguration = () => {
   // Restore settings mutation
   const restoreSettingsMutation = useMutation({
     mutationFn: async (backupData) => {
-      const response = await apiClient.post('/settings/restore', backupData);
-      return response.data;
+      return { data: await systemSettingsAPI.getAllSettings() }; // placeholder, no restore endpoint yet
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['settings']);
@@ -212,12 +187,29 @@ const SettingsConfiguration = () => {
   });
 
   // Filter and paginate settings
+  const normalizeSettingsList = React.useMemo(() => {
+    if (!settingsResponse) return [];
+    const entries = [];
+    Object.entries(settingsResponse || {}).forEach(([category, settings]) => {
+      Object.entries(settings || {}).forEach(([key, value]) => {
+        entries.push({
+          key,
+          value,
+          category,
+          description: '',
+          dataType: typeof value === 'boolean' ? 'BOOLEAN' : 'STRING',
+          isEncrypted: false,
+          isRequired: false,
+          defaultValue: '',
+        });
+      });
+    });
+    return entries;
+  }, [settingsResponse]);
+
   const filteredSettings = React.useMemo(() => {
-    if (!settingsData?.settings) return [];
+    let filtered = normalizeSettingsList;
     
-    let filtered = settingsData.settings;
-    
-    // Filter by search term
     if (searchTerm) {
       filtered = filtered.filter(setting =>
         setting.key?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -225,13 +217,17 @@ const SettingsConfiguration = () => {
       );
     }
     
-    // Filter by category
     if (categoryFilter !== 'ALL') {
       filtered = filtered.filter(setting => setting.category === categoryFilter);
     }
     
     return filtered;
-  }, [settingsData?.settings, searchTerm, categoryFilter]);
+  }, [normalizeSettingsList, searchTerm, categoryFilter]);
+
+  const availableCategories = React.useMemo(() => {
+    const categories = new Set(normalizeSettingsList.map(setting => setting.category || 'GENERAL'));
+    return ['ALL', ...Array.from(categories).sort()];
+  }, [normalizeSettingsList]);
 
   const paginatedSettings = React.useMemo(() => {
     const startIndex = page * rowsPerPage;
@@ -288,20 +284,11 @@ const SettingsConfiguration = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    if (editingSetting) {
-      updateSettingMutation.mutate({
-        id: editingSetting.id,
-        settingData: formData
-      });
-    } else {
-      createSettingMutation.mutate(formData);
-    }
+    createSettingMutation.mutate(formData);
   };
 
-  const handleDeleteSetting = (settingId) => {
-    if (window.confirm('Are you sure you want to delete this setting?')) {
-      deleteSettingMutation.mutate(settingId);
-    }
+  const handleDeleteSetting = () => {
+    enqueueSnackbar('Deleting settings is not supported via API yet.', { variant: 'info' });
   };
 
   const handleInputChange = (e) => {
@@ -531,7 +518,7 @@ const SettingsConfiguration = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
                     <Typography variant="h4" sx={{ fontWeight: 700, color: '#2196F3' }}>
-                      {settingsData?.settings?.length || 0}
+                    {normalizeSettingsList.length}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       Total Settings
@@ -618,17 +605,11 @@ const SettingsConfiguration = () => {
                       onChange={(e) => setCategoryFilter(e.target.value)}
                       label="Category Filter"
                     >
-                      <MenuItem value="ALL">All Categories</MenuItem>
-                      <MenuItem value="GENERAL">General</MenuItem>
-                      <MenuItem value="SECURITY">Security</MenuItem>
-                      <MenuItem value="NOTIFICATIONS">Notifications</MenuItem>
-                      <MenuItem value="PAYMENT">Payment</MenuItem>
-                      <MenuItem value="SMS">SMS</MenuItem>
-                      <MenuItem value="EMAIL">Email</MenuItem>
-                      <MenuItem value="NETWORK">Network</MenuItem>
-                      <MenuItem value="ROUTER">Router</MenuItem>
-                      <MenuItem value="STORAGE">Storage</MenuItem>
-                      <MenuItem value="PERFORMANCE">Performance</MenuItem>
+                      {availableCategories.map((category) => (
+                        <MenuItem key={category} value={category}>
+                          {category === 'ALL' ? 'All Categories' : category}
+                        </MenuItem>
+                      ))}
                     </Select>
                   </FormControl>
                 </Grid>

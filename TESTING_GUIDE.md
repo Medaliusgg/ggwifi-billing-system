@@ -1,326 +1,181 @@
-# 🧪 COMPREHENSIVE MODULE TESTING GUIDE
+# GG-WIFI Testing Guide
 
-**Date:** 2025-11-18  
-**System:** GG-WIFI Hotspot Billing System
+## Quick Start
+
+### 1. Import Postman Collection
+1. Open Postman
+2. Click **Import** button
+3. Select `GG-WIFI_API.postman_collection.json`
+4. Collection will be imported with all endpoints pre-configured
+
+### 2. Set Environment Variables
+In Postman, set the following collection variables:
+- `baseUrl`: `http://localhost:8080/api/v1` (or your production URL)
+- `phoneNumber`: Your test phone number (e.g., `+255712345678`)
+- `authToken`: Will be auto-set after OTP verification
+- `refreshToken`: Will be auto-set after OTP verification
+
+### 3. Test Customer Authentication Flow
+
+#### Step 1: Request OTP
+1. Run **"Request OTP"** request
+2. Check your SMS for the 6-digit OTP code
+3. Note: OTP expires in 2 minutes
+
+#### Step 2: Verify OTP
+1. Run **"Verify OTP"** request
+2. Update `otpCode` in request body with the code from SMS
+3. On success, `authToken` and `refreshToken` are automatically saved
+4. You can now use authenticated endpoints
+
+#### Step 3: Test Authenticated Endpoints
+- **Get Customer Dashboard**: Should return customer data
+- **Get Customer Profile**: Should return profile info
+- **Get Loyalty Status**: Should return points and tier
+
+### 4. Test Admin Loyalty Endpoints
+
+**Note**: Admin endpoints require admin-level JWT token.
+
+1. Login as admin through the admin portal
+2. Copy the admin JWT token
+3. Set `authToken` collection variable to admin token
+4. Test admin endpoints:
+   - Get Customer Snapshot
+   - Get All Rewards
+   - Create/Update/Delete Rewards
+   - Manage Inventory
+   - Approve/Reject Redemptions
 
 ---
 
-## 📋 **TESTING OVERVIEW**
+## Manual Testing with cURL
 
-This guide provides instructions for testing all 16 modules of the GG-WIFI Hotspot Billing System.
-
----
-
-## 🚀 **QUICK START**
-
-### **Option 1: Automated Testing Script**
-
-Run the comprehensive testing script:
-
+### Request OTP
 ```bash
-cd backend
-./test-all-modules-comprehensive.sh
+curl -X POST http://localhost:8080/api/v1/customer-auth/request-otp \
+  -H "Content-Type: application/json" \
+  -d '{"phoneNumber": "+255712345678"}'
 ```
 
-### **Option 2: Manual Testing with Postman**
-
-Import the Postman collection (see below) and test each module individually.
-
----
-
-## 📦 **MODULES TO TEST**
-
-### **1. Authentication Module**
-- **Endpoints:** 2
-- **Tests:**
-  - Admin Login
-  - Health Check
-
-### **2. User Management Module**
-- **Endpoints:** 21
-- **Tests:**
-  - List Users
-  - Get User by ID
-  - Create User
-  - Dashboard Statistics
-
-### **3. Customer Management Module**
-- **Endpoints:** 9
-- **Tests:**
-  - List Customers
-  - Get Customer Statistics
-  - Get Active Customers
-  - Create Customer
-
-### **4. Package Management Module**
-- **Endpoints:** 9
-- **Tests:**
-  - List Packages
-  - Package Analytics
-  - Search Packages
-  - Get Package by ID
-  - Package Performance
-
-### **5. Voucher Management Module**
-- **Endpoints:** 16
-- **Tests:**
-  - List Vouchers
-  - Voucher Statistics
-  - Voucher Analytics
-  - Get Active Vouchers
-  - Get Unused Vouchers
-  - Active Sessions
-  - Get by Status
-
-### **6. Payment Management Module**
-- **Endpoints:** 8
-- **Tests:**
-  - List Payments
-  - Payment Statistics
-  - Payment Analytics
-  - Reconcile Payments
-  - Pending Reconciliations
-  - Get by Status
-
-### **7. Transaction Management Module**
-- **Endpoints:** 8
-- **Tests:**
-  - List Transactions
-  - Transaction Statistics
-  - Reconcile Transactions
-  - Pending Reconciliations
-  - Get by Status
-
-### **8. Invoice Management Module**
-- **Endpoints:** 10
-- **Tests:**
-  - List Invoices
-  - Invoice Statistics
-  - Get Paid Invoices
-  - Get Unpaid Invoices
-  - Invoice Template
-  - Get by Status
-
-### **9. Router Management Module**
-- **Endpoints:** 18
-- **Tests:**
-  - List Routers
-  - Router Statistics
-  - Network Analytics
-
-### **10. FreeRADIUS Module**
-- **Endpoints:** 12
-- **Tests:**
-  - RADIUS Health Check
-  - List RADIUS Users
-  - Get Active Sessions
-  - RADIUS Statistics
-  - RADIUS Analytics
-  - List NAS
-
-### **11. Customer Portal Module**
-- **Endpoints:** 7
-- **Tests:**
-  - List Packages (Public)
-  - Customer Portal Test
-
-### **12. Project Management Module**
-- **Endpoints:** 14
-- **Tests:**
-  - List Projects
-  - Project Statistics
-  - Project Analytics
-
-### **13. Reports & Analytics Module**
-- **Endpoints:** 10
-- **Tests:**
-  - List Reports
-  - Report Statistics
-  - Generate Financial Report
-  - Generate Customer Report
-  - Generate Network Report
-  - Generate Sales Report
-
-### **14. Notifications Module**
-- **Endpoints:** 9
-- **Tests:**
-  - List Notifications
-  - Notification Statistics
-
-### **15. Alerts Module**
-- **Endpoints:** 9
-- **Tests:**
-  - List Alert Rules
-  - Alert Statistics
-
-### **16. Audit Log Module**
-- **Endpoints:** 5
-- **Tests:**
-  - List Audit Logs
-  - Audit Log Statistics
-  - Security Dashboard
-  - Security Events
-
----
-
-## 🔧 **CONFIGURATION**
-
-### **Environment Variables**
-
+### Verify OTP
 ```bash
-export BASE_URL="https://api.ggwifi.co.tz"
-export ADMIN_USERNAME="admin"
-export ADMIN_PASSWORD="Admin2024"
+curl -X POST http://localhost:8080/api/v1/customer-auth/verify-otp \
+  -H "Content-Type: application/json" \
+  -d '{
+    "phoneNumber": "+255712345678",
+    "otpCode": "123456",
+    "deviceFingerprint": "test-fp-123"
+  }'
 ```
 
-### **Or Edit Script Directly**
-
+### Get Dashboard (with token)
 ```bash
-BASE_URL="${BASE_URL:-https://api.ggwifi.co.tz}"
-ADMIN_USERNAME="${ADMIN_USERNAME:-admin}"
-ADMIN_PASSWORD="${ADMIN_PASSWORD:-Admin2024}"
+curl -X GET http://localhost:8080/api/v1/customer-portal/customer/+255712345678/dashboard \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE"
 ```
 
 ---
 
-## 📊 **EXPECTED RESULTS**
+## Testing Scenarios
 
-### **Success Criteria:**
-- ✅ All authentication tests pass
-- ✅ All GET endpoints return HTTP 200
-- ✅ All POST endpoints return HTTP 200 (or appropriate status)
-- ✅ Response format is consistent: `{status, message, data}`
-- ✅ No 403 Forbidden errors
-- ✅ No 500 Internal Server errors
+### Scenario 1: New Customer Signup Flow
+1. Request OTP with new phone number
+2. Verify OTP (account auto-created)
+3. Check dashboard shows empty state
+4. Verify loyalty status shows 0 points
 
-### **Test Output:**
-```
-============================================
-  GG-WIFI COMPREHENSIVE MODULE TESTING
-============================================
+### Scenario 2: Existing Customer Login
+1. Request OTP with existing phone number
+2. Verify OTP
+3. Check dashboard shows historical data
+4. Verify loyalty points and tier are displayed
 
-MODULE 1: AUTHENTICATION
-✓ Admin login successful
-✓ Health Check - PASSED
+### Scenario 3: Token Refresh
+1. Login successfully
+2. Wait 15 minutes (or manually trigger refresh)
+3. Token should auto-refresh
+4. API calls should continue working
 
-MODULE 2: USER MANAGEMENT
-✓ List Users - PASSED
-✓ Get User by ID - PASSED
-...
+### Scenario 4: Rate Limiting
+1. Request OTP 4 times within 10 minutes
+2. 4th request should fail with rate limit error
+3. Wait 10 minutes
+4. Request should succeed again
 
-============================================
-  TEST SUMMARY
-============================================
-Total Tests: 168
-Passed: 165
-Failed: 3
-```
-
----
-
-## 🐛 **TROUBLESHOOTING**
-
-### **Issue: Authentication Fails**
-- **Solution:** Check credentials in script
-- **Verify:** Admin user exists in database
-
-### **Issue: 403 Forbidden Errors**
-- **Solution:** Token may be expired, re-run authentication
-- **Verify:** User has proper permissions
-
-### **Issue: 500 Internal Server Errors**
-- **Solution:** Check backend logs
-- **Verify:** Database connection is working
-
-### **Issue: Connection Refused**
-- **Solution:** Verify BASE_URL is correct
-- **Verify:** Backend service is running
+### Scenario 5: Invalid OTP
+1. Request OTP
+2. Verify with wrong OTP code
+3. Should receive error message
+4. Try 3 times - account should lock after max attempts
 
 ---
 
-## 📝 **MANUAL TESTING CHECKLIST**
+## Expected Behaviors
 
-### **For Each Module:**
-- [ ] Authentication works
-- [ ] List endpoint returns data
-- [ ] Get by ID endpoint works
-- [ ] Create endpoint works (if applicable)
-- [ ] Update endpoint works (if applicable)
-- [ ] Delete endpoint works (if applicable)
-- [ ] Statistics endpoint works
-- [ ] Analytics endpoint works (if applicable)
-- [ ] Search/Filter endpoints work (if applicable)
+### OTP Endpoints
+- ✅ OTP sent via SMS within 5 seconds
+- ✅ OTP expires after 2 minutes
+- ✅ Maximum 3 OTP requests per 10 minutes
+- ✅ Account locks after 5 failed login attempts
 
----
+### Dashboard Endpoints
+- ✅ Returns customer info, sessions, payments, transactions
+- ✅ Empty states for new customers
+- ✅ Real-time data for existing customers
+- ✅ Auto-refreshes every 30 seconds
 
-## 🎯 **TESTING PRIORITIES**
-
-### **Critical (Test First):**
-1. Authentication
-2. Payment Processing
-3. Voucher Management
-4. Customer Portal
-
-### **Important (Test Second):**
-5. Customer Management
-6. Package Management
-7. Transaction Management
-8. Invoice Management
-
-### **Standard (Test Third):**
-9. User Management
-10. Router Management
-11. FreeRADIUS
-12. Project Management
-
-### **Optional (Test Last):**
-13. Reports & Analytics
-14. Notifications
-15. Alerts
-16. Audit Log
+### Loyalty Endpoints
+- ✅ Points calculated correctly based on package purchases
+- ✅ Tier upgrades when points threshold reached
+- ✅ Redemptions tracked and status updated
+- ✅ Inventory decreases when rewards redeemed
 
 ---
 
-## 📈 **PERFORMANCE TESTING**
+## Common Issues & Solutions
 
-### **Load Testing:**
-```bash
-# Test with multiple concurrent requests
-for i in {1..10}; do
-    ./test-all-modules-comprehensive.sh &
-done
-wait
-```
+### Issue: "OTP not received"
+**Solution**: 
+- Check SMS service configuration
+- Verify phone number format (+255...)
+- Check backend logs for SMS service errors
 
-### **Response Time Monitoring:**
-- Most endpoints should respond in < 500ms
-- Analytics endpoints may take 1-2 seconds
-- Report generation may take 2-5 seconds
+### Issue: "Invalid token"
+**Solution**:
+- Token may have expired (24 hours)
+- Use refresh token to get new access token
+- Re-login if refresh token expired
 
----
+### Issue: "Rate limit exceeded"
+**Solution**:
+- Wait 10 minutes before next OTP request
+- Use different phone number for testing
+- Check backend rate limiting configuration
 
-## ✅ **VALIDATION CHECKLIST**
-
-After testing, verify:
-- [ ] All critical modules tested
-- [ ] All endpoints return expected status codes
-- [ ] Response format is consistent
-- [ ] Error handling works correctly
-- [ ] Authentication/Authorization works
-- [ ] Data is returned correctly
-- [ ] No security vulnerabilities exposed
+### Issue: "Customer not found"
+**Solution**:
+- Ensure customer exists in database
+- Verify phone number format matches database
+- Check customer status is ACTIVE
 
 ---
 
-## 📞 **SUPPORT**
+## Performance Benchmarks
 
-If you encounter issues:
-1. Check backend logs: `journalctl -u ggnetworks-backend -f`
-2. Verify database connection
-3. Check API endpoint URLs
-4. Verify authentication token
+Expected response times:
+- OTP Request: < 2 seconds
+- OTP Verify: < 1 second
+- Dashboard Load: < 1.5 seconds
+- Loyalty Status: < 1 second
+- Admin Operations: < 2 seconds
 
 ---
 
-**Happy Testing!** 🚀
+## Next Steps
 
+After manual testing:
+1. ✅ Run E2E tests (Playwright/Cypress)
+2. ✅ Run unit tests (Jest)
+3. ✅ Load testing (if needed)
+4. ✅ Security testing (penetration testing)

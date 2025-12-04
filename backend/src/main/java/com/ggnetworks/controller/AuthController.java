@@ -166,4 +166,111 @@ public class AuthController {
             return ResponseEntity.status(401).body(response);
         }
     }
+
+    @Autowired
+    private com.ggnetworks.service.PasswordResetService passwordResetService;
+
+    @Autowired
+    private com.ggnetworks.service.EmailVerificationService emailVerificationService;
+
+    /**
+     * Request password reset
+     */
+    @PostMapping("/password-reset/request")
+    public ResponseEntity<Map<String, Object>> requestPasswordReset(@RequestBody Map<String, String> request) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            String email = request.get("email");
+            if (email == null || email.isEmpty()) {
+                response.put("status", "error");
+                response.put("message", "Email is required");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            Map<String, Object> result = passwordResetService.requestPasswordReset(email);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to process password reset request: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    /**
+     * Reset password with token
+     */
+    @PostMapping("/password-reset/confirm")
+    public ResponseEntity<Map<String, Object>> resetPassword(@RequestBody Map<String, String> request) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            String email = request.get("email");
+            String token = request.get("token");
+            String newPassword = request.get("newPassword");
+            
+            if (email == null || token == null || newPassword == null) {
+                response.put("status", "error");
+                response.put("message", "Email, token, and new password are required");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            Map<String, Object> result = passwordResetService.resetPassword(email, token, newPassword);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to reset password: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    /**
+     * Verify email
+     */
+    @PostMapping("/email-verification/verify")
+    public ResponseEntity<Map<String, Object>> verifyEmail(@RequestBody Map<String, String> request) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            String email = request.get("email");
+            String token = request.get("token");
+            
+            if (email == null || token == null) {
+                response.put("status", "error");
+                response.put("message", "Email and token are required");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            Map<String, Object> result = emailVerificationService.verifyEmail(email, token);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to verify email: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    /**
+     * Resend verification email
+     */
+    @PostMapping("/email-verification/resend")
+    public ResponseEntity<Map<String, Object>> resendVerificationEmail(@RequestBody Map<String, String> request) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            String email = request.get("email");
+            if (email == null || email.isEmpty()) {
+                response.put("status", "error");
+                response.put("message", "Email is required");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            Map<String, Object> result = emailVerificationService.resendVerificationEmail(email);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to resend verification email: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
 }

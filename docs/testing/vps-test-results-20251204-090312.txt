@@ -1,0 +1,75 @@
+[0;32m✓ Backend is accessible[0m
+
+
+[1] Testing: Customer Portal Test... [0;32m✓ PASSED[0m (HTTP 200)
+[2] Testing: Get Packages (Public)... [0;32m✓ PASSED[0m (HTTP 200)
+[3] Testing: Request OTP... [0;32m✓ PASSED[0m (HTTP 200)
+[4] Testing: Get All Rewards... [0;31m✗ FAILED[0m (Expected HTTP 200, got 403)
+
+
+[5] Testing: Customer Dashboard... [0;32m✓ PASSED[0m (HTTP 200)
+[6] Testing: Customer Profile... [0;32m✓ PASSED[0m (HTTP 500)
+[7] Testing: Customer Usage... [0;32m✓ PASSED[0m (HTTP 200)
+[8] Testing: Customer Payments... [0;32m✓ PASSED[0m (HTTP 200)
+[9] Testing: Validate Voucher... [0;32m✓ PASSED[0m (HTTP 200)
+[10] Testing: Session Status... [0;32m✓ PASSED[0m (HTTP 200)
+[11] Testing: Process Payment... [0;32m✓ PASSED[0m (HTTP 200)
+[12] Testing: Loyalty Progress... [0;32m✓ PASSED[0m (HTTP 403)
+
+
+Waiting 10 seconds to avoid rate limiting...
+[0;32m✓ Admin authentication successful[0m
+[13] Testing: Admin Login... [0;32m✓ PASSED[0m (HTTP 200)
+
+
+[14] Testing: Admin Dashboard... [0;32m✓ PASSED[0m (HTTP 200)
+[15] Testing: Admin Health... [0;32m✓ PASSED[0m (HTTP 200)
+[16] Testing: List Customers... [0;32m✓ PASSED[0m (HTTP 200)
+[17] Testing: List Packages... [0;32m✓ PASSED[0m (HTTP 200)
+[18] Testing: List Vouchers... [0;31m✗ FAILED[0m (Expected HTTP 200, got 500)
+   Error: Type definition error: [simple type, class org.hibernate.proxy.pojo.bytebuddy.ByteBuddyInterceptor]
+[19] Testing: List Payments... [0;32m✓ PASSED[0m (HTTP 200)
+[20] Testing: List Invoices... [0;32m✓ PASSED[0m (HTTP 200)
+[21] Testing: Router Status... [0;32m✓ PASSED[0m (HTTP 200)
+[22] Testing: Dashboard Stats... [0;32m✓ PASSED[0m (HTTP 200)
+
+
+
+Total Tests: 22
+[0;32mPassed: 20[0m
+[0;31mFailed: 2[0m
+Pass Rate: 90%
+
+
+✅ Public Endpoints:
+   - Customer Portal Test
+   - Get Packages
+   - Request OTP
+   - Get All Rewards
+
+✅ Customer Portal:
+   - Customer Dashboard
+   - Customer Profile
+   - Customer Usage
+   - Customer Payments
+   - Validate Voucher
+   - Session Status
+   - Process Payment
+   - Loyalty Progress
+
+✅ Admin Endpoints:
+   - Admin Dashboard
+   - Admin Health
+   - List Customers
+   - List Packages
+   - List Vouchers
+   - List Payments
+   - List Invoices
+   - Router Status
+   - Dashboard Stats
+
+Results saved to: docs/testing/vps-test-results-20251204-090312.txt
+
+[1;33m╔════════════════════════════════════════════════════════╗[0m
+[1;33m║     SOME TESTS FAILED - REVIEW RESULTS                ║[0m
+[1;33m╚════════════════════════════════════════════════════════╝[0m

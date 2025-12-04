@@ -84,7 +84,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSnackbar } from 'notistack';
 import useAuthStore from '/src/store/authStore.js';
-import apiClient from '/src/api/client.js';
+import { financeAPI } from '/src/services/api.js';
 
 const FinancialManagement = () => {
   console.log('🔍 Finance component rendered');
@@ -105,90 +105,128 @@ const FinancialManagement = () => {
   const [activeTab, setActiveTab] = useState(0);
 
   // Form state
-  const [formData, setFormData] = useState({
+  const buildInitialFormState = () => ({
+    title: '',
     type: 'EXPENSE',
-    category: '',
+    category: 'OPERATIONAL',
     amount: '',
+    currency: 'TZS',
     description: '',
     date: new Date().toISOString().split('T')[0],
     paymentMethod: 'CASH',
     reference: '',
-    tags: [],
+    tags: '',
     isRecurring: false,
     recurringInterval: 'MONTHLY',
     notes: '',
   });
 
-  // Fetch financial data with React Query
-  const { data: financialData, isLoading, error, refetch } = useQuery({
-    queryKey: ['financial-data', page, rowsPerPage, searchTerm, typeFilter, categoryFilter],
+  const [formData, setFormData] = useState(buildInitialFormState());
+
+  // Finance overview (totals and KPIs)
+  const {
+    data: overviewResponse,
+    isLoading: isOverviewLoading,
+    error: overviewError,
+    refetch: refetchOverview,
+  } = useQuery({
+    queryKey: ['finance-overview'],
     queryFn: async () => {
-      const response = await apiClient.get('/admin/dashboard/finance');
+      const response = await financeAPI.getOverview();
       return response.data;
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 3 * 60 * 1000,
   });
 
-  // Fetch expenses
-  const { data: expensesData } = useQuery({
-    queryKey: ['expenses'],
+  // Finance transactions (expenses + income snapshots)
+  const {
+    data: transactionsResponse,
+    isLoading: isTransactionsLoading,
+    error: transactionsError,
+    refetch: refetchTransactions,
+  } = useQuery({
+    queryKey: ['finance-transactions'],
     queryFn: async () => {
-      const response = await apiClient.get('/admin/finance/expenses');  // or use finance dashboard
+      const response = await financeAPI.getTransactions();
       return response.data;
     },
+    staleTime: 60 * 1000,
   });
 
-  // Fetch budgets
-  const { data: budgetsData } = useQuery({
-    queryKey: ['budgets'],
+  // Budgets snapshot
+  const {
+    data: budgetsResponse,
+    isLoading: isBudgetsLoading,
+  } = useQuery({
+    queryKey: ['finance-budgets'],
     queryFn: async () => {
-      const response = await apiClient.get('/admin/finance/budgets');  // or use finance dashboard
+      const response = await financeAPI.getBudgets();
       return response.data;
     },
+    staleTime: 5 * 60 * 1000,
   });
 
-  // Fetch employees
-  const { data: employeesData } = useQuery({
-    queryKey: ['employees'],
-    queryFn: async () => {
-      const response = await apiClient.get('/admin/users');  // or employees endpoint
-      return response.data;
-    },
-  });
+  const overviewData = overviewResponse?.data || {};
+  const transactionsData = transactionsResponse?.data || [];
+  const budgetsData = budgetsResponse?.data?.items || [];
+  const budgetStats = budgetsResponse?.data?.stats || {};
+  const combinedError = overviewError || transactionsError;
 
-  // Fetch rent places
-  const { data: rentPlacesData } = useQuery({
-    queryKey: ['rent-places'],
-    queryFn: async () => {
-      const response = await apiClient.get('/admin/locations');  // or rent places endpoint
-      return response.data;
-    },
-  });
+  const refetchAll = () => {
+    refetchOverview();
+    refetchTransactions();
+  };
+
+  const formatCurrency = (value) => {
+    if (value === undefined || value === null) return '0';
+    const numeric = Number(value);
+    if (Number.isNaN(numeric)) return value;
+    return numeric.toLocaleString(undefined, { maximumFractionDigits: 0 });
+  };
+
+  const formatPercentage = (value) => {
+    if (value === undefined || value === null) return '0';
+    const numeric = Number(value);
+    if (Number.isNaN(numeric)) return value;
+    return numeric.toFixed(1);
+  };
+
+  const formatDateValue = (value) => {
+    if (!value) return '-';
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return '-';
+    return parsed.toLocaleDateString();
+  };
 
   // Create transaction mutation
+  const invalidateFinanceQueries = () => {
+    queryClient.invalidateQueries(['finance-transactions']);
+    queryClient.invalidateQueries(['finance-overview']);
+  };
+
   const createTransactionMutation = useMutation({
     mutationFn: async (transactionData) => {
-      const response = await apiClient.post('/financial/transactions', transactionData);
+      const response = await financeAPI.createTransaction(transactionData);
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['financial-data']);
-      enqueueSnackbar('Transaction created successfully', { variant: 'success' });
+      invalidateFinanceQueries();
+      enqueueSnackbar('Expense logged successfully', { variant: 'success' });
       handleCloseDialog();
     },
     onError: (error) => {
-      enqueueSnackbar(error.response?.data?.message || 'Failed to create transaction', { variant: 'error' });
+      enqueueSnackbar(error.response?.data?.message || 'Failed to log expense', { variant: 'error' });
     },
   });
 
   // Update transaction mutation
   const updateTransactionMutation = useMutation({
     mutationFn: async ({ id, transactionData }) => {
-      const response = await apiClient.put(`/financial/transactions/${id}`, transactionData);
+      const response = await financeAPI.updateTransaction(id, transactionData);
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['financial-data']);
+      invalidateFinanceQueries();
       enqueueSnackbar('Transaction updated successfully', { variant: 'success' });
       handleCloseDialog();
     },
@@ -200,11 +238,11 @@ const FinancialManagement = () => {
   // Delete transaction mutation
   const deleteTransactionMutation = useMutation({
     mutationFn: async (transactionId) => {
-      const response = await apiClient.delete(`/financial/transactions/${transactionId}`);
+      const response = await financeAPI.deleteTransaction(transactionId);
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['financial-data']);
+      invalidateFinanceQueries();
       enqueueSnackbar('Transaction deleted successfully', { variant: 'success' });
     },
     onError: (error) => {
@@ -213,17 +251,30 @@ const FinancialManagement = () => {
   });
 
   // Filter and paginate transactions
+  const toDateInputValue = (value) => {
+    if (!value) {
+      return new Date().toISOString().split('T')[0];
+    }
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+      return new Date().toISOString().split('T')[0];
+    }
+    return parsed.toISOString().split('T')[0];
+  };
+
   const filteredTransactions = React.useMemo(() => {
-    if (!financialData?.transactions) return [];
+    if (!Array.isArray(transactionsData)) return [];
     
-    let filtered = financialData.transactions;
+    let filtered = transactionsData;
     
     // Filter by search term
     if (searchTerm) {
+      const term = searchTerm.toLowerCase();
       filtered = filtered.filter(transaction =>
-        transaction.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        transaction.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        transaction.reference?.toLowerCase().includes(searchTerm.toLowerCase())
+        transaction.title?.toLowerCase().includes(term) ||
+        transaction.description?.toLowerCase().includes(term) ||
+        transaction.category?.toLowerCase().includes(term) ||
+        transaction.reference?.toLowerCase().includes(term)
       );
     }
     
@@ -238,7 +289,7 @@ const FinancialManagement = () => {
     }
     
     return filtered;
-  }, [financialData?.transactions, searchTerm, typeFilter, categoryFilter]);
+  }, [transactionsData, searchTerm, typeFilter, categoryFilter]);
 
   const paginatedTransactions = React.useMemo(() => {
     const startIndex = page * rowsPerPage;
@@ -246,36 +297,31 @@ const FinancialManagement = () => {
   }, [filteredTransactions, page, rowsPerPage]);
 
   const handleOpenDialog = (transaction = null) => {
+    if (transaction && transaction.editable === false) {
+      enqueueSnackbar('Only manually logged expenses can be edited or deleted.', { variant: 'info' });
+      return;
+    }
+
     if (transaction) {
       setEditingTransaction(transaction);
       setFormData({
+        title: transaction.title || '',
         type: transaction.type || 'EXPENSE',
-        category: transaction.category || '',
-        amount: transaction.amount || '',
+        category: transaction.category || 'OPERATIONAL',
+        amount: transaction.amount ?? '',
+        currency: transaction.currency || 'TZS',
         description: transaction.description || '',
-        date: transaction.date || new Date().toISOString().split('T')[0],
+        date: toDateInputValue(transaction.date),
         paymentMethod: transaction.paymentMethod || 'CASH',
-        reference: transaction.reference || '',
-        tags: transaction.tags || [],
-        isRecurring: transaction.isRecurring || false,
-        recurringInterval: transaction.recurringInterval || 'MONTHLY',
-        notes: transaction.notes || '',
-      });
-    } else {
-      setEditingTransaction(null);
-      setFormData({
-        type: 'EXPENSE',
-        category: '',
-        amount: '',
-        description: '',
-        date: new Date().toISOString().split('T')[0],
-        paymentMethod: 'CASH',
-        reference: '',
-        tags: [],
+        reference: transaction.referenceDetails || transaction.reference || '',
+        tags: transaction.tags || '',
         isRecurring: false,
         recurringInterval: 'MONTHLY',
         notes: '',
       });
+    } else {
+      setEditingTransaction(null);
+      setFormData(buildInitialFormState());
     }
     setOpenDialog(true);
   };
@@ -283,37 +329,39 @@ const FinancialManagement = () => {
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setEditingTransaction(null);
-    setFormData({
-      type: 'EXPENSE',
-      category: '',
-      amount: '',
-      description: '',
-      date: new Date().toISOString().split('T')[0],
-      paymentMethod: 'CASH',
-      reference: '',
-      tags: [],
-      isRecurring: false,
-      recurringInterval: 'MONTHLY',
-      notes: '',
-    });
+    setFormData(buildInitialFormState());
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     
+    if (formData.type === 'INCOME') {
+      enqueueSnackbar('Income entries are sourced from customer payments and cannot be logged manually.', { variant: 'warning' });
+      return;
+    }
+    
+    const payload = {
+      ...formData,
+      amount: formData.amount ? Number(formData.amount) : 0,
+    };
+
     if (editingTransaction) {
       updateTransactionMutation.mutate({
         id: editingTransaction.id,
-        transactionData: formData
+        transactionData: payload
       });
     } else {
-      createTransactionMutation.mutate(formData);
+      createTransactionMutation.mutate(payload);
     }
   };
 
-  const handleDeleteTransaction = (transactionId) => {
+  const handleDeleteTransaction = (transaction) => {
+    if (transaction.editable === false) {
+      enqueueSnackbar('Only manually logged expenses can be deleted.', { variant: 'info' });
+      return;
+    }
     if (window.confirm('Are you sure you want to delete this transaction?')) {
-      deleteTransactionMutation.mutate(transactionId);
+      deleteTransactionMutation.mutate(transaction.id);
     }
   };
 
@@ -354,6 +402,7 @@ const FinancialManagement = () => {
   const getCategoryIcon = (category) => {
     switch (category) {
       case 'SALARY':
+      case 'SALARIES':
         return <WorkIcon />;
       case 'RENT':
         return <HomeIcon />;
@@ -364,17 +413,29 @@ const FinancialManagement = () => {
       case 'EQUIPMENT':
         return <ShoppingIcon />;
       case 'MAINTENANCE':
-        return <BusinessIcon />;
+        return <BuildIcon />;
+      case 'TRANSPORT':
       case 'TRAVEL':
-        return <FlightIcon />;
+        return <CarIcon />;
       case 'FOOD':
         return <RestaurantIcon />;
       case 'HEALTHCARE':
         return <HospitalIcon />;
       case 'EDUCATION':
+      case 'TRAINING':
         return <SchoolIcon />;
-      case 'TRANSPORT':
-        return <CarIcon />;
+      case 'COMMUNICATION':
+        return <PhoneIcon />;
+      case 'SOFTWARE':
+        return <AssessmentIcon />;
+      case 'HARDWARE':
+        return <AssessmentIcon />;
+      case 'CAPITAL_EXPENDITURE':
+        return <AccountBalanceIcon />;
+      case 'OPERATIONAL':
+      case 'GENERAL':
+      case 'OTHER':
+        return <AssessmentIcon />;
       default:
         return <MoneyIcon />;
     }
@@ -387,9 +448,15 @@ const FinancialManagement = () => {
       case 'BANK_TRANSFER':
         return '#2196F3'; // Blue
       case 'MOBILE_MONEY':
+      case 'MPESA':
+      case 'TIGO_PESA':
+      case 'AIRTEL_MONEY':
+      case 'HALOPESA':
         return '#FF9800'; // Orange
       case 'CREDIT_CARD':
         return '#9C27B0'; // Purple
+      case 'VOUCHER':
+        return '#795548';
       default:
         return '#9E9E9E'; // Gray
     }
@@ -397,13 +464,13 @@ const FinancialManagement = () => {
 
   const canManageFinance = hasPermission('MANAGE_FINANCE');
 
-  if (error) {
+  if (combinedError) {
     return (
       <Box sx={{ p: 3 }}>
         <Alert severity="error" sx={{ mb: 2 }}>
-          Failed to load financial data: {error.message}
+          Failed to load financial data: {combinedError.message}
         </Alert>
-        <Button onClick={() => refetch()} startIcon={<RefreshIcon />}>
+        <Button onClick={refetchAll} startIcon={<RefreshIcon />}>
           Retry
         </Button>
       </Box>
@@ -467,7 +534,7 @@ const FinancialManagement = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
                     <Typography variant="h4" sx={{ fontWeight: 700, color: '#4CAF50' }}>
-                      TZS {financialData?.totalIncome?.toLocaleString() || '0'}
+                      TZS {formatCurrency(overviewData.totalIncome)}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       Total Income
@@ -496,7 +563,7 @@ const FinancialManagement = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
                     <Typography variant="h4" sx={{ fontWeight: 700, color: '#F44336' }}>
-                      TZS {financialData?.totalExpenses?.toLocaleString() || '0'}
+                      TZS {formatCurrency(overviewData.totalExpenses)}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       Total Expenses
@@ -525,7 +592,7 @@ const FinancialManagement = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
                     <Typography variant="h4" sx={{ fontWeight: 700, color: '#F5B700' }}>
-                      TZS {financialData?.netProfit?.toLocaleString() || '0'}
+                      TZS {formatCurrency(overviewData.netProfit)}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       Net Profit
@@ -554,7 +621,7 @@ const FinancialManagement = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
                     <Typography variant="h4" sx={{ fontWeight: 700, color: '#2196F3' }}>
-                      TZS {financialData?.budgetUtilization?.toLocaleString() || '0'}%
+                      {formatPercentage(overviewData.budgetUtilization)}%
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       Budget Utilization
@@ -627,12 +694,17 @@ const FinancialManagement = () => {
                       label="Category Filter"
                     >
                       <MenuItem value="ALL">All Categories</MenuItem>
-                      <MenuItem value="SALARY">Salary</MenuItem>
+                      <MenuItem value="SALARIES">Salaries</MenuItem>
                       <MenuItem value="RENT">Rent</MenuItem>
                       <MenuItem value="UTILITIES">Utilities</MenuItem>
                       <MenuItem value="MARKETING">Marketing</MenuItem>
                       <MenuItem value="EQUIPMENT">Equipment</MenuItem>
                       <MenuItem value="MAINTENANCE">Maintenance</MenuItem>
+                      <MenuItem value="TRANSPORT">Transport</MenuItem>
+                      <MenuItem value="COMMUNICATION">Communication</MenuItem>
+                      <MenuItem value="SOFTWARE">Software</MenuItem>
+                      <MenuItem value="HARDWARE">Hardware</MenuItem>
+                      <MenuItem value="OTHER">Other</MenuItem>
                     </Select>
                   </FormControl>
                 </Grid>
@@ -641,8 +713,8 @@ const FinancialManagement = () => {
                     <Button
                       variant="outlined"
                       startIcon={<RefreshIcon />}
-                      onClick={() => refetch()}
-                      disabled={isLoading}
+                      onClick={refetchAll}
+                      disabled={isTransactionsLoading || isOverviewLoading}
                     >
                       Refresh
                     </Button>
@@ -669,7 +741,7 @@ const FinancialManagement = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {isLoading ? (
+                    {isTransactionsLoading ? (
                       <TableRow>
                         <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
                           <CircularProgress />
@@ -698,10 +770,10 @@ const FinancialManagement = () => {
                               </Avatar>
                               <Box>
                                 <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                                  {transaction.description}
+                                  {transaction.title || transaction.description || 'Untitled entry'}
                                 </Typography>
                                 <Typography variant="caption" color="text.secondary">
-                                  {transaction.reference}
+                                  {transaction.description || transaction.reference || transaction.source}
                                 </Typography>
                               </Box>
                             </Box>
@@ -732,12 +804,12 @@ const FinancialManagement = () => {
                                 color: transaction.type === 'INCOME' ? '#4CAF50' : '#F44336'
                               }}
                             >
-                              {transaction.type === 'EXPENSE' ? '-' : '+'}TZS {transaction.amount?.toLocaleString() || '0'}
+                              {transaction.type === 'EXPENSE' ? '-' : '+'}TZS {formatCurrency(transaction.amount)}
                             </Typography>
                           </TableCell>
                           <TableCell>
                             <Chip
-                              label={transaction.paymentMethod}
+                              label={transaction.paymentMethod || 'N/A'}
                               size="small"
                               sx={{
                                 bgcolor: getPaymentMethodColor(transaction.paymentMethod),
@@ -748,7 +820,7 @@ const FinancialManagement = () => {
                           </TableCell>
                           <TableCell>
                             <Typography variant="body2">
-                              {transaction.date ? new Date(transaction.date).toLocaleDateString() : '-'}
+                              {formatDateValue(transaction.date)}
                             </Typography>
                           </TableCell>
                           <TableCell align="center">
@@ -760,23 +832,29 @@ const FinancialManagement = () => {
                               </Tooltip>
                               {canManageFinance && (
                                 <>
-                                  <Tooltip title="Edit Transaction">
-                                    <IconButton 
-                                      size="small" 
-                                      color="primary"
-                                      onClick={() => handleOpenDialog(transaction)}
-                                    >
-                                      <EditIcon />
-                                    </IconButton>
+                                  <Tooltip title={transaction.editable ? 'Edit Transaction' : 'Only manual expenses can be edited'}>
+                                    <span>
+                                      <IconButton 
+                                        size="small" 
+                                        color="primary"
+                                        onClick={() => handleOpenDialog(transaction)}
+                                        disabled={!transaction.editable}
+                                      >
+                                        <EditIcon />
+                                      </IconButton>
+                                    </span>
                                   </Tooltip>
-                                  <Tooltip title="Delete Transaction">
-                                    <IconButton 
-                                      size="small" 
-                                      color="error"
-                                      onClick={() => handleDeleteTransaction(transaction.id)}
-                                    >
-                                      <DeleteIcon />
-                                    </IconButton>
+                                  <Tooltip title={transaction.editable ? 'Delete Transaction' : 'Only manual expenses can be deleted'}>
+                                    <span>
+                                      <IconButton 
+                                        size="small" 
+                                        color="error"
+                                        onClick={() => handleDeleteTransaction(transaction)}
+                                        disabled={!transaction.editable}
+                                      >
+                                        <DeleteIcon />
+                                      </IconButton>
+                                    </span>
                                   </Tooltip>
                                 </>
                               )}
@@ -821,10 +899,35 @@ const FinancialManagement = () => {
       {activeTab === 2 && (
         <Card>
           <CardContent>
-            <Typography variant="h6" gutterBottom>Budget Management</Typography>
-            <Typography color="text.secondary">
-              Budget planning and monitoring will be implemented here.
-            </Typography>
+            <Typography variant="h6" gutterBottom>Budget Snapshot</Typography>
+            <Grid container spacing={2} sx={{ mb: 2 }}>
+              <Grid item xs={12} md={3}>
+                <Typography variant="body2" color="text.secondary">Active Budgets</Typography>
+                <Typography variant="h5" fontWeight={700}>{budgetStats.activeBudgets ?? 0}</Typography>
+              </Grid>
+              <Grid item xs={12} md={3}>
+                <Typography variant="body2" color="text.secondary">Total Budget</Typography>
+                <Typography variant="h5" fontWeight={700}>TZS {formatCurrency(budgetStats.totalBudgetAmount)}</Typography>
+              </Grid>
+              <Grid item xs={12} md={3}>
+                <Typography variant="body2" color="text.secondary">Total Spent</Typography>
+                <Typography variant="h5" fontWeight={700}>TZS {formatCurrency(budgetStats.totalSpentAmount)}</Typography>
+              </Grid>
+              <Grid item xs={12} md={3}>
+                <Typography variant="body2" color="text.secondary">Remaining</Typography>
+                <Typography variant="h5" fontWeight={700}>TZS {formatCurrency(budgetStats.totalRemainingAmount)}</Typography>
+              </Grid>
+            </Grid>
+            {isBudgetsLoading ? (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <CircularProgress size={20} />
+                <Typography color="text.secondary">Loading budgets…</Typography>
+              </Box>
+            ) : (
+              <Typography color="text.secondary">
+                Detailed budget planning will be available in the next iteration. Current data shows {budgetsData.length || 0} configured budgets.
+              </Typography>
+            )}
           </CardContent>
         </Card>
       )}
@@ -865,6 +968,17 @@ const FinancialManagement = () => {
         <form onSubmit={handleSubmit}>
           <DialogContent>
             <Grid container spacing={2} sx={{ mt: 1 }}>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Title"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleInputChange}
+                  required
+                />
+              </Grid>
+
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth required>
                   <InputLabel>Transaction Type</InputLabel>
@@ -874,7 +988,6 @@ const FinancialManagement = () => {
                     onChange={handleInputChange}
                     label="Transaction Type"
                   >
-                    <MenuItem value="INCOME">Income</MenuItem>
                     <MenuItem value="EXPENSE">Expense</MenuItem>
                     <MenuItem value="INVESTMENT">Investment</MenuItem>
                   </Select>
@@ -889,17 +1002,17 @@ const FinancialManagement = () => {
                     onChange={handleInputChange}
                     label="Category"
                   >
-                    <MenuItem value="SALARY">Salary</MenuItem>
+                    <MenuItem value="SALARIES">Salaries</MenuItem>
                     <MenuItem value="RENT">Rent</MenuItem>
                     <MenuItem value="UTILITIES">Utilities</MenuItem>
                     <MenuItem value="MARKETING">Marketing</MenuItem>
                     <MenuItem value="EQUIPMENT">Equipment</MenuItem>
                     <MenuItem value="MAINTENANCE">Maintenance</MenuItem>
-                    <MenuItem value="TRAVEL">Travel</MenuItem>
-                    <MenuItem value="FOOD">Food</MenuItem>
-                    <MenuItem value="HEALTHCARE">Healthcare</MenuItem>
-                    <MenuItem value="EDUCATION">Education</MenuItem>
                     <MenuItem value="TRANSPORT">Transport</MenuItem>
+                    <MenuItem value="COMMUNICATION">Communication</MenuItem>
+                    <MenuItem value="SOFTWARE">Software</MenuItem>
+                    <MenuItem value="HARDWARE">Hardware</MenuItem>
+                    <MenuItem value="OTHER">Other</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
@@ -937,8 +1050,12 @@ const FinancialManagement = () => {
                   >
                     <MenuItem value="CASH">Cash</MenuItem>
                     <MenuItem value="BANK_TRANSFER">Bank Transfer</MenuItem>
-                    <MenuItem value="MOBILE_MONEY">Mobile Money</MenuItem>
                     <MenuItem value="CREDIT_CARD">Credit Card</MenuItem>
+                    <MenuItem value="MPESA">M-Pesa</MenuItem>
+                    <MenuItem value="TIGO_PESA">Tigo Pesa</MenuItem>
+                    <MenuItem value="AIRTEL_MONEY">Airtel Money</MenuItem>
+                    <MenuItem value="HALOPESA">HaloPesa</MenuItem>
+                    <MenuItem value="VOUCHER">Voucher</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
@@ -950,6 +1067,16 @@ const FinancialManagement = () => {
                   value={formData.reference}
                   onChange={handleInputChange}
                   placeholder="e.g., Invoice #12345"
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Tags"
+                  name="tags"
+                  value={formData.tags}
+                  onChange={handleInputChange}
+                  placeholder="Optional labels"
                 />
               </Grid>
               <Grid item xs={12}>

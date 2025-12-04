@@ -1,111 +1,73 @@
 package com.ggnetworks.config;
 
-import com.ggnetworks.service.JwtService;
-import com.ggnetworks.service.CustomUserDetailsService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
-import java.util.Arrays;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(prePostEnabled = true)
+@EnableMethodSecurity
+@ConditionalOnProperty(name = "app.security.enabled", havingValue = "true", matchIfMissing = true)
 public class SecurityConfig {
 
-    @Autowired
-    private JwtService jwtService;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final AuthenticationProvider authenticationProvider;
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
+                          AuthenticationProvider authenticationProvider) {
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.authenticationProvider = authenticationProvider;
+    }
 
-    @Autowired
-    private CustomUserDetailsService userDetailsService;
+    private static final RequestMatcher CUSTOMER_AUTH_MATCHER = request -> {
+        String uri = request.getRequestURI();
+        String servletPath = request.getServletPath();
+        boolean matches =
+            uri.startsWith("/api/v1/customer-auth")
+            || uri.startsWith("/customer-auth")
+            || servletPath.startsWith("/customer-auth");
+        if (matches) {
+            System.out.println("SecurityConfig CUSTOMER_AUTH_MATCHER matched request: " + uri);
+        }
+        return matches;
+    };
 
-    @Autowired
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
+    private static final RequestMatcher[] GENERAL_PUBLIC_MATCHERS = new RequestMatcher[]{
+        new AntPathRequestMatcher("/swagger-ui.html"),
+        new AntPathRequestMatcher("/swagger-ui/**"),
+        new AntPathRequestMatcher("/api-docs/**"),
+        new AntPathRequestMatcher("/v3/api-docs/**"),
+        new AntPathRequestMatcher("/actuator/**"),
+        new AntPathRequestMatcher("/api/v1/actuator/**"),
+        new AntPathRequestMatcher("/auth/**"),
+        new AntPathRequestMatcher("/api/v1/auth/**"),
+        new AntPathRequestMatcher("/api/v1/testing/**"),  // Testing endpoints (only in testing profile)
+        new AntPathRequestMatcher("/api/v1/customer-portal/**")  // Customer portal (public)
+    };
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        System.out.println("🔧 SecurityConfig - Creating SecurityFilterChain");
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .headers(headers -> headers
-                .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'; img-src 'self' data:; script-src 'self'; style-src 'self' 'unsafe-inline'"))
-                .xssProtection(xss -> xss.disable())
-                .frameOptions(frame -> frame.sameOrigin())
-                .httpStrictTransportSecurity(hsts -> hsts.includeSubDomains(true).preload(true))
-            )
-            // For now, completely permit all requests to remove all 403s from Spring Security.
-            // Controllers still contain their own checks (like role checks), but the filter
-            // chain itself will not block any endpoint.
-            .authorizeHttpRequests(authz -> authz
-                .anyRequest().permitAll()
-            )
+            .cors(Customizer.withDefaults())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authenticationProvider(authenticationProvider())
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers(CUSTOMER_AUTH_MATCHER).permitAll()
+                .requestMatchers(GENERAL_PUBLIC_MATCHERS).permitAll()
+                .anyRequest().authenticated()
+            )
+            .authenticationProvider(authenticationProvider)
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-        
-        System.out.println("🔧 SecurityConfig - JWT Filter added to filter chain");
-        
-        SecurityFilterChain chain = http.build();
-        System.out.println("🔧 SecurityConfig - SecurityFilterChain created: " + chain);
-        return chain;
-    }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    public AuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userDetailsService);
-        authProvider.setPasswordEncoder(passwordEncoder());
-        return authProvider;
-    }
-
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-        return config.getAuthenticationManager();
-    }
-
-
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList(
-            "http://localhost:3000",
-            "http://localhost:5173",
-            "http://localhost:8080",
-            "https://admin.ggwifi.co.tz",
-            "https://connect.ggwifi.co.tz",
-            "https://portal.ggwifi.co.tz",
-            "https://api.ggwifi.co.tz",
-            "https://www.ggwifi.co.tz"
-        ));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
-        configuration.setAllowCredentials(true);
-        configuration.setMaxAge(3600L);
-        
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
+        return http.build();
     }
 }

@@ -20,7 +20,11 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     
     Optional<Transaction> findByGatewayReference(String gatewayReference);
     
-    List<Transaction> findByCustomerId(Long customerId);
+    List<Transaction> findByCustomer_Id(Long customerId);
+
+    default List<Transaction> findByCustomerId(Long customerId) {
+        return findByCustomer_Id(customerId);
+    }
     
     List<Transaction> findByStatus(Transaction.TransactionStatus status);
     
@@ -46,7 +50,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     
     boolean existsByGatewayReference(String gatewayReference);
     
-    @Query("SELECT t FROM Transaction t WHERE t.customerId = :customerId AND t.status = :status ORDER BY t.createdAt DESC")
+    @Query("SELECT t FROM Transaction t WHERE t.customer.id = :customerId AND t.status = :status ORDER BY t.createdAt DESC")
     List<Transaction> findByCustomerIdAndStatusOrderByCreatedAtDesc(@Param("customerId") Long customerId, @Param("status") Transaction.TransactionStatus status);
     
     @Query("SELECT t FROM Transaction t WHERE t.status = :status AND t.createdAt >= :startDate ORDER BY t.createdAt DESC")
@@ -62,7 +66,11 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     List<Transaction> findByPaymentGatewayAndStatusOrderByCreatedAtDesc(@Param("gateway") String gateway, @Param("status") Transaction.TransactionStatus status);
     
     // Find by customer ID
-    List<Transaction> findByCustomerIdOrderByCreatedAtDesc(Long customerId);
+    List<Transaction> findByCustomer_IdOrderByCreatedAtDesc(Long customerId);
+
+    default List<Transaction> findByCustomerIdOrderByCreatedAtDesc(Long customerId) {
+        return findByCustomer_IdOrderByCreatedAtDesc(customerId);
+    }
     
     // Additional methods needed by services
     long countByStatus(Transaction.TransactionStatus status);

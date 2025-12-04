@@ -1,0 +1,184 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - banner [ref=e8]:
+    - generic [ref=e9]:
+      - generic [ref=e10] [cursor=pointer]:
+        - img "GG Wi-Fi Logo" [ref=e12]
+        - heading "GG Wi-Fi" [level=6] [ref=e13]
+      - generic [ref=e14]:
+        - button "Home" [ref=e15] [cursor=pointer]:
+          - img [ref=e17]
+          - text: Home
+        - button "Buy Packages" [ref=e19] [cursor=pointer]:
+          - img [ref=e21]
+          - text: Buy Packages
+        - button "Voucher Login" [ref=e23] [cursor=pointer]:
+          - img [ref=e25]
+          - text: Voucher Login
+        - button "Customer Portal" [ref=e27] [cursor=pointer]:
+          - img [ref=e29]
+          - text: Customer Portal
+      - generic [ref=e31]:
+        - button "Contact Support" [ref=e32] [cursor=pointer]:
+          - img [ref=e33]
+        - button "WhatsApp Chat" [ref=e35] [cursor=pointer]:
+          - img [ref=e36]
+        - button "Service Areas" [ref=e38] [cursor=pointer]:
+          - img [ref=e39]
+  - generic [ref=e45]:
+    - img "GG Wi-Fi Logo" [ref=e48]
+    - heading "Welcome to GG Wi-Fi" [level=1] [ref=e50]
+    - generic [ref=e51]:
+      - heading "Experience Lightning-Fast, Secure, and Reliable Internet" [level=4] [ref=e52]
+      - paragraph [ref=e53]: Connect instantly to high-speed WiFi hotspots across Tanzania. No contracts, no hassle—just fast, secure internet when you need it.
+    - generic [ref=e55]:
+      - generic [ref=e58]:
+        - img [ref=e60]
+        - heading "50K+" [level=4] [ref=e62]
+        - paragraph [ref=e63]: Active Users
+      - generic [ref=e66]:
+        - img [ref=e68]
+        - heading "8+" [level=4] [ref=e70]
+        - paragraph [ref=e71]: Cities Covered
+      - generic [ref=e74]:
+        - img [ref=e76]
+        - heading "99.9%" [level=4] [ref=e78]
+        - paragraph [ref=e79]: Uptime
+      - generic [ref=e82]:
+        - img [ref=e84]
+        - heading "4.8/5" [level=4] [ref=e86]
+        - paragraph [ref=e87]: User Rating
+    - generic [ref=e89]:
+      - generic [ref=e92] [cursor=pointer]:
+        - img [ref=e95]
+        - heading "Connect to Hotspot" [level=5] [ref=e97]
+        - paragraph [ref=e98]: Have a voucher code? Connect to GG Wi-Fi network instantly and start browsing.
+        - button "Connect Now" [ref=e99]:
+          - text: Connect Now
+          - img [ref=e101]
+      - generic [ref=e105] [cursor=pointer]:
+        - img [ref=e108]
+        - heading "Buy Packages" [level=5] [ref=e110]
+        - paragraph [ref=e111]: Choose from flexible packages. Pay via mobile money and get instant access to high-speed internet.
+        - button "View Packages" [ref=e112]:
+          - text: View Packages
+          - img [ref=e114]
+    - generic [ref=e117]:
+      - heading "Why Choose GG Wi-Fi?" [level=6] [ref=e118]
+      - generic [ref=e119]:
+        - generic [ref=e121]:
+          - img [ref=e122]
+          - paragraph [ref=e124]: No contracts or commitments
+        - generic [ref=e126]:
+          - img [ref=e127]
+          - paragraph [ref=e129]: Pay as you go flexibility
+        - generic [ref=e131]:
+          - img [ref=e132]
+          - paragraph [ref=e134]: Multiple package options
+        - generic [ref=e136]:
+          - img [ref=e137]
+          - paragraph [ref=e139]: Easy voucher-based access
+        - generic [ref=e141]:
+          - img [ref=e142]
+          - paragraph [ref=e144]: Secure and encrypted
+        - generic [ref=e146]:
+          - img [ref=e147]
+          - paragraph [ref=e149]: 24/7 customer support
+    - generic [ref=e150]:
+      - heading "Powerful Features" [level=4] [ref=e151]
+      - paragraph [ref=e152]: Everything you need for a seamless internet experience
+      - generic [ref=e153]:
+        - generic [ref=e156]:
+          - img [ref=e158]
+          - heading "Lightning Fast Speed" [level=6] [ref=e160]
+          - paragraph [ref=e161]: Experience blazing-fast internet speeds up to 100 Mbps for seamless browsing, streaming, and downloads.
+        - generic [ref=e164]:
+          - img [ref=e166]
+          - heading "Military-Grade Security" [level=6] [ref=e168]
+          - paragraph [ref=e169]: Bank-level encryption and secure connections to protect your data and privacy at all times.
+        - generic [ref=e172]:
+          - img [ref=e174]
+          - heading "24/7 Expert Support" [level=6] [ref=e176]
+          - paragraph [ref=e177]: Round-the-clock customer support via phone, WhatsApp, and email. We're always here to help.
+        - generic [ref=e180]:
+          - img [ref=e182]
+          - heading "Nationwide Coverage" [level=6] [ref=e184]
+          - paragraph [ref=e185]: Access high-speed WiFi in 8+ major cities across Tanzania. Connect anywhere, anytime.
+        - generic [ref=e188]:
+          - img [ref=e190]
+          - heading "Instant Activation" [level=6] [ref=e192]
+          - paragraph [ref=e193]: Get connected in seconds. No waiting, no complicated setup. Just purchase and connect instantly.
+        - generic [ref=e196]:
+          - img [ref=e198]
+          - heading "Reliable & Trusted" [level=6] [ref=e200]
+          - paragraph [ref=e201]: Trusted by thousands of users. 99.9% uptime guarantee ensures you stay connected when it matters.
+    - generic [ref=e202]:
+      - heading "What Our Customers Say" [level=4] [ref=e203]
+      - paragraph [ref=e204]: Join thousands of satisfied customers across Tanzania
+      - generic [ref=e205]:
+        - generic [ref=e208]:
+          - generic [ref=e209]:
+            - img [ref=e210]
+            - img [ref=e212]
+            - img [ref=e214]
+            - img [ref=e216]
+            - img [ref=e218]
+          - paragraph [ref=e220]: "\"Fast and reliable internet! The voucher system is so convenient. I can connect instantly wherever I am. Best WiFi service in Tanzania!\""
+          - generic [ref=e221]:
+            - generic [ref=e222]: JM
+            - generic [ref=e223]:
+              - heading "John Mwangi" [level=6] [ref=e224]
+              - text: Dar es Salaam
+        - generic [ref=e227]:
+          - generic [ref=e228]:
+            - img [ref=e229]
+            - img [ref=e231]
+            - img [ref=e233]
+            - img [ref=e235]
+            - img [ref=e237]
+          - paragraph [ref=e239]: "\"Excellent service! The connection is stable and the customer support is outstanding. Highly recommend GG Wi-Fi to everyone.\""
+          - generic [ref=e240]:
+            - generic [ref=e241]: SH
+            - generic [ref=e242]:
+              - heading "Sarah Hassan" [level=6] [ref=e243]
+              - text: Arusha
+        - generic [ref=e246]:
+          - generic [ref=e247]:
+            - img [ref=e248]
+            - img [ref=e250]
+            - img [ref=e252]
+            - img [ref=e254]
+            - img [ref=e256]
+          - paragraph [ref=e258]: "\"Great value for money. The packages are affordable and the speed is amazing. I've been using it for months without any issues.\""
+          - generic [ref=e259]:
+            - generic [ref=e260]: DK
+            - generic [ref=e261]:
+              - heading "David Kimathi" [level=6] [ref=e262]
+              - text: Mwanza
+    - generic [ref=e264]:
+      - heading "Ready to Get Started?" [level=4] [ref=e265]
+      - paragraph [ref=e266]: Join thousands of satisfied customers. Get connected in seconds with our easy-to-use platform.
+      - generic [ref=e267]:
+        - button "Buy Package Now" [ref=e268] [cursor=pointer]:
+          - text: Buy Package Now
+          - img [ref=e270]
+        - button "Connect with Voucher" [ref=e272] [cursor=pointer]:
+          - text: Connect with Voucher
+          - img [ref=e274]
+  - contentinfo [ref=e276]:
+    - generic [ref=e278]:
+      - paragraph [ref=e279]: © 2025 GG Wi-Fi. All rights reserved.
+      - generic [ref=e280]:
+        - button [ref=e281] [cursor=pointer]:
+          - img [ref=e282]
+        - button [ref=e284] [cursor=pointer]:
+          - img [ref=e285]
+        - button [ref=e287] [cursor=pointer]:
+          - img [ref=e288]
+        - button [ref=e290] [cursor=pointer]:
+          - img [ref=e291]
+        - button [ref=e293] [cursor=pointer]:
+          - img [ref=e294]
+```

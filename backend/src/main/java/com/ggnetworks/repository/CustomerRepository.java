@@ -67,4 +67,12 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
     
     @Query("SELECT COUNT(c) FROM Customer c WHERE c.createdAt BETWEEN :startDate AND :endDate")
     long countByCreatedAtBetween(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
+
+    @Query("SELECT c FROM Customer c WHERE c.dateOfBirth IS NOT NULL "
+         + "AND FUNCTION('MONTH', c.dateOfBirth) = :month "
+         + "AND FUNCTION('DAY', c.dateOfBirth) = :day")
+    List<Customer> findCustomersWithBirthday(@Param("month") int month, @Param("day") int day);
+
+    @Query("SELECT c FROM Customer c WHERE c.lastActivityAt IS NULL OR c.lastActivityAt < :threshold")
+    List<Customer> findInactiveSince(@Param("threshold") LocalDateTime threshold);
 }

@@ -18,11 +18,13 @@ public class Payment {
     @Column(name = "payment_id", unique = true, nullable = false)
     private String paymentId;
 
-    @Column(name = "invoice_id", nullable = false)
-    private Long invoiceId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "invoice_id", nullable = false)
+    private Invoice invoice;
 
-    @Column(name = "customer_id", nullable = false)
-    private Long customerId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_id", nullable = false)
+    private Customer customer;
 
     @Column(name = "amount", nullable = false, precision = 10, scale = 2)
     private BigDecimal amount;
@@ -103,11 +105,11 @@ public class Payment {
     // Constructors
     public Payment() {}
 
-    public Payment(String paymentId, Long invoiceId, Long customerId, BigDecimal amount, 
+    public Payment(String paymentId, Invoice invoice, Customer customer, BigDecimal amount, 
                    PaymentMethod paymentMethod, String paymentGateway) {
         this.paymentId = paymentId;
-        this.invoiceId = invoiceId;
-        this.customerId = customerId;
+        this.invoice = invoice;
+        this.customer = customer;
         this.amount = amount;
         this.paymentMethod = paymentMethod;
         this.paymentGateway = paymentGateway;
@@ -121,11 +123,37 @@ public class Payment {
     public String getPaymentId() { return paymentId; }
     public void setPaymentId(String paymentId) { this.paymentId = paymentId; }
 
-    public Long getInvoiceId() { return invoiceId; }
-    public void setInvoiceId(Long invoiceId) { this.invoiceId = invoiceId; }
+    public Invoice getInvoice() { return invoice; }
+    public void setInvoice(Invoice invoice) { this.invoice = invoice; }
 
-    public Long getCustomerId() { return customerId; }
-    public void setCustomerId(Long customerId) { this.customerId = customerId; }
+    public Customer getCustomer() { return customer; }
+    public void setCustomer(Customer customer) { this.customer = customer; }
+
+    // Helper methods for backward compatibility
+    public Long getInvoiceId() { return invoice != null ? invoice.getId() : null; }
+    public Long getCustomerId() { return customer != null ? customer.getId() : null; }
+
+    public void setInvoiceId(Long invoiceId) {
+        if (invoiceId == null) {
+            this.invoice = null;
+        } else {
+            if (this.invoice == null) {
+                this.invoice = new Invoice();
+            }
+            this.invoice.setId(invoiceId);
+        }
+    }
+
+    public void setCustomerId(Long customerId) {
+        if (customerId == null) {
+            this.customer = null;
+        } else {
+            if (this.customer == null) {
+                this.customer = new Customer();
+            }
+            this.customer.setId(customerId);
+        }
+    }
 
     public BigDecimal getAmount() { return amount; }
     public void setAmount(BigDecimal amount) { this.amount = amount; }

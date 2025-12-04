@@ -32,6 +32,12 @@ public interface RadiusAcctRepository extends JpaRepository<RadiusAcct, Long> {
     @Query("SELECT ra FROM RadiusAcct ra WHERE ra.username = :username AND ra.acctStopTime IS NULL")
     List<RadiusAcct> findActiveSessionsByUsername(@Param("username") String username);
     
+    @Query("SELECT ra FROM RadiusAcct ra WHERE ra.username = :username AND ra.acctStopTime IS NULL")
+    Optional<RadiusAcct> findByUsernameAndAcctStopTimeIsNull(@Param("username") String username);
+    
+    @Query("SELECT ra FROM RadiusAcct ra WHERE ra.acctSessionId = :sessionId AND ra.acctStopTime IS NULL")
+    Optional<RadiusAcct> findByAcctSessionIdAndActive(@Param("sessionId") String sessionId);
+    
     @Query("SELECT ra FROM RadiusAcct ra WHERE ra.acctStopTime IS NULL")
     List<RadiusAcct> findAllActiveSessions();
     

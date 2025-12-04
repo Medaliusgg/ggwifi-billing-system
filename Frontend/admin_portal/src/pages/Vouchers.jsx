@@ -66,7 +66,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSnackbar } from 'notistack';
 import useAuthStore from '/src/store/authStore.js';
-import apiClient from '/src/api/client.js';
+import { voucherAPI, packageAPI } from '/src/services/api.js';
 
 const VoucherManagement = () => {
   console.log('🔍 Vouchers component rendered');
@@ -111,28 +111,28 @@ const VoucherManagement = () => {
   });
 
   // Fetch vouchers with React Query
-  const { data: vouchersData, isLoading, error, refetch } = useQuery({
-    queryKey: ['vouchers', page, rowsPerPage, searchTerm, statusFilter, packageFilter],
+  const { data: vouchersResponse, isLoading, error, refetch } = useQuery({
+    queryKey: ['vouchers'],
     queryFn: async () => {
-      const response = await apiClient.get('/admin/vouchers');
-      return response.data;
+      const response = await voucherAPI.getAllVouchers();
+      return response.data?.data || response.data || [];
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 
   // Fetch packages for dropdown
-  const { data: packagesData } = useQuery({
+  const { data: packagesResponse } = useQuery({
     queryKey: ['packages'],
     queryFn: async () => {
-      const response = await apiClient.get('/admin/packages');
-      return response.data;
+      const response = await packageAPI.getAllPackages();
+      return response.data?.data || response.data || [];
     },
   });
 
   // Create voucher mutation
   const createVoucherMutation = useMutation({
     mutationFn: async (voucherData) => {
-      const response = await apiClient.post('/vouchers', voucherData);
+      const response = await voucherAPI.createVoucher(voucherData);
       return response.data;
     },
     onSuccess: () => {
@@ -148,7 +148,7 @@ const VoucherManagement = () => {
   // Bulk voucher generation mutation
   const bulkCreateVoucherMutation = useMutation({
     mutationFn: async (bulkData) => {
-      const response = await apiClient.post('/vouchers/bulk', bulkData);
+      const response = await voucherAPI.createBulkVouchers(bulkData);
       return response.data;
     },
     onSuccess: () => {
@@ -164,7 +164,7 @@ const VoucherManagement = () => {
   // Update voucher mutation
   const updateVoucherMutation = useMutation({
     mutationFn: async ({ id, voucherData }) => {
-      const response = await apiClient.put(`/vouchers/${id}`, voucherData);
+      const response = await voucherAPI.updateVoucher(id, voucherData);
       return response.data;
     },
     onSuccess: () => {
@@ -180,7 +180,7 @@ const VoucherManagement = () => {
   // Delete voucher mutation
   const deleteVoucherMutation = useMutation({
     mutationFn: async (voucherId) => {
-      const response = await apiClient.delete(`/vouchers/${voucherId}`);
+      const response = await voucherAPI.deleteVoucher(voucherId);
       return response.data;
     },
     onSuccess: () => {
@@ -193,10 +193,13 @@ const VoucherManagement = () => {
   });
 
   // Filter and paginate vouchers
+  const vouchersList = vouchersResponse || [];
+  const packagesList = packagesResponse || [];
+
   const filteredVouchers = React.useMemo(() => {
-    if (!vouchersData?.vouchers) return [];
+    if (!vouchersList.length) return [];
     
-    let filtered = vouchersData.vouchers;
+    let filtered = vouchersList;
     
     // Filter by search term
     if (searchTerm) {
@@ -217,7 +220,7 @@ const VoucherManagement = () => {
     }
     
     return filtered;
-  }, [vouchersData?.vouchers, searchTerm, statusFilter, packageFilter]);
+  }, [vouchersList, searchTerm, statusFilter, packageFilter]);
 
   const paginatedVouchers = React.useMemo(() => {
     const startIndex = page * rowsPerPage;
@@ -450,7 +453,7 @@ const VoucherManagement = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
                     <Typography variant="h4" sx={{ fontWeight: 700, color: '#F5B700' }}>
-                      {vouchersData?.vouchers?.length || 0}
+                      {vouchersList.length}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       Total Vouchers
@@ -479,7 +482,7 @@ const VoucherManagement = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
                     <Typography variant="h4" sx={{ fontWeight: 700, color: '#4CAF50' }}>
-                      {vouchersData?.vouchers?.filter(v => v.status === 'ACTIVE').length || 0}
+                      {vouchersList.filter(v => v.status === 'ACTIVE').length}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       Active Vouchers
@@ -508,7 +511,7 @@ const VoucherManagement = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
                     <Typography variant="h4" sx={{ fontWeight: 700, color: '#2196F3' }}>
-                      {vouchersData?.vouchers?.filter(v => v.status === 'USED').length || 0}
+                      {vouchersList.filter(v => v.status === 'USED').length}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       Used Vouchers
@@ -537,7 +540,7 @@ const VoucherManagement = () => {
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
                     <Typography variant="h4" sx={{ fontWeight: 700, color: '#F44336' }}>
-                      {vouchersData?.vouchers?.filter(v => v.status === 'EXPIRED').length || 0}
+                      {vouchersList.filter(v => v.status === 'EXPIRED').length}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       Expired Vouchers
@@ -597,7 +600,7 @@ const VoucherManagement = () => {
                   label="Package Filter"
                 >
                   <MenuItem value="ALL">All Packages</MenuItem>
-                  {packagesData?.packages?.map(pkg => (
+                  {packagesList.map(pkg => (
                     <MenuItem key={pkg.id} value={pkg.id}>
                       {pkg.name}
                     </MenuItem>
@@ -678,7 +681,7 @@ const VoucherManagement = () => {
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                          {packagesData?.packages?.find(p => p.id === voucher.packageId)?.name || 'Unknown'}
+                          {packagesList.find(p => p.id === voucher.packageId)?.name || 'Unknown'}
                         </Typography>
                       </TableCell>
                       <TableCell>
@@ -815,7 +818,7 @@ const VoucherManagement = () => {
                     onChange={handleInputChange}
                     label="Package"
                   >
-                    {packagesData?.packages?.map(pkg => (
+                    {packagesList.map(pkg => (
                       <MenuItem key={pkg.id} value={pkg.id}>
                         {pkg.name} - TZS {pkg.price}
                       </MenuItem>
@@ -965,7 +968,7 @@ const VoucherManagement = () => {
                           onChange={handleBulkInputChange}
                           label="Package"
                         >
-                          {packagesData?.packages?.map(pkg => (
+                          {packagesList.map(pkg => (
                             <MenuItem key={pkg.id} value={pkg.id}>
                               {pkg.name} - TZS {pkg.price}
                             </MenuItem>

@@ -49,6 +49,13 @@ export const authAPI = {
   refreshToken: (token) => apiClient.post('/auth/refresh', { token }),
 };
 
+// Customer OTP Authentication API (Customer Portal)
+export const customerAuthAPI = {
+  requestOtp: ({ phoneNumber }) => apiClient.post('/customer-auth/request-otp', { phoneNumber }),
+  verifyOtp: (data) => apiClient.post('/customer-auth/verify-otp', data),
+  refreshToken: (data) => apiClient.post('/customer-auth/refresh', data),
+};
+
 // Package Discovery API
 export const packageAPI = {
   getHotspotPackages: (params = {}) => apiClient.get('/customer/packages/hotspot', { params }),

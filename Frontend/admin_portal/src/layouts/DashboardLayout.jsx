@@ -79,9 +79,7 @@ const DashboardLayout = ({ children }) => {
         { text: 'Reports', icon: AnalyticsIcon, path: '/finance/reports', permission: 'VIEW_REPORTS' }
       ],
       MARKETING: [
-        { text: 'Campaigns', icon: CampaignIcon, path: '/marketing/campaigns', permission: 'MANAGE_CAMPAIGNS' },
-        { text: 'Lead Management', icon: PeopleIcon, path: '/marketing/leads', permission: 'MANAGE_LEADS' },
-        { text: 'Analytics', icon: AnalyticsIcon, path: '/marketing/analytics', permission: 'VIEW_ANALYTICS' }
+        { text: 'Marketing Suite', icon: CampaignIcon, path: '/marketing', permission: 'MANAGE_CAMPAIGNS' }
       ]
     };
 

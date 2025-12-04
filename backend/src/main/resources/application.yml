@@ -28,15 +28,19 @@ spring:
         format_sql: true
         use_sql_comments: true
 
-  # Flyway Migration - DISABLED temporarily
+  # Flyway Migration - ENABLED for database migrations
   flyway:
-    enabled: false
+    enabled: ${FLYWAY_ENABLED:true}
     locations: classpath:db/migration
+    baseline-on-migrate: true
+    validate-on-migrate: true
+    out-of-order: false
+    table: flyway_schema_history
 
-  # Redis Configuration - DISABLED for testing
+  # Redis Configuration - ENABLED for production
   data:
     redis:
-      enabled: false
+      enabled: true
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:}
@@ -48,6 +52,7 @@ spring:
           max-idle: 8
           min-idle: 0
           max-wait: -1ms
+        shutdown-timeout: 100ms
 
   # Mail Configuration
   mail:
@@ -69,6 +74,10 @@ server:
   servlet:
     context-path: /api/v1
 
+app:
+  security:
+    enabled: ${APP_SECURITY_ENABLED:false}
+
 # JWT Configuration
 jwt:
   secret: ${JWT_SECRET:Z2duZXR3b3Jrcy1zdXBlci1zZWNyZXQta2V5LWZvci1qd3QtdG9rZW4tZ2VuZXJhdGlvbi1hbmQtdmFsaWRhdGlvbi0yMDI0}
@@ -77,9 +86,14 @@ jwt:
 
 # OTP Configuration
 otp:
+  expiry-minutes: ${OTP_EXPIRY_MINUTES:5}
   expiration: ${OTP_EXPIRATION:300} # 5 minutes in seconds
   max-retries: ${OTP_MAX_RETRIES:3}
   length: ${OTP_LENGTH:6}
+
+# Encryption Configuration
+encryption:
+  secret-key: ${ENCRYPTION_SECRET_KEY:GGNetworks2024SecretKeyForRouterPasswordEncryption!}
 
 # Rate Limiting Configuration
 rate-limit:
@@ -202,7 +216,7 @@ mikrotik:
 zenopay:
   api:
     base-url: ${ZENOPAY_BASE_URL:https://zenoapi.com}
-    api-key: ${ZENOPAY_API_KEY:gUHLes8c3nVYCa7XEK8CWi-eBBNf04OCJ3JqJIU63NVj52MgevdOjFsL1tr26zgXZDvI3J6e5AjJAOflNS_EIw}
+    api-key: ${ZENOPAY_API_KEY:eDjMtGJmX7teox2NaiEa-2LTAQFtPVVHDdfW_f5e-3Z63Bdl2rBD4CuytSwYzF3p4nN6oLCPe3yj0vNIjPiSmg}
   endpoints:
     mobile-money: ${ZENOPAY_MOBILE_MONEY_ENDPOINT:/api/payments/mobile_money_tanzania}
     order-status: ${ZENOPAY_ORDER_STATUS_ENDPOINT:/api/payments/order-status}

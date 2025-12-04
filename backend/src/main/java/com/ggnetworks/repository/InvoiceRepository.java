@@ -13,7 +13,11 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
     
     Optional<Invoice> findByInvoiceNumber(String invoiceNumber);
     
-    List<Invoice> findByCustomerId(Long customerId);
+    List<Invoice> findByCustomer_Id(Long customerId);
+
+    default List<Invoice> findByCustomerId(Long customerId) {
+        return findByCustomer_Id(customerId);
+    }
     
     List<Invoice> findByStatus(Invoice.InvoiceStatus status);
     
@@ -21,7 +25,11 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
     
     List<Invoice> findByPaymentGateway(String paymentGateway);
     
-    List<Invoice> findByPackageId(Long packageId);
+    List<Invoice> findByInternetPackage_Id(Long packageId);
+
+    default List<Invoice> findByPackageId(Long packageId) {
+        return findByInternetPackage_Id(packageId);
+    }
     
     List<Invoice> findByRouterId(Long routerId);
     
@@ -45,7 +53,11 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
     
     long countByPaymentMethod(Invoice.PaymentMethod paymentMethod);
     
-    long countByCustomerId(Long customerId);
+    long countByCustomer_Id(Long customerId);
+
+    default long countByCustomerId(Long customerId) {
+        return countByCustomer_Id(customerId);
+    }
     
     long countByCreatedAtBetween(LocalDateTime startDate, LocalDateTime endDate);
 }

@@ -1,0 +1,361 @@
+{
+  "info": {
+    "name": "GG-WIFI API Collection",
+    "description": "Complete API collection for GG-WIFI Customer Portal and Loyalty Management",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refreshToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "phoneNumber",
+      "value": "+255712345678",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Customer Authentication",
+      "item": [
+        {
+          "name": "Request OTP",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    pm.test('OTP request successful', function () {",
+                  "        pm.response.to.have.status(200);",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData.status).to.eql('success');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phoneNumber\": \"{{phoneNumber}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customer-auth/request-otp",
+              "host": ["{{baseUrl}}"],
+              "path": ["customer-auth", "request-otp"]
+            }
+          }
+        },
+        {
+          "name": "Verify OTP",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    pm.test('OTP verification successful', function () {",
+                  "        pm.response.to.have.status(200);",
+                  "        var jsonData = pm.response.json();",
+                  "        pm.expect(jsonData.status).to.eql('success');",
+                  "        if (jsonData.token) {",
+                  "            pm.collectionVariables.set('authToken', jsonData.token);",
+                  "        }",
+                  "        if (jsonData.refreshToken) {",
+                  "            pm.collectionVariables.set('refreshToken', jsonData.refreshToken);",
+                  "        }",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phoneNumber\": \"{{phoneNumber}}\",\n  \"otpCode\": \"123456\",\n  \"deviceFingerprint\": \"test-fingerprint-123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customer-auth/verify-otp",
+              "host": ["{{baseUrl}}"],
+              "path": ["customer-auth", "verify-otp"]
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\",\n  \"deviceFingerprint\": \"test-fingerprint-123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/customer-auth/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["customer-auth", "refresh"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Customer Portal",
+      "item": [
+        {
+          "name": "Get Customer Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/customer-portal/customer/{{phoneNumber}}/dashboard",
+              "host": ["{{baseUrl}}"],
+              "path": ["customer-portal", "customer", "{{phoneNumber}}", "dashboard"]
+            }
+          }
+        },
+        {
+          "name": "Get Customer Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/customer-portal/customer/{{phoneNumber}}/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["customer-portal", "customer", "{{phoneNumber}}", "profile"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Loyalty Program (Customer)",
+      "item": [
+        {
+          "name": "Get Loyalty Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/loyalty/progress/{{phoneNumber}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["loyalty", "progress", "{{phoneNumber}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Loyalty Program (Admin)",
+      "item": [
+        {
+          "name": "Get Customer Snapshot",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/loyalty/customer/phone/{{phoneNumber}}/snapshot",
+              "host": ["{{baseUrl}}"],
+              "path": ["loyalty", "customer", "phone", "{{phoneNumber}}", "snapshot"]
+            }
+          }
+        },
+        {
+          "name": "Get All Rewards",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/loyalty/rewards/all?page=1&size=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["loyalty", "rewards", "all"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Reward",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rewardName\": \"Free 1GB Data\",\n  \"rewardCode\": \"DATA1GB\",\n  \"pointsRequired\": 500,\n  \"rewardTier\": \"GOLD\",\n  \"category\": \"DATA\",\n  \"deliveryMethod\": \"DIGITAL\",\n  \"description\": \"Get 1GB of free data\",\n  \"imageUrl\": \"https://example.com/image.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/loyalty/rewards",
+              "host": ["{{baseUrl}}"],
+              "path": ["loyalty", "rewards"]
+            }
+          }
+        },
+        {
+          "name": "Get Inventory",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/loyalty/inventory?page=1&size=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["loyalty", "inventory"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Redemptions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/loyalty/redemptions?page=1&size=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["loyalty", "redemptions"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Tier Configs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/loyalty/tiers?page=1&size=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["loyalty", "tiers"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
+
+
+
+
+
+

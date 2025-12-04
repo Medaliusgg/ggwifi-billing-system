@@ -18,6 +18,27 @@ public class MikroTikApiService {
     private final Map<String, ApiConnection> connections = new ConcurrentHashMap<>();
     
     /**
+     * Test connection to MikroTik router
+     */
+    public boolean testConnection(String routerId, String ipAddress) {
+        try {
+            String connectionKey = routerId + "_" + ipAddress;
+            ApiConnection connection = connections.get(connectionKey);
+            
+            if (connection != null && connection.isConnected()) {
+                return true;
+            }
+            
+            // Try to connect
+            ApiConnection testConnection = ApiConnection.connect(ipAddress);
+            testConnection.close();
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    /**
      * Connect to MikroTik router
      */
     public boolean connectToRouter(String routerId, String ipAddress, String username, String password, int port) {

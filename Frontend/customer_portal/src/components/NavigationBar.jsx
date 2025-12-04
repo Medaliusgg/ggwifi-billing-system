@@ -24,7 +24,13 @@ import {
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 
-const NavigationBar = ({ currentView, onNavigateToHome, onNavigateToPackages, onNavigateToVoucher }) => {
+const NavigationBar = ({
+  currentView,
+  onNavigateToHome,
+  onNavigateToPackages,
+  onNavigateToVoucher,
+  onNavigateToCustomer,
+}) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [mobileMenuAnchor, setMobileMenuAnchor] = React.useState(null);
@@ -172,6 +178,23 @@ const NavigationBar = ({ currentView, onNavigateToHome, onNavigateToPackages, on
             >
               Voucher Login
             </Button>
+            <Button
+              startIcon={<WifiIcon />}
+              onClick={onNavigateToCustomer}
+              sx={{
+                color: currentView === 'customer' ? '#FFC72C' : '#FFFFFF',
+                fontWeight: currentView === 'customer' ? 700 : 500,
+                borderBottom: currentView === 'customer' ? '2px solid #FFC72C' : 'none',
+                borderRadius: 0,
+                '&:hover': {
+                  color: '#FFC72C',
+                  backgroundColor: 'rgba(255, 199, 44, 0.1)',
+                },
+                transition: 'all 0.3s ease',
+              }}
+            >
+              Customer Portal
+            </Button>
           </Box>
         )}
 
@@ -247,6 +270,20 @@ const NavigationBar = ({ currentView, onNavigateToHome, onNavigateToPackages, on
           >
             <WifiIcon sx={{ mr: 1 }} />
             Voucher Login
+          </MenuItem>
+          <MenuItem
+            onClick={() => handleMobileNav(onNavigateToCustomer)}
+            sx={{
+              color: currentView === 'customer' ? '#FFC72C' : '#FFFFFF',
+              fontWeight: currentView === 'customer' ? 700 : 500,
+              '&:hover': {
+                backgroundColor: 'rgba(255, 199, 44, 0.1)',
+                color: '#FFC72C',
+              },
+            }}
+          >
+            <WifiIcon sx={{ mr: 1 }} />
+            Customer Portal
           </MenuItem>
         </Menu>
 

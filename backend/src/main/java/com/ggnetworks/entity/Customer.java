@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -31,6 +32,9 @@ public class Customer {
 
     @Column(name = "secondary_phone_number")
     private String secondaryPhoneNumber;
+
+    @Column(name = "date_of_birth")
+    private LocalDate dateOfBirth;
 
     @Column(name = "status", nullable = false)
     @Enumerated(EnumType.STRING)
@@ -68,6 +72,19 @@ public class Customer {
     @Enumerated(EnumType.STRING)
     private LoyaltyStatus loyaltyStatus;
 
+    @Column(name = "loyalty_tier")
+    @Enumerated(EnumType.STRING)
+    private LoyaltyTier loyaltyTier = LoyaltyTier.BRONZE;
+
+    @Column(name = "total_points_earned")
+    private Integer totalPointsEarned = 0; // Lifetime points earned
+
+    @Column(name = "total_points_redeemed")
+    private Integer totalPointsRedeemed = 0; // Lifetime points redeemed
+
+    @Column(name = "last_points_earned_at")
+    private LocalDateTime lastPointsEarnedAt;
+
     @CreationTimestamp
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -82,6 +99,45 @@ public class Customer {
     @Column(name = "last_activity_at")
     private LocalDateTime lastActivityAt;
 
+    // Relationships
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private java.util.List<com.ggnetworks.entity.Payment> payments = new java.util.ArrayList<>();
+
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private java.util.List<com.ggnetworks.entity.Invoice> invoices = new java.util.ArrayList<>();
+
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private java.util.List<com.ggnetworks.entity.Transaction> transactions = new java.util.ArrayList<>();
+
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private java.util.List<com.ggnetworks.entity.HotspotUser> hotspotUsers = new java.util.ArrayList<>();
+
+    // Enterprise enhancements
+    @Column(name = "device_mac_history", columnDefinition = "TEXT")
+    private String deviceMacHistory; // JSON array of all MAC addresses used
+
+    @Column(name = "blacklist_reason")
+    private String blacklistReason;
+
+    @Column(name = "total_sessions")
+    private Integer totalSessions = 0;
+
+    @Column(name = "last_device_mac", length = 17)
+    private String lastDeviceMac;
+
+    @Column(name = "installation_status")
+    @Enumerated(EnumType.STRING)
+    private InstallationStatus installationStatus; // For PPPoE customers
+
+    @Column(name = "technician_assigned")
+    private String technicianAssigned; // For PPPoE installation
+
+    @Column(name = "address")
+    private String address; // For PPPoE customers
+
+    @Column(name = "contract_duration_months")
+    private Integer contractDurationMonths; // For PPPoE customers
+
     // Enums
     public enum CustomerStatus {
         ACTIVE, INACTIVE, SUSPENDED, PENDING_VERIFICATION, 
@@ -95,6 +151,19 @@ public class Customer {
     public enum LoyaltyStatus {
         NEW_CUSTOMER, REGULAR_CUSTOMER, LOYAL_CUSTOMER, VIP_CUSTOMER, 
         AT_RISK_CUSTOMER, UNLOYAL_CUSTOMER, CHURNED_CUSTOMER
+    }
+
+    public enum LoyaltyTier {
+        BRONZE,    // 0-50 points
+        SILVER,    // 51-150 points
+        GOLD,      // 151-400 points
+        PLATINUM   // 400+ points
+    }
+
+    public enum InstallationStatus {
+        REQUEST_RECEIVED, SURVEY_SCHEDULED, SURVEY_COMPLETED, 
+        INSTALLATION_SCHEDULED, INSTALLATION_IN_PROGRESS, 
+        INSTALLATION_COMPLETED, ACTIVATED, CANCELLED
     }
 
     // Constructors
@@ -134,6 +203,9 @@ public class Customer {
 
     public String getSecondaryPhoneNumber() { return secondaryPhoneNumber; }
     public void setSecondaryPhoneNumber(String secondaryPhoneNumber) { this.secondaryPhoneNumber = secondaryPhoneNumber; }
+
+    public LocalDate getDateOfBirth() { return dateOfBirth; }
+    public void setDateOfBirth(LocalDate dateOfBirth) { this.dateOfBirth = dateOfBirth; }
 
     public CustomerStatus getStatus() { return status; }
     public void setStatus(CustomerStatus status) { this.status = status; }
@@ -194,5 +266,102 @@ public class Customer {
 
     public boolean isNewCustomer() {
         return loyaltyStatus == LoyaltyStatus.NEW_CUSTOMER;
+    }
+
+    // Enterprise helper methods
+    public void addDeviceMac(String macAddress) {
+        if (macAddress == null || macAddress.isEmpty()) return;
+        try {
+            java.util.List<String> macs = new java.util.ArrayList<>();
+            if (deviceMacHistory != null && !deviceMacHistory.equals("[]")) {
+                String[] existing = deviceMacHistory.replace("[", "").replace("]", "").replace("\"", "").split(",");
+                macs = new java.util.ArrayList<>(java.util.Arrays.asList(existing));
+            }
+            if (!macs.contains(macAddress)) {
+                macs.add(macAddress);
+            }
+            this.deviceMacHistory = java.util.Arrays.toString(macs.toArray());
+            this.lastDeviceMac = macAddress;
+        } catch (Exception e) {
+            this.deviceMacHistory = "[\"" + macAddress + "\"]";
+            this.lastDeviceMac = macAddress;
+        }
+    }
+
+    public java.util.List<String> getDeviceMacList() {
+        if (deviceMacHistory == null || deviceMacHistory.equals("[]")) {
+            return new java.util.ArrayList<>();
+        }
+        try {
+            String[] macs = deviceMacHistory.replace("[", "").replace("]", "").replace("\"", "").split(",");
+            return new java.util.ArrayList<>(java.util.Arrays.asList(macs));
+        } catch (Exception e) {
+            return new java.util.ArrayList<>();
+        }
+    }
+
+    // Getters and Setters for new fields
+    public String getDeviceMacHistory() { return deviceMacHistory; }
+    public void setDeviceMacHistory(String deviceMacHistory) { this.deviceMacHistory = deviceMacHistory; }
+
+    public String getBlacklistReason() { return blacklistReason; }
+    public void setBlacklistReason(String blacklistReason) { this.blacklistReason = blacklistReason; }
+
+    public Integer getTotalSessions() { return totalSessions; }
+    public void setTotalSessions(Integer totalSessions) { this.totalSessions = totalSessions; }
+
+    public String getLastDeviceMac() { return lastDeviceMac; }
+    public void setLastDeviceMac(String lastDeviceMac) { this.lastDeviceMac = lastDeviceMac; }
+
+    public InstallationStatus getInstallationStatus() { return installationStatus; }
+    public void setInstallationStatus(InstallationStatus installationStatus) { this.installationStatus = installationStatus; }
+
+    public String getTechnicianAssigned() { return technicianAssigned; }
+    public void setTechnicianAssigned(String technicianAssigned) { this.technicianAssigned = technicianAssigned; }
+
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
+
+    public Integer getContractDurationMonths() { return contractDurationMonths; }
+    public void setContractDurationMonths(Integer contractDurationMonths) { this.contractDurationMonths = contractDurationMonths; }
+
+    public LoyaltyTier getLoyaltyTier() { return loyaltyTier; }
+    public void setLoyaltyTier(LoyaltyTier loyaltyTier) { this.loyaltyTier = loyaltyTier; }
+
+    // Relationship getters and setters
+    public java.util.List<com.ggnetworks.entity.Payment> getPayments() { return payments; }
+    public void setPayments(java.util.List<com.ggnetworks.entity.Payment> payments) { this.payments = payments; }
+
+    public java.util.List<com.ggnetworks.entity.Invoice> getInvoices() { return invoices; }
+    public void setInvoices(java.util.List<com.ggnetworks.entity.Invoice> invoices) { this.invoices = invoices; }
+
+    public java.util.List<com.ggnetworks.entity.Transaction> getTransactions() { return transactions; }
+    public void setTransactions(java.util.List<com.ggnetworks.entity.Transaction> transactions) { this.transactions = transactions; }
+
+    public java.util.List<com.ggnetworks.entity.HotspotUser> getHotspotUsers() { return hotspotUsers; }
+    public void setHotspotUsers(java.util.List<com.ggnetworks.entity.HotspotUser> hotspotUsers) { this.hotspotUsers = hotspotUsers; }
+
+    public Integer getTotalPointsEarned() { return totalPointsEarned; }
+    public void setTotalPointsEarned(Integer totalPointsEarned) { this.totalPointsEarned = totalPointsEarned; }
+
+    public Integer getTotalPointsRedeemed() { return totalPointsRedeemed; }
+    public void setTotalPointsRedeemed(Integer totalPointsRedeemed) { this.totalPointsRedeemed = totalPointsRedeemed; }
+
+    public LocalDateTime getLastPointsEarnedAt() { return lastPointsEarnedAt; }
+    public void setLastPointsEarnedAt(LocalDateTime lastPointsEarnedAt) { this.lastPointsEarnedAt = lastPointsEarnedAt; }
+
+    /**
+     * Update loyalty tier based on current points
+     */
+    public void updateLoyaltyTier() {
+        if (loyaltyPoints >= 400) {
+            this.loyaltyTier = LoyaltyTier.PLATINUM;
+        } else if (loyaltyPoints >= 151) {
+            this.loyaltyTier = LoyaltyTier.GOLD;
+        } else if (loyaltyPoints >= 51) {
+            this.loyaltyTier = LoyaltyTier.SILVER;
+        } else {
+            this.loyaltyTier = LoyaltyTier.BRONZE;
+        }
     }
 }

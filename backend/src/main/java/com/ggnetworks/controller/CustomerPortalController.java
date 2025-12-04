@@ -6,12 +6,16 @@ import com.ggnetworks.service.VoucherService;
 import com.ggnetworks.service.ZenoPayService;
 import com.ggnetworks.service.PaymentService;
 import com.ggnetworks.entity.InternetPackage;
-import com.ggnetworks.repository.InternetPackageRepository;
-import java.math.BigDecimal;
+import com.ggnetworks.dto.VoucherDTO;
+import com.ggnetworks.util.VoucherMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,9 +34,6 @@ public class CustomerPortalController {
     private SmsService smsService;
     
     @Autowired
-    private InternetPackageRepository packageRepository;
-    
-    @Autowired
     private PackageService packageService;
     
     @Autowired
@@ -46,6 +47,9 @@ public class CustomerPortalController {
     
     @Autowired
     private com.ggnetworks.service.EnhancedRadiusService enhancedRadiusService;
+    
+    @Autowired
+    private com.ggnetworks.service.EnhancedLoyaltyService enhancedLoyaltyService;
     
     @Autowired
     private com.ggnetworks.repository.InternetPackageRepository internetPackageRepository;
@@ -64,6 +68,191 @@ public class CustomerPortalController {
     
     @Autowired
     private com.ggnetworks.repository.InvoiceRepository invoiceRepository;
+    
+    @Autowired
+    private com.ggnetworks.service.SessionManagementService sessionManagementService;
+    
+    @Autowired
+    private com.ggnetworks.service.DeviceFingerprintService deviceFingerprintService;
+    
+    @Autowired
+    private com.ggnetworks.service.RedisSessionService redisSessionService;
+
+    /**
+     * Resolve the currently authenticated customer's phone number from the security context.
+     * For customer portal JWTs we treat the token subject/username as the phone number.
+     */
+    private String getAuthenticatedPhoneNumber() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new IllegalStateException("Unauthenticated: customer login required");
+        }
+        Object principal = authentication.getPrincipal();
+        if (principal == null || "anonymousUser".equals(principal)) {
+            throw new IllegalStateException("Unauthenticated: customer login required");
+        }
+        return authentication.getName();
+    }
+
+    // =========================
+    // Helper methods (no duplication)
+    // =========================
+
+    private ResponseEntity<Map<String, Object>> buildCustomerProfileResponse(String phoneNumber) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            List<com.ggnetworks.entity.Voucher> vouchers = voucherService.getVouchersByCustomerPhone(phoneNumber);
+
+            List<VoucherDTO> voucherList = vouchers.stream()
+                .map(VoucherMapper::toDTO)
+                .filter(dto -> dto != null)
+                .collect(Collectors.toList());
+
+            Map<String, Object> profile = new HashMap<>();
+            profile.put("phoneNumber", phoneNumber);
+            profile.put("totalVouchers", vouchers.size());
+            profile.put("usedVouchers", vouchers.stream().filter(com.ggnetworks.entity.Voucher::isUsed).count());
+            profile.put("activeVouchers", vouchers.stream()
+                .filter(v -> !v.isUsed() && v.getStatus() == com.ggnetworks.entity.Voucher.VoucherStatus.ACTIVE)
+                .count());
+            profile.put("vouchers", voucherList);
+
+            response.put("status", "success");
+            response.put("message", "Customer profile retrieved successfully");
+            response.put("data", profile);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to retrieve customer profile: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    private ResponseEntity<Map<String, Object>> buildUsageHistoryResponse(String phoneNumber) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            List<com.ggnetworks.entity.Voucher> vouchers = voucherService.getVouchersByCustomerPhone(phoneNumber);
+
+            List<Map<String, Object>> usageHistory = vouchers.stream()
+                .filter(v -> v.isUsed() && v.getUsedAt() != null)
+                .map(v -> {
+                    Map<String, Object> usage = new HashMap<>();
+                    usage.put("voucherCode", v.getVoucherCode());
+                    usage.put("packageName", v.getPackageName());
+                    usage.put("packageId", v.getPackageId());
+                    usage.put("amount", v.getAmount());
+                    usage.put("usedAt", v.getUsedAt());
+                    usage.put("expiresAt", v.getExpiresAt());
+                    return usage;
+                })
+                .collect(java.util.stream.Collectors.toList());
+
+            response.put("status", "success");
+            response.put("message", "Usage history retrieved successfully");
+            response.put("data", usageHistory);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to retrieve usage history: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    private ResponseEntity<Map<String, Object>> buildPaymentHistoryResponse(String phoneNumber) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            List<com.ggnetworks.entity.Payment> payments = paymentService.getPaymentsByPhoneNumber(phoneNumber);
+
+            List<Map<String, Object>> paymentHistory = payments.stream()
+                .map(p -> {
+                    Map<String, Object> payment = new HashMap<>();
+                    payment.put("paymentId", p.getPaymentId());
+                    payment.put("amount", p.getAmount());
+                    payment.put("currency", p.getCurrency());
+                    payment.put("status", p.getStatus());
+                    payment.put("paymentMethod", p.getPaymentMethod());
+                    payment.put("paymentGateway", p.getPaymentGateway());
+                    payment.put("createdAt", p.getCreatedAt());
+                    payment.put("processedAt", p.getProcessedAt());
+                    payment.put("confirmedAt", p.getConfirmedAt());
+                    return payment;
+                })
+                .collect(java.util.stream.Collectors.toList());
+
+            response.put("status", "success");
+            response.put("message", "Payment history retrieved successfully");
+            response.put("data", paymentHistory);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to retrieve payment history: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    private ResponseEntity<Map<String, Object>> buildDashboardResponse(String phoneNumber) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            com.ggnetworks.entity.Customer customer = customerRepository.findByPhoneNumber(phoneNumber)
+                .orElseThrow(() -> new RuntimeException("Customer not found"));
+
+            List<com.ggnetworks.entity.Voucher> vouchers = voucherService.getVouchersByCustomerPhone(phoneNumber);
+            List<com.ggnetworks.entity.Payment> payments = paymentService.getPaymentsByPhoneNumber(phoneNumber);
+
+            Map<String, Object> dashboard = new HashMap<>();
+            Map<String, Object> customerInfo = new HashMap<>();
+            customerInfo.put("id", customer.getId());
+            customerInfo.put("name", customer.getFirstName() + " " +
+                (customer.getLastName() != null ? customer.getLastName() : ""));
+            customerInfo.put("phone", customer.getPrimaryPhoneNumber());
+            customerInfo.put("email", customer.getEmail() != null ? customer.getEmail() : "");
+            customerInfo.put("status", customer.getStatus());
+            dashboard.put("customer", customerInfo);
+
+            dashboard.put("totalVouchers", vouchers.size());
+            dashboard.put("activeVouchers", vouchers.stream()
+                .filter(v -> v.getStatus() == com.ggnetworks.entity.Voucher.VoucherStatus.ACTIVE && !v.isUsed())
+                .count());
+            dashboard.put("usedVouchers", vouchers.stream()
+                .filter(com.ggnetworks.entity.Voucher::isUsed)
+                .count());
+            dashboard.put("totalPayments", payments.size());
+            dashboard.put("successfulPayments", payments.stream()
+                .filter(p -> p.getStatus() == com.ggnetworks.entity.Payment.PaymentStatus.COMPLETED)
+                .count());
+            dashboard.put("totalSpent", payments.stream()
+                .filter(p -> p.getStatus() == com.ggnetworks.entity.Payment.PaymentStatus.COMPLETED)
+                .map(com.ggnetworks.entity.Payment::getAmount)
+                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add));
+
+            dashboard.put("recentVouchers", vouchers.stream()
+                .sorted((a, b) -> {
+                    if (a.getCreatedAt() == null) return 1;
+                    if (b.getCreatedAt() == null) return -1;
+                    return b.getCreatedAt().compareTo(a.getCreatedAt());
+                })
+                .limit(5)
+                .map(v -> {
+                    Map<String, Object> vInfo = new HashMap<>();
+                    vInfo.put("code", v.getVoucherCode());
+                    vInfo.put("status", v.getStatus());
+                    vInfo.put("isUsed", v.isUsed());
+                    vInfo.put("createdAt", v.getCreatedAt());
+                    return vInfo;
+                })
+                .collect(java.util.stream.Collectors.toList()));
+
+            response.put("status", "success");
+            response.put("message", "Dashboard retrieved successfully");
+            response.put("data", dashboard);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to retrieve dashboard: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
 
     /**
      * Process customer payment with ZenoPay Mobile Money Tanzania
@@ -112,8 +301,8 @@ public class CustomerPortalController {
                 return ResponseEntity.badRequest().body(response);
             }
             
-            // Generate order ID
-            String orderId = "PKG_" + System.currentTimeMillis() + "_" + phoneNumber.substring(phoneNumber.length() - 4);
+            // Generate order ID with package_id included: PKG_timestamp_phone_packageId
+            String orderId = "PKG_" + System.currentTimeMillis() + "_" + phoneNumber.substring(phoneNumber.length() - 4) + "_" + packageId;
             
             // Create payment request for ZenoPay
             Map<String, Object> zenoPayRequest = new HashMap<>();
@@ -191,15 +380,28 @@ public class CustomerPortalController {
             if ("SUCCESS".equals(paymentStatus) || "COMPLETED".equals(paymentStatus)) {
                 System.out.println("🎉 Payment successful! Processing voucher creation...");
                 
-                // Extract package ID from order ID (format: PKG_timestamp_phone)
-                // Or get from webhook data if available
-                String packageIdStr = (String) webhookData.get("package_id");
-                if (packageIdStr == null || packageIdStr.isEmpty()) {
-                    // Try to extract from order ID or use default
-                    packageIdStr = "1"; // Default package, should be passed in webhook
-                    System.out.println("⚠️ Package ID not found in webhook, using default: " + packageIdStr);
+            // Extract package ID from order ID (format: PKG_timestamp_phone) or webhook data
+            // ZenoPay webhook may include package_id, or we extract from order_id
+            String packageIdStr = (String) webhookData.get("package_id");
+            if (packageIdStr == null || packageIdStr.isEmpty()) {
+                // Try to extract from order ID format: PKG_timestamp_phone
+                // Store package_id in order_id format: PKG_timestamp_phone_packageId
+                if (orderId.contains("_")) {
+                    String[] parts = orderId.split("_");
+                    if (parts.length >= 4) {
+                        packageIdStr = parts[3]; // Last part is package_id
+                    }
                 }
-                Long packageId = Long.parseLong(packageIdStr);
+                if (packageIdStr == null || packageIdStr.isEmpty()) {
+                    packageIdStr = "1"; // Default package
+                    System.out.println("⚠️ Package ID not found in webhook or order_id, using default: " + packageIdStr);
+                } else {
+                    System.out.println("✅ Package ID extracted from order_id: " + packageIdStr);
+                }
+            } else {
+                System.out.println("✅ Package ID found in webhook: " + packageIdStr);
+            }
+            Long packageId = Long.parseLong(packageIdStr);
                 
                 // Get or create customer
                 com.ggnetworks.entity.Customer customer = customerRepository.findByPhoneNumber(phoneNumber)
@@ -309,6 +511,20 @@ public class CustomerPortalController {
                 
                 if (!radiusUserCreated) {
                     System.out.println("⚠️ Warning: RADIUS user creation failed, but voucher is created");
+                }
+                
+                // Award loyalty points after successful payment
+                System.out.println("🎁 Awarding loyalty points...");
+                try {
+                    Map<String, Object> loyaltyResult = enhancedLoyaltyService.awardPointsAfterPayment(
+                        payment.getId(), phoneNumber, packageId, voucherCode);
+                    System.out.println("✅ Loyalty points awarded: " + loyaltyResult);
+                    response.put("loyalty_points_awarded", loyaltyResult.get("pointsAwarded"));
+                    response.put("loyalty_balance", loyaltyResult.get("newBalance"));
+                    response.put("loyalty_tier", loyaltyResult.get("loyaltyTier"));
+                } catch (Exception e) {
+                    System.out.println("⚠️ Loyalty points awarding failed (non-critical): " + e.getMessage());
+                    // Continue - payment and voucher are already created
                 }
                 
                 // Send success SMS with voucher
@@ -424,12 +640,29 @@ public class CustomerPortalController {
         try {
             System.out.println("🔍 CRITICAL WEBHOOK VALIDATION STARTED");
             
-            // 1. REQUIRED FIELDS VALIDATION
+            // 1. REQUIRED FIELDS VALIDATION - Support multiple field name variations (ZenoPay format)
             String orderId = (String) webhookData.get("order_id");
+            if (orderId == null) orderId = (String) webhookData.get("orderId");
+            if (orderId == null) orderId = (String) webhookData.get("reference");
+            
             String paymentStatus = (String) webhookData.get("payment_status");
-            String amount = (String) webhookData.get("amount");
+            if (paymentStatus == null) paymentStatus = (String) webhookData.get("status");
+            if (paymentStatus == null) paymentStatus = (String) webhookData.get("result");
+            
+            Object amountObj = webhookData.get("amount");
+            String amount = null;
+            if (amountObj != null) {
+                amount = amountObj instanceof String ? (String) amountObj : String.valueOf(amountObj);
+            }
+            
             String msisdn = (String) webhookData.get("msisdn");
+            if (msisdn == null) msisdn = (String) webhookData.get("phone");
+            if (msisdn == null) msisdn = (String) webhookData.get("buyer_phone");
+            if (msisdn == null) msisdn = (String) webhookData.get("phone_number");
+            
             String transid = (String) webhookData.get("transid");
+            if (transid == null) transid = (String) webhookData.get("transaction_id");
+            if (transid == null) transid = (String) webhookData.get("transactionId");
             
             System.out.println("🔍 Validation - Order ID: '" + orderId + "'");
             System.out.println("🔍 Validation - Payment Status: '" + paymentStatus + "'");
@@ -630,29 +863,22 @@ public class CustomerPortalController {
      */
     @GetMapping("/customer/{phoneNumber}/profile")
     public ResponseEntity<Map<String, Object>> getCustomerProfile(@PathVariable String phoneNumber) {
-        Map<String, Object> response = new HashMap<>();
+        return buildCustomerProfileResponse(phoneNumber);
+    }
+
+    /**
+     * Get current logged-in customer's profile (phone resolved from JWT)
+     */
+    @GetMapping("/customer/me/profile")
+    public ResponseEntity<Map<String, Object>> getMyProfile() {
         try {
-            // Get customer vouchers
-            List<com.ggnetworks.entity.Voucher> vouchers = voucherService.getVouchersByCustomerPhone(phoneNumber);
-            
-            // Get customer payments (if PaymentRepository has findByPhoneNumber)
-            // This would require adding the method to PaymentRepository
-            
-            Map<String, Object> profile = new HashMap<>();
-            profile.put("phoneNumber", phoneNumber);
-            profile.put("totalVouchers", vouchers.size());
-            profile.put("usedVouchers", vouchers.stream().filter(v -> v.isUsed()).count());
-            profile.put("activeVouchers", vouchers.stream().filter(v -> !v.isUsed() && v.getStatus() == com.ggnetworks.entity.Voucher.VoucherStatus.ACTIVE).count());
-            profile.put("vouchers", vouchers);
-            
-            response.put("status", "success");
-            response.put("message", "Customer profile retrieved successfully");
-            response.put("data", profile);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
+            String phoneNumber = getAuthenticatedPhoneNumber();
+            return buildCustomerProfileResponse(phoneNumber);
+        } catch (IllegalStateException ex) {
+            Map<String, Object> response = new HashMap<>();
             response.put("status", "error");
-            response.put("message", "Failed to retrieve customer profile: " + e.getMessage());
-            return ResponseEntity.status(500).body(response);
+            response.put("message", ex.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
     }
 
@@ -661,33 +887,22 @@ public class CustomerPortalController {
      */
     @GetMapping("/customer/{phoneNumber}/usage")
     public ResponseEntity<Map<String, Object>> getCustomerUsageHistory(@PathVariable String phoneNumber) {
-        Map<String, Object> response = new HashMap<>();
+        return buildUsageHistoryResponse(phoneNumber);
+    }
+
+    /**
+     * Get current logged-in customer's usage history
+     */
+    @GetMapping("/customer/me/usage")
+    public ResponseEntity<Map<String, Object>> getMyUsageHistory() {
         try {
-            List<com.ggnetworks.entity.Voucher> vouchers = voucherService.getVouchersByCustomerPhone(phoneNumber);
-            
-            // Filter used vouchers for usage history
-            List<Map<String, Object>> usageHistory = vouchers.stream()
-                .filter(v -> v.isUsed() && v.getUsedAt() != null)
-                .map(v -> {
-                    Map<String, Object> usage = new HashMap<>();
-                    usage.put("voucherCode", v.getVoucherCode());
-                    usage.put("packageName", v.getPackageName());
-                    usage.put("packageId", v.getPackageId());
-                    usage.put("amount", v.getAmount());
-                    usage.put("usedAt", v.getUsedAt());
-                    usage.put("expiresAt", v.getExpiresAt());
-                    return usage;
-                })
-                .collect(java.util.stream.Collectors.toList());
-            
-            response.put("status", "success");
-            response.put("message", "Usage history retrieved successfully");
-            response.put("data", usageHistory);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
+            String phoneNumber = getAuthenticatedPhoneNumber();
+            return buildUsageHistoryResponse(phoneNumber);
+        } catch (IllegalStateException ex) {
+            Map<String, Object> response = new HashMap<>();
             response.put("status", "error");
-            response.put("message", "Failed to retrieve usage history: " + e.getMessage());
-            return ResponseEntity.status(500).body(response);
+            response.put("message", ex.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
     }
 
@@ -696,34 +911,22 @@ public class CustomerPortalController {
      */
     @GetMapping("/customer/{phoneNumber}/payments")
     public ResponseEntity<Map<String, Object>> getCustomerPaymentHistory(@PathVariable String phoneNumber) {
-        Map<String, Object> response = new HashMap<>();
+        return buildPaymentHistoryResponse(phoneNumber);
+    }
+
+    /**
+     * Get current logged-in customer's payment history
+     */
+    @GetMapping("/customer/me/payments")
+    public ResponseEntity<Map<String, Object>> getMyPaymentHistory() {
         try {
-            List<com.ggnetworks.entity.Payment> payments = paymentService.getPaymentsByPhoneNumber(phoneNumber);
-            
-            List<Map<String, Object>> paymentHistory = payments.stream()
-                .map(p -> {
-                    Map<String, Object> payment = new HashMap<>();
-                    payment.put("paymentId", p.getPaymentId());
-                    payment.put("amount", p.getAmount());
-                    payment.put("currency", p.getCurrency());
-                    payment.put("status", p.getStatus());
-                    payment.put("paymentMethod", p.getPaymentMethod());
-                    payment.put("paymentGateway", p.getPaymentGateway());
-                    payment.put("createdAt", p.getCreatedAt());
-                    payment.put("processedAt", p.getProcessedAt());
-                    payment.put("confirmedAt", p.getConfirmedAt());
-                    return payment;
-                })
-                .collect(java.util.stream.Collectors.toList());
-            
-            response.put("status", "success");
-            response.put("message", "Payment history retrieved successfully");
-            response.put("data", paymentHistory);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
+            String phoneNumber = getAuthenticatedPhoneNumber();
+            return buildPaymentHistoryResponse(phoneNumber);
+        } catch (IllegalStateException ex) {
+            Map<String, Object> response = new HashMap<>();
             response.put("status", "error");
-            response.put("message", "Failed to retrieve payment history: " + e.getMessage());
-            return ResponseEntity.status(500).body(response);
+            response.put("message", ex.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
     }
     
@@ -732,70 +935,22 @@ public class CustomerPortalController {
      */
     @GetMapping("/customer/{phoneNumber}/dashboard")
     public ResponseEntity<Map<String, Object>> getCustomerDashboard(@PathVariable String phoneNumber) {
-        Map<String, Object> response = new HashMap<>();
+        return buildDashboardResponse(phoneNumber);
+    }
+
+    /**
+     * Get current logged-in customer's dashboard
+     */
+    @GetMapping("/customer/me/dashboard")
+    public ResponseEntity<Map<String, Object>> getMyDashboard() {
         try {
-            // Get customer
-            com.ggnetworks.entity.Customer customer = customerRepository.findByPhoneNumber(phoneNumber)
-                .orElseThrow(() -> new RuntimeException("Customer not found"));
-            
-            // Get vouchers
-            List<com.ggnetworks.entity.Voucher> vouchers = voucherService.getVouchersByCustomerPhone(phoneNumber);
-            
-            // Get payments
-            List<com.ggnetworks.entity.Payment> payments = paymentService.getPaymentsByPhoneNumber(phoneNumber);
-            
-            // Prepare dashboard data
-            Map<String, Object> dashboard = new HashMap<>();
-             Map<String, Object> customerInfo = new HashMap<>();
-            customerInfo.put("id", customer.getId());
-            customerInfo.put("name", customer.getFirstName() + " " + (customer.getLastName() != null ? customer.getLastName() : ""));
-            customerInfo.put("phone", customer.getPrimaryPhoneNumber());
-            customerInfo.put("email", customer.getEmail() != null ? customer.getEmail() : "");
-            customerInfo.put("status", customer.getStatus());
-            dashboard.put("customer", customerInfo);
-            
-            dashboard.put("totalVouchers", vouchers.size());
-            dashboard.put("activeVouchers", vouchers.stream()
-                .filter(v -> v.getStatus() == com.ggnetworks.entity.Voucher.VoucherStatus.ACTIVE && !v.isUsed())
-                .count());
-            dashboard.put("usedVouchers", vouchers.stream()
-                .filter(v -> v.isUsed())
-                .count());
-            dashboard.put("totalPayments", payments.size());
-            dashboard.put("successfulPayments", payments.stream()
-                .filter(p -> p.getStatus() == com.ggnetworks.entity.Payment.PaymentStatus.COMPLETED)
-                .count());
-            dashboard.put("totalSpent", payments.stream()
-                .filter(p -> p.getStatus() == com.ggnetworks.entity.Payment.PaymentStatus.COMPLETED)
-                .map(p -> p.getAmount())
-                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add));
-            
-            // Add recent vouchers
-            dashboard.put("recentVouchers", vouchers.stream()
-                .sorted((a, b) -> {
-                    if (a.getCreatedAt() == null) return 1;
-                    if (b.getCreatedAt() == null) return -1;
-                    return b.getCreatedAt().compareTo(a.getCreatedAt());
-                })
-                .limit(5)
-                .map(v -> {
-                    Map<String, Object> vInfo = new HashMap<>();
-                    vInfo.put("code", v.getVoucherCode());
-                    vInfo.put("status", v.getStatus());
-                    vInfo.put("isUsed", v.isUsed());
-                    vInfo.put("createdAt", v.getCreatedAt());
-                    return vInfo;
-                })
-                .collect(java.util.stream.Collectors.toList()));
-            
-            response.put("status", "success");
-            response.put("message", "Dashboard retrieved successfully");
-            response.put("data", dashboard);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
+            String phoneNumber = getAuthenticatedPhoneNumber();
+            return buildDashboardResponse(phoneNumber);
+        } catch (IllegalStateException ex) {
+            Map<String, Object> response = new HashMap<>();
             response.put("status", "error");
-            response.put("message", "Failed to retrieve dashboard: " + e.getMessage());
-            return ResponseEntity.status(500).body(response);
+            response.put("message", ex.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
     }
     
@@ -862,6 +1017,320 @@ public class CustomerPortalController {
         } catch (Exception e) {
             response.put("status", "error");
             response.put("message", "Failed to validate voucher: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+    
+    /**
+     * Activate voucher and create session
+     */
+    @PostMapping("/voucher/{voucherCode}/activate")
+    public ResponseEntity<Map<String, Object>> activateVoucher(
+            @PathVariable String voucherCode,
+            @RequestBody Map<String, Object> activationData) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            String phoneNumber = (String) activationData.get("phoneNumber");
+            String macAddress = (String) activationData.get("macAddress");
+            String ipAddress = (String) activationData.get("ipAddress");
+            
+            if (phoneNumber == null || phoneNumber.trim().isEmpty()) {
+                response.put("status", "error");
+                response.put("message", "Phone number is required");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            // Validate voucher first
+            Optional<com.ggnetworks.entity.Voucher> voucherOpt = voucherRepository.findByVoucherCode(voucherCode);
+            if (voucherOpt.isEmpty() || !voucherOpt.get().isActive()) {
+                response.put("status", "error");
+                response.put("message", "Invalid or inactive voucher");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            // Handle device fingerprinting (for MAC randomization immunity)
+            String deviceFingerprintHash = (String) activationData.get("deviceFingerprintHash");
+            if (deviceFingerprintHash != null && !deviceFingerprintHash.isEmpty()) {
+                // Create or update device fingerprint
+                deviceFingerprintService.createOrUpdateFingerprint(
+                    deviceFingerprintHash, voucherCode, phoneNumber, macAddress, ipAddress);
+            }
+            
+            // Create session (with Redis storage for fast lookups)
+            com.ggnetworks.entity.VoucherSession session = sessionManagementService.createSession(
+                voucherCode, phoneNumber, macAddress, ipAddress);
+            
+            // Create RADIUS user
+            boolean radiusCreated = enhancedRadiusService.createRadiusUserForVoucherLogin(
+                phoneNumber, voucherCode);
+            
+            if (!radiusCreated) {
+                response.put("status", "error");
+                response.put("message", "Failed to create internet access");
+                return ResponseEntity.status(500).body(response);
+            }
+            
+            // Update voucher status
+            com.ggnetworks.entity.Voucher voucher = voucherOpt.get();
+            voucher.setStatus(com.ggnetworks.entity.Voucher.VoucherStatus.ACTIVE);
+            voucher.setActivatedAt(java.time.LocalDateTime.now());
+            voucher.setActivatedBy(phoneNumber);
+            voucherRepository.save(voucher);
+            
+            response.put("status", "success");
+            response.put("message", "Voucher activated successfully - seamless session created");
+            response.put("sessionId", session.getId());
+            response.put("sessionToken", session.getSessionToken());
+            response.put("expiresAt", session.getExpiresAt().toString());
+            response.put("remainingTimeSeconds", session.getRemainingTimeSeconds());
+            response.put("persistentSession", session.getPersistentSession());
+            response.put("noReauthenticationRequired", session.getNoReauthenticationRequired());
+            response.put("heartbeatIntervalSeconds", session.getHeartbeatIntervalSeconds());
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to activate voucher: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+    
+    /**
+     * Get session status
+     */
+    @GetMapping("/voucher/{voucherCode}/session/status")
+    public ResponseEntity<Map<String, Object>> getSessionStatus(@PathVariable String voucherCode) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            com.ggnetworks.service.SessionManagementService.SessionStatusResponse sessionStatus = 
+                sessionManagementService.getSessionStatus(voucherCode);
+            
+            if (sessionStatus == null) {
+                response.put("status", "error");
+                response.put("message", "No active session found");
+                return ResponseEntity.ok(response);
+            }
+            
+            response.put("status", "success");
+            response.put("active", sessionStatus.isActive());
+            response.put("connected", sessionStatus.isConnected());
+            response.put("expired", sessionStatus.isExpired());
+            response.put("remainingTimeSeconds", sessionStatus.getRemainingTimeSeconds());
+            response.put("elapsedTimeSeconds", sessionStatus.getElapsedTimeSeconds());
+            response.put("expiresAt", sessionStatus.getExpiresAt().toString());
+            response.put("sessionStatus", sessionStatus.getSessionStatus().toString());
+            response.put("macAddress", sessionStatus.getMacAddress());
+            response.put("ipAddress", sessionStatus.getIpAddress());
+            response.put("macChangesCount", sessionStatus.getMacChangesCount());
+            response.put("ipChangesCount", sessionStatus.getIpChangesCount());
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to get session status: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+    
+    /**
+     * Update session MAC address (handles MAC randomization)
+     */
+    @PostMapping("/voucher/{voucherCode}/session/update-mac")
+    public ResponseEntity<Map<String, Object>> updateMacAddress(
+            @PathVariable String voucherCode,
+            @RequestBody Map<String, Object> updateData) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            String newMacAddress = (String) updateData.get("macAddress");
+            
+            if (newMacAddress == null || newMacAddress.trim().isEmpty()) {
+                response.put("status", "error");
+                response.put("message", "MAC address is required");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            boolean updated = sessionManagementService.updateMacAddress(voucherCode, newMacAddress);
+            
+            if (updated) {
+                response.put("status", "success");
+                response.put("message", "MAC address updated successfully");
+            } else {
+                response.put("status", "error");
+                response.put("message", "Failed to update MAC address");
+            }
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to update MAC address: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+    
+    /**
+     * Update session IP address (handles IP changes)
+     */
+    @PostMapping("/voucher/{voucherCode}/session/update-ip")
+    public ResponseEntity<Map<String, Object>> updateIpAddress(
+            @PathVariable String voucherCode,
+            @RequestBody Map<String, Object> updateData) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            String newIpAddress = (String) updateData.get("ipAddress");
+            
+            if (newIpAddress == null || newIpAddress.trim().isEmpty()) {
+                response.put("status", "error");
+                response.put("message", "IP address is required");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            boolean updated = sessionManagementService.updateIpAddress(voucherCode, newIpAddress);
+            
+            if (updated) {
+                response.put("status", "success");
+                response.put("message", "IP address updated successfully");
+            } else {
+                response.put("status", "error");
+                response.put("message", "Failed to update IP address");
+            }
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to update IP address: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+    
+    /**
+     * Reconnect session after disconnection (seamless, no re-authentication)
+     */
+    @PostMapping("/voucher/{voucherCode}/session/reconnect")
+    public ResponseEntity<Map<String, Object>> reconnectSession(
+            @PathVariable String voucherCode,
+            @RequestBody Map<String, Object> reconnectData) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            String macAddress = (String) reconnectData.get("macAddress");
+            String ipAddress = (String) reconnectData.get("ipAddress");
+            
+            boolean reconnected = sessionManagementService.reconnectSession(
+                voucherCode, macAddress, ipAddress);
+            
+            if (reconnected) {
+                // Get session to return token
+                Optional<com.ggnetworks.entity.VoucherSession> sessionOpt = 
+                    sessionManagementService.getActiveSession(voucherCode);
+                
+                response.put("status", "success");
+                response.put("message", "Session reconnected successfully (no re-authentication required)");
+                if (sessionOpt.isPresent()) {
+                    response.put("sessionToken", sessionOpt.get().getSessionToken());
+                    response.put("persistentSession", sessionOpt.get().getPersistentSession());
+                }
+            } else {
+                response.put("status", "error");
+                response.put("message", "Failed to reconnect session");
+            }
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to reconnect session: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+    
+    /**
+     * Record session heartbeat (keeps session alive, prevents disconnection)
+     */
+    @PostMapping("/voucher/{voucherCode}/session/heartbeat")
+    public ResponseEntity<Map<String, Object>> recordHeartbeat(
+            @PathVariable String voucherCode,
+            @RequestBody Map<String, Object> heartbeatData) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            String macAddress = (String) heartbeatData.get("macAddress");
+            String ipAddress = (String) heartbeatData.get("ipAddress");
+            String deviceFingerprintHash = (String) heartbeatData.get("deviceFingerprintHash");
+            
+            // Update device fingerprint if provided (for MAC randomization immunity)
+            if (deviceFingerprintHash != null && !deviceFingerprintHash.isEmpty()) {
+                Optional<com.ggnetworks.entity.Voucher> voucherOpt = voucherRepository.findByVoucherCode(voucherCode);
+                if (voucherOpt.isPresent()) {
+                    String phoneNumber = voucherOpt.get().getCustomerPhoneNumber();
+                    // Update fingerprint last seen (creates if doesn't exist)
+                    deviceFingerprintService.createOrUpdateFingerprint(
+                        deviceFingerprintHash, voucherCode, phoneNumber, macAddress, ipAddress);
+                }
+            }
+            
+            boolean heartbeatRecorded = sessionManagementService.recordHeartbeat(
+                voucherCode, macAddress, ipAddress);
+            
+            if (heartbeatRecorded) {
+                response.put("status", "success");
+                response.put("message", "Heartbeat recorded - session remains active");
+            } else {
+                response.put("status", "error");
+                response.put("message", "Failed to record heartbeat");
+            }
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to record heartbeat: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+    
+    /**
+     * Reconnect using session token (seamless reconnection, no re-authentication)
+     */
+    @PostMapping("/session/reconnect-token")
+    public ResponseEntity<Map<String, Object>> reconnectWithToken(
+            @RequestBody Map<String, Object> reconnectData) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            String sessionToken = (String) reconnectData.get("sessionToken");
+            String macAddress = (String) reconnectData.get("macAddress");
+            String ipAddress = (String) reconnectData.get("ipAddress");
+            
+            if (sessionToken == null || sessionToken.trim().isEmpty()) {
+                response.put("status", "error");
+                response.put("message", "Session token is required");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            boolean reconnected = sessionManagementService.reconnectWithToken(
+                sessionToken, macAddress, ipAddress);
+            
+            if (reconnected) {
+                response.put("status", "success");
+                response.put("message", "Session reconnected seamlessly using token (no re-authentication)");
+            } else {
+                response.put("status", "error");
+                response.put("message", "Invalid or expired session token");
+            }
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to reconnect with token: " + e.getMessage());
             return ResponseEntity.status(500).body(response);
         }
     }

@@ -20,7 +20,7 @@ public class SmsService {
     @Value("${sms.api.username:medalius}")
     private String smsApiUsername;
 
-    @Value("${sms.api.password:Kolombo@123}")
+    @Value("${sms.api.password:Kolombo@123%}")
     private String smsApiPassword;
 
     @Value("${sms.api.sender-id:GGWi-Fi}")
@@ -62,7 +62,8 @@ public class SmsService {
 
             // Send SMS
             String sendEndpoint = smsApiBaseUrl + "/api/sms/v1/text/single";
-            ResponseEntity<Map> response = restTemplate.postForEntity(sendEndpoint, entity, Map.class);
+            @SuppressWarnings("unchecked")
+            ResponseEntity<Map<String, Object>> response = (ResponseEntity<Map<String, Object>>) (ResponseEntity<?>) restTemplate.postForEntity(sendEndpoint, entity, Map.class);
 
             if (response.getStatusCode() == HttpStatus.OK) {
                 Map<String, Object> responseBody = response.getBody();

@@ -28,8 +28,13 @@ public interface VoucherRepository extends JpaRepository<Voucher, Long> {
     // Find by customer email
     List<Voucher> findByCustomerEmail(String customerEmail);
 
-    // Find by package ID
-    List<Voucher> findByPackageId(Long packageId);
+    // Find by package ID (primary relation-aware)
+    List<Voucher> findByInternetPackage_Id(Long packageId);
+
+    // Backward-compatible helper
+    default List<Voucher> findByPackageId(Long packageId) {
+        return findByInternetPackage_Id(packageId);
+    }
 
     // Find by status
     List<Voucher> findByStatus(Voucher.VoucherStatus status);

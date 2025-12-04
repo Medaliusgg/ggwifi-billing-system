@@ -3,20 +3,26 @@ package com.ggnetworks.service;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.stereotype.Service;
-
-import javax.crypto.SecretKey;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import javax.crypto.SecretKey;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
 
 @Service
 public class JwtService {
+    
+    private static final Logger logger = LoggerFactory.getLogger(JwtService.class);
     
     @Value("${jwt.secret:ggnetworks-super-secret-key-for-jwt-token-generation-and-validation}")
     private String secretKey;
@@ -80,11 +86,17 @@ public class JwtService {
         claims.put("ip", ipAddress);
         claims.put("ua", userAgent);
         
-        // Add user authorities to the token
-        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-        claims.put("authorities", userDetails.getAuthorities().stream()
+        List<String> authorities = new ArrayList<>();
+        try {
+            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+            authorities = userDetails.getAuthorities().stream()
                 .map(auth -> auth.getAuthority())
-                .collect(java.util.stream.Collectors.toList()));
+                .collect(java.util.stream.Collectors.toList());
+        } catch (UsernameNotFoundException ex) {
+            logger.warn("User {} not found in UserDetailsService. Issuing customer token with ROLE_CUSTOMER.", username);
+            authorities = List.of("ROLE_CUSTOMER");
+        }
+        claims.put("authorities", authorities);
         
         return createToken(claims, username, jwtExpiration);
     }

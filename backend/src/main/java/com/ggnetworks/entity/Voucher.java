@@ -3,12 +3,14 @@ package com.ggnetworks.entity;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "vouchers")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Voucher {
 
     @Id
@@ -33,8 +35,9 @@ public class Voucher {
     @Column(name = "customer_location")
     private String customerLocation;
 
-    @Column(name = "package_id")
-    private Long packageId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "package_id")
+    private InternetPackage internetPackage;
 
     @Column(name = "package_name")
     private String packageName;
@@ -89,6 +92,19 @@ public class Voucher {
     @Column(name = "customer_phone_number")
     private String customerPhoneNumber;
 
+    // Enterprise enhancements
+    @Column(name = "device_mac_history", columnDefinition = "TEXT")
+    private String deviceMacHistory; // JSON array of all MACs that used this voucher
+
+    @Column(name = "issued_date")
+    private LocalDateTime issuedDate;
+
+    @Column(name = "revoked_at")
+    private LocalDateTime revokedAt;
+
+    @Column(name = "revoked_by")
+    private String revokedBy;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -113,7 +129,7 @@ public class Voucher {
     }
 
     public Voucher(String voucherCode, String orderId, String customerName, String customerPhone,
-                   String customerEmail, String customerLocation, Long packageId, String packageName,
+                   String customerEmail, String customerLocation, InternetPackage internetPackage, String packageName,
                    BigDecimal amount, String paymentReference, String transactionId, String paymentChannel) {
         this();
         this.voucherCode = voucherCode;
@@ -122,7 +138,7 @@ public class Voucher {
         this.customerPhone = customerPhone;
         this.customerEmail = customerEmail;
         this.customerLocation = customerLocation;
-        this.packageId = packageId;
+        this.internetPackage = internetPackage;
         this.packageName = packageName;
         this.amount = amount;
         this.paymentReference = paymentReference;
@@ -188,12 +204,28 @@ public class Voucher {
         this.customerLocation = customerLocation;
     }
 
+    public InternetPackage getInternetPackage() {
+        return internetPackage;
+    }
+
+    public void setInternetPackage(InternetPackage internetPackage) {
+        this.internetPackage = internetPackage;
+    }
+
+    // Helper method for backward compatibility
     public Long getPackageId() {
-        return packageId;
+        return internetPackage != null ? internetPackage.getId() : null;
     }
 
     public void setPackageId(Long packageId) {
-        this.packageId = packageId;
+        if (packageId == null) {
+            this.internetPackage = null;
+        } else {
+            if (this.internetPackage == null) {
+                this.internetPackage = new InternetPackage();
+            }
+            this.internetPackage.setId(packageId);
+        }
     }
 
     public String getPackageName() {
@@ -372,4 +404,46 @@ public class Voucher {
     public void setIsActive(boolean isActive) {
         this.status = isActive ? VoucherStatus.ACTIVE : VoucherStatus.CANCELLED;
     }
+
+    public void addDeviceMac(String macAddress) {
+        if (macAddress == null || macAddress.isEmpty()) return;
+        try {
+            java.util.List<String> macs = new java.util.ArrayList<>();
+            if (deviceMacHistory != null && !deviceMacHistory.equals("[]")) {
+                String[] existing = deviceMacHistory.replace("[", "").replace("]", "").replace("\"", "").split(",");
+                macs = new java.util.ArrayList<>(java.util.Arrays.asList(existing));
+            }
+            if (!macs.contains(macAddress)) {
+                macs.add(macAddress);
+            }
+            this.deviceMacHistory = java.util.Arrays.toString(macs.toArray());
+        } catch (Exception e) {
+            this.deviceMacHistory = "[\"" + macAddress + "\"]";
+        }
+    }
+
+    public java.util.List<String> getDeviceMacList() {
+        if (deviceMacHistory == null || deviceMacHistory.equals("[]")) {
+            return new java.util.ArrayList<>();
+        }
+        try {
+            String[] macs = deviceMacHistory.replace("[", "").replace("]", "").replace("\"", "").split(",");
+            return new java.util.ArrayList<>(java.util.Arrays.asList(macs));
+        } catch (Exception e) {
+            return new java.util.ArrayList<>();
+        }
+    }
+
+    // Getters and Setters
+    public String getDeviceMacHistory() { return deviceMacHistory; }
+    public void setDeviceMacHistory(String deviceMacHistory) { this.deviceMacHistory = deviceMacHistory; }
+
+    public LocalDateTime getIssuedDate() { return issuedDate; }
+    public void setIssuedDate(LocalDateTime issuedDate) { this.issuedDate = issuedDate; }
+
+    public LocalDateTime getRevokedAt() { return revokedAt; }
+    public void setRevokedAt(LocalDateTime revokedAt) { this.revokedAt = revokedAt; }
+
+    public String getRevokedBy() { return revokedBy; }
+    public void setRevokedBy(String revokedBy) { this.revokedBy = revokedBy; }
 }

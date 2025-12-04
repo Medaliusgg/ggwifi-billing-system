@@ -27,7 +27,7 @@
         "VITE_APP_DOMAIN": "connect.ggwifi.co.tz",
         "VITE_ENVIRONMENT": "production"
       },
-      "customDomain": "portal.ggwifi.co.tz",
+      "customDomain": "connect.ggwifi.co.tz",
       "nodeVersion": "18"
     },
     {

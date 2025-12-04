@@ -5,7 +5,6 @@ import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Map;
 
 @Entity
 @Table(name = "transactions")
@@ -18,8 +17,13 @@ public class Transaction {
     @Column(name = "transaction_id", unique = true, nullable = false)
     private String transactionId;
     
-    @Column(name = "customer_id")
-    private Long customerId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_id")
+    private Customer customer;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "payment_id")
+    private Payment payment;
     
     @Column(name = "amount", nullable = false, precision = 10, scale = 2)
     @DecimalMin(value = "0.01", message = "Amount must be greater than 0")
@@ -139,11 +143,11 @@ public class Transaction {
     // Constructors
     public Transaction() {}
     
-    public Transaction(String transactionId, Long customerId, BigDecimal amount, String currency, 
+    public Transaction(String transactionId, Customer customer, BigDecimal amount, String currency, 
                       TransactionType transactionType, PaymentMethod paymentMethod, String paymentGateway, 
                       String description, String createdBy) {
         this.transactionId = transactionId;
-        this.customerId = customerId;
+        this.customer = customer;
         this.amount = amount;
         this.currency = currency;
         this.transactionType = transactionType;
@@ -164,8 +168,40 @@ public class Transaction {
     public String getTransactionId() { return transactionId; }
     public void setTransactionId(String transactionId) { this.transactionId = transactionId; }
     
-    public Long getCustomerId() { return customerId; }
-    public void setCustomerId(Long customerId) { this.customerId = customerId; }
+    public Customer getCustomer() { return customer; }
+    public void setCustomer(Customer customer) { this.customer = customer; }
+
+    public Payment getPayment() { return payment; }
+    public void setPayment(Payment payment) { this.payment = payment; }
+
+    // Helper method for backward compatibility
+    public Long getCustomerId() { return customer != null ? customer.getId() : null; }
+    public Long getPaymentId() { return payment != null ? payment.getId() : null; }
+
+    public void setCustomerId(Long customerId) {
+        if (customerId == null) {
+            this.customer = null;
+        } else {
+            if (this.customer == null) {
+                this.customer = new Customer();
+            }
+            this.customer.setId(customerId);
+        }
+    }
+
+    public void setPaymentId(Long paymentId) {
+        if (paymentId == null) {
+            this.payment = null;
+        } else {
+            if (this.payment == null) {
+                Payment placeholder = new Payment();
+                placeholder.setId(paymentId);
+                this.payment = placeholder;
+            } else {
+                this.payment.setId(paymentId);
+            }
+        }
+    }
     
     public BigDecimal getAmount() { return amount; }
     public void setAmount(BigDecimal amount) { this.amount = amount; }

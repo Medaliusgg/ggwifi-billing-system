@@ -6,6 +6,7 @@ import com.ggnetworks.service.TransactionService;
 import com.ggnetworks.service.PermissionService;
 import com.ggnetworks.repository.CustomerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -30,15 +31,26 @@ public class TransactionController {
     @Autowired
     private CustomerRepository customerRepository;
 
+    @Value("${app.security.enabled:true}")
+    private boolean securityEnabled;
+
     private ResponseEntity<Map<String, Object>> checkPermission(String permission) {
+        if (!securityEnabled) return null;
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getName() == null || 
+            "anonymousUser".equals(authentication.getName()) || !authentication.isAuthenticated()) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("status", "error");
+            response.put("message", "Authentication required");
+            return ResponseEntity.status(401).body(response);
+        }
         Map<String, Object> response = new HashMap<>();
         if (!permissionService.hasPermission(authentication.getName(), permission)) {
             response.put("status", "error");
             response.put("message", "Access Denied: You do not have permission to " + permission.toLowerCase().replace("_", " "));
             return ResponseEntity.status(403).body(response);
         }
-        return null; // Permission granted
+        return null;
     }
 
     @GetMapping

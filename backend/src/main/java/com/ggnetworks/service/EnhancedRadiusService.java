@@ -343,7 +343,7 @@ public class EnhancedRadiusService {
         }
     }
     
-    private String generateRadiusUsername(String phoneNumber, String voucherCode) {
+    public String generateRadiusUsername(String phoneNumber, String voucherCode) {
         // Create unique username: phone_voucher (e.g., 0742920510_VCH123456)
         return phoneNumber + "_" + voucherCode;
     }

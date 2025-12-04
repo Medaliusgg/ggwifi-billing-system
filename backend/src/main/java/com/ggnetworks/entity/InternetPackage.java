@@ -107,6 +107,19 @@ public class InternetPackage {
     @Column(name = "discount_percentage")
     private Integer discountPercentage;
 
+    // Enterprise enhancements
+    @Column(name = "loyalty_points_awarded")
+    private Integer loyaltyPointsAwarded = 0;
+
+    @Column(name = "validity_after_activation_days")
+    private Integer validityAfterActivationDays;
+
+    @Column(name = "router_profile_name")
+    private String routerProfileName; // MikroTik profile name
+
+    @Column(name = "auto_reconnect_capable")
+    private Boolean autoReconnectCapable = true;
+
     @CreationTimestamp
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -218,6 +231,18 @@ public class InternetPackage {
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    public Integer getLoyaltyPointsAwarded() { return loyaltyPointsAwarded; }
+    public void setLoyaltyPointsAwarded(Integer loyaltyPointsAwarded) { this.loyaltyPointsAwarded = loyaltyPointsAwarded; }
+
+    public Integer getValidityAfterActivationDays() { return validityAfterActivationDays; }
+    public void setValidityAfterActivationDays(Integer validityAfterActivationDays) { this.validityAfterActivationDays = validityAfterActivationDays; }
+
+    public String getRouterProfileName() { return routerProfileName; }
+    public void setRouterProfileName(String routerProfileName) { this.routerProfileName = routerProfileName; }
+
+    public Boolean getAutoReconnectCapable() { return autoReconnectCapable; }
+    public void setAutoReconnectCapable(Boolean autoReconnectCapable) { this.autoReconnectCapable = autoReconnectCapable; }
 
     // Enums
     public enum PackageType {

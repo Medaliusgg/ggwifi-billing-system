@@ -161,6 +161,20 @@ export const generateDeviceFingerprint = async () => {
 };
 
 /**
+ * Convenience helper used throughout the app.
+ * Returns just the stable fingerprint hash string.
+ */
+export const getDeviceFingerprint = async () => {
+  const existing = getStoredFingerprintHash();
+  if (existing) {
+    return existing;
+  }
+
+  const result = await generateDeviceFingerprint();
+  return result.hash;
+};
+
+/**
  * Get stored fingerprint hash
  */
 export const getStoredFingerprintHash = () => {

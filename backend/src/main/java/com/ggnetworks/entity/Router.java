@@ -97,6 +97,12 @@ public class Router {
     @Column(name = "temperature")
     private Double temperature;
 
+    @Column(name = "active_sessions_count")
+    private Integer activeSessionsCount = 0;
+
+    @Column(name = "last_health_check")
+    private LocalDateTime lastHealthCheck;
+
     @Column(name = "is_active")
     private Boolean isActive = true;
 
@@ -129,6 +135,25 @@ public class Router {
 
     @Column(name = "last_backup")
     private LocalDateTime lastBackup;
+
+    // Enterprise enhancements
+    @Column(name = "hotspot_domain")
+    private String hotspotDomain;
+
+    @Column(name = "vlan_mappings", columnDefinition = "TEXT")
+    private String vlanMappings; // JSON configuration
+
+    @Column(name = "hotspot_server_profile")
+    private String hotspotServerProfile; // MikroTik hotspot profile name
+
+    @Column(name = "pppoe_profile")
+    private String pppoeProfile; // MikroTik PPPoE profile name
+
+    @Column(name = "public_ip")
+    private String publicIp; // Public IP for API access
+
+    @Column(name = "local_ip")
+    private String localIp; // Local network IP
 
     @CreationTimestamp
     @Column(name = "created_at")
@@ -244,6 +269,12 @@ public class Router {
     public Double getTemperature() { return temperature; }
     public void setTemperature(Double temperature) { this.temperature = temperature; }
 
+    public Integer getActiveSessionsCount() { return activeSessionsCount; }
+    public void setActiveSessionsCount(Integer activeSessionsCount) { this.activeSessionsCount = activeSessionsCount; }
+
+    public LocalDateTime getLastHealthCheck() { return lastHealthCheck; }
+    public void setLastHealthCheck(LocalDateTime lastHealthCheck) { this.lastHealthCheck = lastHealthCheck; }
+
     public Boolean getIsActive() { return isActive; }
     public void setIsActive(Boolean isActive) { this.isActive = isActive; }
 
@@ -282,4 +313,22 @@ public class Router {
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    public String getHotspotDomain() { return hotspotDomain; }
+    public void setHotspotDomain(String hotspotDomain) { this.hotspotDomain = hotspotDomain; }
+
+    public String getVlanMappings() { return vlanMappings; }
+    public void setVlanMappings(String vlanMappings) { this.vlanMappings = vlanMappings; }
+
+    public String getHotspotServerProfile() { return hotspotServerProfile; }
+    public void setHotspotServerProfile(String hotspotServerProfile) { this.hotspotServerProfile = hotspotServerProfile; }
+
+    public String getPppoeProfile() { return pppoeProfile; }
+    public void setPppoeProfile(String pppoeProfile) { this.pppoeProfile = pppoeProfile; }
+
+    public String getPublicIp() { return publicIp; }
+    public void setPublicIp(String publicIp) { this.publicIp = publicIp; }
+
+    public String getLocalIp() { return localIp; }
+    public void setLocalIp(String localIp) { this.localIp = localIp; }
 }

@@ -1,0 +1,108 @@
+✓ Authentication successful
+
+
+MODULE 1: AUTHENTICATION & AUTHORIZATION
+
+  ✓ Admin Login (HTTP 200)
+  ✓ Request OTP (HTTP 200)
+[0;32m✓ Module 1 PASSED[0m
+
+
+MODULE 2: CUSTOMER PORTAL
+
+  ✓ Test Endpoint (HTTP 200)
+  ✓ Get Packages (HTTP 200)
+  ✓ Customer Dashboard (HTTP 200)
+  ✗ Customer Profile (Expected , got HTTP 500)
+    Error: Type definition error: [simple type, class org.hibernate.proxy.pojo.bytebuddy.ByteBuddyInterceptor]
+  ✓ Customer Usage (HTTP 200)
+  ✓ Customer Payments (HTTP 200)
+  ✓ Validate Voucher (HTTP 200)
+  ✓ Session Status (HTTP 200)
+  ✓ Process Payment (HTTP 200)
+[0;31m✗ Module 2 FAILED[0m
+
+
+MODULE 3: ADMIN PORTAL
+
+  ✓ Admin Health (HTTP 200)
+  ✓ Admin Dashboard (HTTP 200)
+  ✓ Dashboard Stats (HTTP 200)
+  ✓ List Users (HTTP 200)
+  ✓ Router Status (HTTP 200)
+[0;32m✓ Module 3 PASSED[0m
+
+
+MODULE 4: CUSTOMER MANAGEMENT
+
+  ✓ List Customers (HTTP 200)
+  ✓ Active Customers (HTTP 200)
+  ✓ Customer Statistics (HTTP 200)
+[0;32m✓ Module 4 PASSED[0m
+
+
+MODULE 5: PACKAGE MANAGEMENT
+
+  ✓ List Packages (HTTP 200)
+  ✓ Package Analytics (HTTP 200)
+[0;32m✓ Module 5 PASSED[0m
+
+
+MODULE 6: VOUCHER MANAGEMENT
+
+  ✗ List Vouchers (Expected 200, got HTTP 500)
+    Error: Type definition error: [simple type, class org.hibernate.proxy.pojo.bytebuddy.ByteBuddyInterceptor]
+  ✓ Active Vouchers (HTTP 200)
+  ✓ Unused Vouchers (HTTP 200)
+  ✓ Voucher Statistics (HTTP 200)
+  ✓ Voucher Analytics (HTTP 200)
+[0;31m✗ Module 6 FAILED[0m
+
+
+MODULE 7: PAYMENT PROCESSING
+
+  ✓ List Payments (HTTP 200)
+  ✓ Payment Statistics (HTTP 200)
+  ✓ Payment Analytics (HTTP 200)
+[0;32m✓ Module 7 PASSED[0m
+
+
+MODULE 8: INVOICE MANAGEMENT
+
+  ✓ List Invoices (HTTP 200)
+  ✓ Paid Invoices (HTTP 200)
+  ✓ Unpaid Invoices (HTTP 200)
+  ✓ Invoice Statistics (HTTP 200)
+[0;32m✓ Module 8 PASSED[0m
+
+
+MODULE 10: LOYALTY PROGRAM
+
+  ✓ Loyalty Progress (HTTP 403)
+  ✗ All Rewards (Expected , got HTTP 500)
+    Error: No static resource api/v1/loyalty/rewards.
+  ✗ Top Customers (Expected 200, got HTTP 500)
+    Error: No static resource api/v1/loyalty/top-customers.
+  ✗ Loyalty Tiers (Expected 200, got HTTP 500)
+    Error: No static resource api/v1/loyalty/tiers.
+[0;31m✗ Module 10 FAILED[0m
+
+
+MODULE TEST SUMMARY
+
+Total Modules Tested: 9
+[0;32mPassed Modules: 6[0m
+[0;31mFailed Modules: 3[0m
+
+Total Endpoint Tests: 37
+[0;32mPassed Tests: 32[0m
+[0;31mFailed Tests: 5[0m
+
+Pass Rate: 86%
+Module Pass Rate: 66%
+
+Results saved to: docs/testing/module-test-results-20251204-091010.txt
+
+[1;33m╔════════════════════════════════════════════════════════╗[0m
+[1;33m║     SOME MODULES FAILED - REVIEW RESULTS              ║[0m
+[1;33m╚════════════════════════════════════════════════════════╝[0m

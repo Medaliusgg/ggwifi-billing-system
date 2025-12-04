@@ -1,0 +1,56 @@
+╔════════════════════════════════════════════════════════╗
+║     SECURITY AUDIT TESTING                            ║
+╚════════════════════════════════════════════════════════╝
+
+API URL: http://139.84.241.182:8080
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Step 1: Authentication
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[1;33m⚠ Using unauthenticated tests[0m
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Step 2: SQL Injection Testing
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2.1 Testing SQL injection in login...
+Testing: SQL Injection Login... [0;32m✓ PASSED[0m (Attack blocked/sanitized)
+
+2.2 Testing SQL injection in ID parameter...
+Testing: SQL Injection ID... [1;33m⚠ WARNING[0m (HTTP 000 - May need review)
+
+2.3 Testing SQL injection in search...
+Testing: SQL Injection Search... [1;33m⚠ WARNING[0m (HTTP 000 - May need review)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Step 3: XSS (Cross-Site Scripting) Testing
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+3.1 Testing XSS in customer name...
+Testing: XSS in Name... [0;32m✓ PASSED[0m (Attack blocked/sanitized)
+
+3.2 Testing XSS in email...
+Testing: XSS in Email... [0;32m✓ PASSED[0m (Attack blocked/sanitized)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Step 4: Authentication & Authorization Testing
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+4.1 Testing access without token...
+[0;32m✓ PASSED[0m (Properly requires authentication - HTTP 403)
+
+4.2 Testing with invalid token...
+[0;31m✗ FAILED[0m (Should reject invalid token - HTTP 200)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Step 5: Rate Limiting Verification
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+5.1 Testing login rate limit (attempting 6 logins)...
+  Attempt 1: Rate limit triggered ✓
+[0;32m✓ PASSED[0m (Rate limiting is active)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SECURITY AUDIT SUMMARY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[0;32mPassed: 5[0m
+[0;31mFailed: 1[0m
+[1;33mWarnings: 2[0m
+
+[0;31m✗ Security issues found[0m

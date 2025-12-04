@@ -6,6 +6,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "invoices")
@@ -18,11 +20,16 @@ public class Invoice {
     @Column(name = "invoice_number", unique = true, nullable = false)
     private String invoiceNumber;
 
-    @Column(name = "customer_id", nullable = false)
-    private Long customerId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_id", nullable = false)
+    private Customer customer;
 
-    @Column(name = "package_id")
-    private Long packageId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "package_id")
+    private InternetPackage internetPackage;
+
+    @OneToMany(mappedBy = "invoice", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Payment> payments = new ArrayList<>();
 
     @Column(name = "router_id")
     private Long routerId;
@@ -103,9 +110,9 @@ public class Invoice {
     // Constructors
     public Invoice() {}
 
-    public Invoice(String invoiceNumber, Long customerId, BigDecimal amount, String currency) {
+    public Invoice(String invoiceNumber, Customer customer, BigDecimal amount, String currency) {
         this.invoiceNumber = invoiceNumber;
-        this.customerId = customerId;
+        this.customer = customer;
         this.amount = amount;
         this.currency = currency;
         this.totalAmount = amount;
@@ -118,11 +125,37 @@ public class Invoice {
     public String getInvoiceNumber() { return invoiceNumber; }
     public void setInvoiceNumber(String invoiceNumber) { this.invoiceNumber = invoiceNumber; }
 
-    public Long getCustomerId() { return customerId; }
-    public void setCustomerId(Long customerId) { this.customerId = customerId; }
+    public Customer getCustomer() { return customer; }
+    public void setCustomer(Customer customer) { this.customer = customer; }
 
-    public Long getPackageId() { return packageId; }
-    public void setPackageId(Long packageId) { this.packageId = packageId; }
+    public InternetPackage getInternetPackage() { return internetPackage; }
+    public void setInternetPackage(InternetPackage internetPackage) { this.internetPackage = internetPackage; }
+
+    // Helper methods for backward compatibility
+    public Long getCustomerId() { return customer != null ? customer.getId() : null; }
+    public Long getPackageId() { return internetPackage != null ? internetPackage.getId() : null; }
+
+    public void setCustomerId(Long customerId) {
+        if (customerId == null) {
+            this.customer = null;
+        } else {
+            if (this.customer == null) {
+                this.customer = new Customer();
+            }
+            this.customer.setId(customerId);
+        }
+    }
+
+    public void setPackageId(Long packageId) {
+        if (packageId == null) {
+            this.internetPackage = null;
+        } else {
+            if (this.internetPackage == null) {
+                this.internetPackage = new InternetPackage();
+            }
+            this.internetPackage.setId(packageId);
+        }
+    }
 
     public Long getRouterId() { return routerId; }
     public void setRouterId(Long routerId) { this.routerId = routerId; }
@@ -186,4 +219,7 @@ public class Invoice {
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    public List<Payment> getPayments() { return payments; }
+    public void setPayments(List<Payment> payments) { this.payments = payments; }
 }

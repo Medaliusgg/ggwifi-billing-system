@@ -1,0 +1,32 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:ggwifi;MODE=MYSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE;INIT=CREATE SCHEMA IF NOT EXISTS ggnetworks_radius\;SET SCHEMA ggnetworks_radius
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    database-platform: org.hibernate.dialect.H2Dialect
+    show-sql: false
+    properties:
+      hibernate:
+        default_schema: ggnetworks_radius
+  flyway:
+    enabled: false
+  task:
+    scheduling:
+      enabled: false
+
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: /  # Override base application.yml context-path since controllers already use /api/v1 in @RequestMapping
+
+app:
+  security:
+    enabled: false
+  testing:
+    log-otp: true
+    disable-otp-rate-limit: true
+

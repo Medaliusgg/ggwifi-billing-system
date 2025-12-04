@@ -4,6 +4,7 @@ import com.ggnetworks.entity.Invoice;
 import com.ggnetworks.service.InvoiceService;
 import com.ggnetworks.service.PermissionService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,15 +26,26 @@ public class InvoiceController {
     @Autowired
     private PermissionService permissionService;
 
+    @Value("${app.security.enabled:true}")
+    private boolean securityEnabled;
+
     private ResponseEntity<Map<String, Object>> checkPermission(String permission) {
+        if (!securityEnabled) return null;
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getName() == null || 
+            "anonymousUser".equals(authentication.getName()) || !authentication.isAuthenticated()) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("status", "error");
+            response.put("message", "Authentication required");
+            return ResponseEntity.status(401).body(response);
+        }
         Map<String, Object> response = new HashMap<>();
         if (!permissionService.hasPermission(authentication.getName(), permission)) {
             response.put("status", "error");
             response.put("message", "Access Denied: You do not have permission to " + permission.toLowerCase().replace("_", " "));
             return ResponseEntity.status(403).body(response);
         }
-        return null; // Permission granted
+        return null;
     }
 
     @GetMapping
@@ -242,6 +254,98 @@ public class InvoiceController {
         } catch (Exception e) {
             response.put("status", "error");
             response.put("message", "Failed to retrieve template: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    @PostMapping
+    public ResponseEntity<Map<String, Object>> createInvoice(@RequestBody Map<String, Object> request) {
+        Map<String, Object> response = new HashMap<>();
+        ResponseEntity<Map<String, Object>> permissionCheck = checkPermission("INVOICE_CREATE");
+        if (permissionCheck != null) return permissionCheck;
+
+        try {
+            // Validate required fields
+            if (!request.containsKey("customerId") || request.get("customerId") == null) {
+                response.put("status", "error");
+                response.put("message", "customerId is required");
+                return ResponseEntity.badRequest().body(response);
+            }
+            if (!request.containsKey("amount") || request.get("amount") == null) {
+                response.put("status", "error");
+                response.put("message", "amount is required");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            Invoice invoice = new Invoice();
+            
+            // Set customer (required)
+            Long customerId = Long.valueOf(request.get("customerId").toString());
+            invoice.setCustomerId(customerId);
+            
+            // Set package (optional)
+            if (request.containsKey("packageId") && request.get("packageId") != null) {
+                Long packageId = Long.valueOf(request.get("packageId").toString());
+                invoice.setPackageId(packageId);
+            }
+            
+            // Set amounts (amount is required)
+            invoice.setAmount(new java.math.BigDecimal(request.get("amount").toString()));
+            if (request.containsKey("totalAmount") && request.get("totalAmount") != null) {
+                invoice.setTotalAmount(new java.math.BigDecimal(request.get("totalAmount").toString()));
+            } else {
+                invoice.setTotalAmount(invoice.getAmount());
+            }
+            if (request.containsKey("taxAmount") && request.get("taxAmount") != null) {
+                invoice.setTaxAmount(new java.math.BigDecimal(request.get("taxAmount").toString()));
+            }
+            if (request.containsKey("discountAmount") && request.get("discountAmount") != null) {
+                invoice.setDiscountAmount(new java.math.BigDecimal(request.get("discountAmount").toString()));
+            }
+            
+            // Set currency (default to TZS)
+            if (request.containsKey("currency") && request.get("currency") != null) {
+                invoice.setCurrency(request.get("currency").toString());
+            } else {
+                invoice.setCurrency("TZS");
+            }
+            
+            // Set status (default to PENDING)
+            if (request.containsKey("status") && request.get("status") != null) {
+                try {
+                    invoice.setStatus(Invoice.InvoiceStatus.valueOf(request.get("status").toString().toUpperCase()));
+                } catch (IllegalArgumentException e) {
+                    response.put("status", "error");
+                    response.put("message", "Invalid status. Valid values: PENDING, PAID, UNPAID, OVERDUE, CANCELLED, REFUNDED, PARTIALLY_PAID");
+                    return ResponseEntity.badRequest().body(response);
+                }
+            } else {
+                invoice.setStatus(Invoice.InvoiceStatus.PENDING);
+            }
+            
+            // Set optional fields
+            if (request.containsKey("notes") && request.get("notes") != null) {
+                invoice.setNotes(request.get("notes").toString());
+            }
+            if (request.containsKey("phoneNumber") && request.get("phoneNumber") != null) {
+                invoice.setPhoneNumber(request.get("phoneNumber").toString());
+            }
+            if (request.containsKey("email") && request.get("email") != null) {
+                invoice.setEmail(request.get("email").toString());
+            }
+            
+            Invoice created = invoiceService.createInvoice(invoice);
+            response.put("status", "success");
+            response.put("message", "Invoice created successfully");
+            response.put("data", created);
+            return ResponseEntity.ok(response);
+        } catch (NumberFormatException e) {
+            response.put("status", "error");
+            response.put("message", "Invalid number format: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to create invoice: " + e.getMessage());
             return ResponseEntity.status(500).body(response);
         }
     }

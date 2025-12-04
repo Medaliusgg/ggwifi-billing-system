@@ -1,0 +1,69 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - banner [ref=e8]:
+    - generic [ref=e9]:
+      - generic [ref=e10] [cursor=pointer]:
+        - img "GG Wi-Fi Logo" [ref=e12]
+        - heading "GG Wi-Fi" [level=6] [ref=e13]
+      - generic [ref=e14]:
+        - button "Home" [ref=e15] [cursor=pointer]:
+          - img [ref=e17]
+          - text: Home
+        - button "Buy Packages" [ref=e19] [cursor=pointer]:
+          - img [ref=e21]
+          - text: Buy Packages
+        - button "Voucher Login" [ref=e23] [cursor=pointer]:
+          - img [ref=e25]
+          - text: Voucher Login
+        - button "Customer Portal" [active] [ref=e27] [cursor=pointer]:
+          - img [ref=e29]
+          - text: Customer Portal
+      - generic [ref=e31]:
+        - button "Contact Support" [ref=e32] [cursor=pointer]:
+          - img [ref=e33]
+        - button "WhatsApp Chat" [ref=e35] [cursor=pointer]:
+          - img [ref=e36]
+        - button "Service Areas" [ref=e38] [cursor=pointer]:
+          - img [ref=e39]
+  - generic [ref=e45]:
+    - button "Back to Home" [ref=e46] [cursor=pointer]:
+      - img [ref=e48]
+      - text: Back to Home
+    - generic [ref=e52]:
+      - generic [ref=e53]:
+        - generic [ref=e54]:
+          - img [ref=e55]
+          - generic [ref=e57]: Secure OTP Login
+        - heading "Access your customer portal" [level=4] [ref=e58]
+        - paragraph [ref=e59]: Use your registered phone number to receive a one-time password (OTP). No password needed.
+      - separator [ref=e60]
+      - generic [ref=e61]:
+        - generic [ref=e62]:
+          - generic [ref=e63]: Phone Number
+          - generic [ref=e64]:
+            - img [ref=e66]
+            - textbox "Phone Number" [ref=e68]:
+              - /placeholder: +255 712 345 678
+            - group:
+              - generic: Phone Number
+        - button "Request OTP" [ref=e69] [cursor=pointer]:
+          - img [ref=e71]
+          - text: Request OTP
+        - generic [ref=e73]: By continuing you agree to our Terms of Service and Privacy Policy.
+  - contentinfo [ref=e74]:
+    - generic [ref=e76]:
+      - paragraph [ref=e77]: © 2025 GG Wi-Fi. All rights reserved.
+      - generic [ref=e78]:
+        - button [ref=e79] [cursor=pointer]:
+          - img [ref=e80]
+        - button [ref=e82] [cursor=pointer]:
+          - img [ref=e83]
+        - button [ref=e85] [cursor=pointer]:
+          - img [ref=e86]
+        - button [ref=e88] [cursor=pointer]:
+          - img [ref=e89]
+        - button [ref=e91] [cursor=pointer]:
+          - img [ref=e92]
+```
