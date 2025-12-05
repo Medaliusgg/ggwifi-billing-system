@@ -24,10 +24,10 @@
       "environmentVariables": {
         "VITE_API_URL": "https://api.ggwifi.co.tz/api/v1",
         "VITE_APP_NAME": "GGWIFI Customer Portal",
-        "VITE_APP_DOMAIN": "connect.ggwifi.co.tz",
+        "VITE_APP_DOMAIN": "hotspot.ggwifi.co.tz",
         "VITE_ENVIRONMENT": "production"
       },
-      "customDomain": "connect.ggwifi.co.tz",
+      "customDomain": "hotspot.ggwifi.co.tz",
       "nodeVersion": "18"
     },
     {
