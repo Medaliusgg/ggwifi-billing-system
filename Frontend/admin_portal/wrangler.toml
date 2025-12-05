@@ -1,12 +1,19 @@
+# Cloudflare Pages Configuration for Admin Portal
+# This file configures the build settings for Cloudflare Pages
+
 name = "ggwifi-admin-portal"
 compatibility_date = "2024-01-01"
 
-[env.production]
-pages_build_output_dir = "dist"
+[build]
+command = "npm run build"
+cwd = "Frontend/admin_portal"
 
-[env.production.vars]
+[build.environment_variables]
 VITE_API_URL = "https://api.ggwifi.co.tz/api/v1"
 VITE_API_BASE_URL = "https://api.ggwifi.co.tz/api/v1"
 VITE_APP_DOMAIN = "admin.ggwifi.co.tz"
 VITE_APP_NAME = "GGWIFI Admin Portal"
 VITE_ENVIRONMENT = "production"
+
+# Pages build output directory
+pages_build_output_dir = "dist"
