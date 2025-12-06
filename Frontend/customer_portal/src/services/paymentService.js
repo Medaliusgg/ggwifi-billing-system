@@ -231,12 +231,21 @@ class PaymentService {
                                'USER_CANCELLED', 'NETWORK_ERROR', 'ERROR'];
         if (finalStatuses.includes(paymentStatus)) {
           console.log(`✅ Payment polling completed with status: ${paymentStatus} after ${elapsedSeconds}s`);
+          console.log(`🎉 Final status detected! Stopping polling immediately.`);
           if (pollInterval) {
             clearInterval(pollInterval);
             pollInterval = null;
           }
           this.activePolling.delete(orderId);
           return;
+        }
+        
+        // CRITICAL: After 5 seconds, increase polling frequency to catch webhook faster
+        // This ensures we detect payment completion as soon as webhook is processed
+        if (elapsedSeconds >= 5 && interval === 2000) {
+          console.log(`⚡ Payment likely in progress, increasing polling frequency to 500ms for faster webhook detection`);
+          clearInterval(pollInterval);
+          pollInterval = setInterval(performPoll, 500); // Poll every 500ms after 5 seconds
         }
         
         // Also handle case where response status is error but payment_status might be in response

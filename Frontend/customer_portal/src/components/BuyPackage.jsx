@@ -504,6 +504,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
         });
         
         // Start enhanced payment status polling with optimized settings
+        // Use 2s interval initially, will auto-increase to 500ms after 5s for faster webhook detection
         const stopPolling = await paymentService.pollPaymentStatus(
           result.order_id,
           (statusData) => {
