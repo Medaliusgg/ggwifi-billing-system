@@ -17,7 +17,7 @@ import java.util.List;
  */
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
-public class CorsFilter implements Filter {
+public class CustomCorsFilter implements Filter {
 
     private static final List<String> ALLOWED_ORIGINS = Arrays.asList(
         "http://localhost:3000",
