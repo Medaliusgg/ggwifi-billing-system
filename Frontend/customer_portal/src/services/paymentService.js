@@ -207,8 +207,9 @@ class PaymentService {
         console.log(`📊 Full response data:`, responseData);
         
         // Call the status update callback with elapsed time
+        // IMPORTANT: Always include elapsedSeconds to ensure UI updates
         if (onStatusUpdate) {
-          onStatusUpdate({
+          const updateData = {
             status: paymentStatus,
             message: responseData.message || this.getStatusMessage(paymentStatus),
             orderId: responseData.order_id || responseData.orderId || orderId,
@@ -217,9 +218,11 @@ class PaymentService {
             timestamp: responseData.timestamp || new Date().toISOString(),
             zenopayResponse: responseData.zenopay_response || responseData.zenopayResponse,
             failureReason: responseData.failure_reason || responseData.failureReason,
-            elapsedSeconds: elapsedSeconds,
+            elapsedSeconds: elapsedSeconds, // Always include - calculated from startTime
             attempt: attempts
-          });
+          };
+          console.log(`📤 Sending status update with elapsedSeconds: ${elapsedSeconds}s`, updateData);
+          onStatusUpdate(updateData);
         }
         
         // Stop polling if payment is in final state

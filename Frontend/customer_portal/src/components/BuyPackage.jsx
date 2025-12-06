@@ -436,7 +436,9 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
             console.log('📊 Payment status update received:', statusData);
             
             // Update elapsed time and attempts
-            if (statusData.elapsedSeconds !== undefined) {
+            // Always update elapsed time - it should be calculated from start time
+            if (statusData.elapsedSeconds !== undefined && statusData.elapsedSeconds !== null) {
+              console.log(`⏱️ Updating elapsed time: ${statusData.elapsedSeconds}s`);
               setPaymentElapsedTime(statusData.elapsedSeconds);
               
               // Progressive warnings with toast notifications
@@ -452,6 +454,19 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                 toast.error('🚨 10 seconds left! Complete payment immediately!', { duration: 5000 });
               } else if (statusData.elapsedSeconds === 55) {
                 toast.error('🚨 CRITICAL: 5 seconds remaining!', { duration: 5000 });
+              }
+            } else {
+              // Fallback: Calculate elapsed time from when payment was initiated
+              // This ensures UI updates even if elapsedSeconds is not provided
+              if (paymentStartTimeRef.current) {
+                const currentTime = Date.now();
+                const calculatedElapsed = Math.floor((currentTime - paymentStartTimeRef.current) / 1000);
+                console.log(`⏱️ Fallback: Calculated elapsed time: ${calculatedElapsed}s (from payment start)`);
+                if (calculatedElapsed > paymentElapsedTime) {
+                  setPaymentElapsedTime(calculatedElapsed);
+                }
+              } else {
+                console.warn('⚠️ elapsedSeconds not provided and no payment start time available');
               }
             }
             if (statusData.attempt !== undefined) {
