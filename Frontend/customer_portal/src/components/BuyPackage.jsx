@@ -80,6 +80,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
   const [paymentElapsedTime, setPaymentElapsedTime] = useState(0); // Track elapsed time in seconds
   const [paymentPollingAttempts, setPaymentPollingAttempts] = useState(0); // Track polling attempts
   const [cardStyle, setCardStyle] = useState('detailed'); // 'detailed' or 'colorful' - card style toggle
+  const paymentStartTimeRef = React.useRef(null); // Track when payment was initiated
 
   // Cleanup polling on unmount and when dialog closes
   useEffect(() => {
