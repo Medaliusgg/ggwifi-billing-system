@@ -162,12 +162,35 @@ class PaymentService {
     this.activePolling.add(orderId);
     
     const startTime = Date.now();
+    const maxElapsedSeconds = 60; // Maximum 60 seconds
     let attempts = 0;
+    let pollInterval = null;
     
     // Immediate first poll (don't wait for interval)
     const performPoll = async () => {
-      attempts++;
       const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+      
+      // Force timeout if 60 seconds elapsed, regardless of attempts
+      if (elapsedSeconds >= maxElapsedSeconds) {
+        console.log(`⏰ Payment polling timeout after ${elapsedSeconds}s (60s limit reached)`);
+        if (pollInterval) {
+          clearInterval(pollInterval);
+          pollInterval = null;
+        }
+        this.activePolling.delete(orderId);
+        if (onStatusUpdate) {
+          onStatusUpdate({
+            status: 'TIMEOUT',
+            message: 'Payment timed out after 60 seconds. The USSD prompt has expired. Please initiate a new payment.',
+            orderId: orderId,
+            elapsedSeconds: elapsedSeconds,
+            attempt: attempts
+          });
+        }
+        return;
+      }
+      
+      attempts++;
       console.log(`🔄 Polling attempt ${attempts}/${maxAttempts} (${elapsedSeconds}s elapsed) for order: ${orderId}`);
       
       try {
@@ -205,7 +228,10 @@ class PaymentService {
                                'USER_CANCELLED', 'NETWORK_ERROR', 'ERROR'];
         if (finalStatuses.includes(paymentStatus)) {
           console.log(`✅ Payment polling completed with status: ${paymentStatus} after ${elapsedSeconds}s`);
-          clearInterval(pollInterval);
+          if (pollInterval) {
+            clearInterval(pollInterval);
+            pollInterval = null;
+          }
           this.activePolling.delete(orderId);
           return;
         }
@@ -216,15 +242,18 @@ class PaymentService {
           // Continue polling - might be temporary error
         }
         
-        // Stop polling if max attempts reached
+        // Stop polling if max attempts reached (backup check)
         if (attempts >= maxAttempts) {
           console.log(`⏰ Payment polling timeout after ${maxAttempts} attempts (${elapsedSeconds}s)`);
-          clearInterval(pollInterval);
+          if (pollInterval) {
+            clearInterval(pollInterval);
+            pollInterval = null;
+          }
           this.activePolling.delete(orderId);
           if (onStatusUpdate) {
             onStatusUpdate({
               status: 'TIMEOUT',
-              message: 'Payment status check timed out. Please check your payment manually.',
+              message: 'Payment status check timed out after 60 seconds. Please initiate a new payment.',
               orderId: orderId,
               elapsedSeconds: elapsedSeconds,
               attempt: attempts
@@ -253,14 +282,38 @@ class PaymentService {
           errorMessage = 'Request timed out. Please try again.';
         }
         
-        if (attempts >= maxAttempts) {
-          console.log(`⏰ Payment polling failed after ${maxAttempts} attempts (${elapsedSeconds}s)`);
-          clearInterval(pollInterval);
+        // Force timeout if 60 seconds elapsed even on error
+        if (elapsedSeconds >= maxElapsedSeconds) {
+          console.log(`⏰ Payment polling timeout after ${elapsedSeconds}s (error occurred but time limit reached)`);
+          if (pollInterval) {
+            clearInterval(pollInterval);
+            pollInterval = null;
+          }
           this.activePolling.delete(orderId);
           if (onStatusUpdate) {
             onStatusUpdate({
-              status: 'ERROR',
-              message: errorMessage,
+              status: 'TIMEOUT',
+              message: 'Payment timed out after 60 seconds. Please initiate a new payment.',
+              orderId: orderId,
+              elapsedSeconds: elapsedSeconds,
+              attempt: attempts,
+              error: error.message
+            });
+          }
+          return;
+        }
+        
+        if (attempts >= maxAttempts) {
+          console.log(`⏰ Payment polling failed after ${maxAttempts} attempts (${elapsedSeconds}s)`);
+          if (pollInterval) {
+            clearInterval(pollInterval);
+            pollInterval = null;
+          }
+          this.activePolling.delete(orderId);
+          if (onStatusUpdate) {
+            onStatusUpdate({
+              status: 'TIMEOUT',
+              message: 'Payment status check timed out. Please initiate a new payment.',
               orderId: orderId,
               elapsedSeconds: elapsedSeconds,
               attempt: attempts,
@@ -279,13 +332,35 @@ class PaymentService {
     performPoll();
     
     // Then poll at regular intervals
-    const pollInterval = setInterval(performPoll, interval);
+    pollInterval = setInterval(performPoll, interval);
+    
+    // Safety timeout: Force stop after 65 seconds (5 seconds buffer)
+    setTimeout(() => {
+      if (pollInterval) {
+        console.log(`⏰ Safety timeout: Forcing stop after 65 seconds`);
+        clearInterval(pollInterval);
+        pollInterval = null;
+        this.activePolling.delete(orderId);
+        if (onStatusUpdate) {
+          onStatusUpdate({
+            status: 'TIMEOUT',
+            message: 'Payment timed out. Please initiate a new payment.',
+            orderId: orderId,
+            elapsedSeconds: 65,
+            attempt: attempts
+          });
+        }
+      }
+    }, 65000); // 65 seconds safety timeout
     
     // Return a function to stop polling
     return () => {
       console.log(`🛑 Stopping payment polling for order: ${orderId}`);
       console.log(`🛑 Active polling before stop:`, this.activePolling);
-      clearInterval(pollInterval);
+      if (pollInterval) {
+        clearInterval(pollInterval);
+        pollInterval = null;
+      }
       this.activePolling.delete(orderId);
       console.log(`🛑 Active polling after stop:`, this.activePolling);
     };
