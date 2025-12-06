@@ -108,49 +108,55 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
     
     console.log(`🔍 Timer useEffect triggered: paymentStep=${paymentStep}, paymentStatus=${paymentStatus}, paymentStartTimeRef=${paymentStartTimeRef.current}`);
     
-    // Only start timer when payment is processing and we have a start time
+    // Only start timer when payment is processing
     if (paymentStep === 2 && paymentStatus === 'processing') {
-      if (!paymentStartTimeRef.current) {
-        console.warn('⚠️ Timer condition met but paymentStartTimeRef is null, cannot start timer');
-        return;
-      }
-      
-      console.log('⏰ Starting independent elapsed time timer, startTime:', paymentStartTimeRef.current);
-      elapsedTimer = setInterval(() => {
+      // Wait a bit for paymentStartTimeRef to be set if it's not set yet
+      const checkAndStartTimer = () => {
         if (!paymentStartTimeRef.current) {
-          console.log('⚠️ No payment start time, stopping timer');
-          clearInterval(elapsedTimer);
+          console.warn('⚠️ Timer condition met but paymentStartTimeRef is null, retrying in 100ms');
+          setTimeout(checkAndStartTimer, 100);
           return;
         }
         
-        const currentElapsed = Math.floor((Date.now() - paymentStartTimeRef.current) / 1000);
-        console.log(`⏱️ Timer update: ${currentElapsed}s elapsed (paymentElapsedTime was: ${paymentElapsedTime})`);
-        
-        // Always update state to trigger re-render
-        setPaymentElapsedTime(currentElapsed);
-        
-        // Progressive warnings (only show once per second)
-        if (currentElapsed === 10) {
-          toast.warning('📱 Check your phone for the USSD prompt!', { duration: 4000 });
-        } else if (currentElapsed === 20) {
-          toast.warning('🔐 Please enter your mobile money PIN on your phone!', { duration: 4000 });
-        } else if (currentElapsed === 30) {
-          toast.warning('⏳ Payment processing... Please wait for confirmation.', { duration: 4000 });
-        } else if (currentElapsed === 40) {
-          toast.error('⚠️ 20 seconds remaining! Please complete payment now!', { duration: 5000 });
-        } else if (currentElapsed === 50) {
-          toast.error('🚨 10 seconds left! Complete payment immediately!', { duration: 5000 });
-        } else if (currentElapsed === 55) {
-          toast.error('🚨 CRITICAL: 5 seconds remaining!', { duration: 5000 });
-        }
-        
-        // Stop timer at 60 seconds
-        if (currentElapsed >= 60) {
-          console.log('⏰ Timer reached 60s, stopping');
-          clearInterval(elapsedTimer);
-          elapsedTimer = null;
-        }
-      }, 1000); // Update every second for smooth UI updates
+        console.log('⏰ Starting independent elapsed time timer, startTime:', paymentStartTimeRef.current);
+        elapsedTimer = setInterval(() => {
+          if (!paymentStartTimeRef.current) {
+            console.log('⚠️ No payment start time, stopping timer');
+            clearInterval(elapsedTimer);
+            return;
+          }
+          
+          const currentElapsed = Math.floor((Date.now() - paymentStartTimeRef.current) / 1000);
+          console.log(`⏱️ Timer update: ${currentElapsed}s elapsed`);
+          
+          // Always update state to trigger re-render
+          setPaymentElapsedTime(currentElapsed);
+          
+          // Progressive warnings (only show once per second)
+          if (currentElapsed === 10) {
+            toast.warning('📱 Check your phone for the USSD prompt!', { duration: 4000 });
+          } else if (currentElapsed === 20) {
+            toast.warning('🔐 Please enter your mobile money PIN on your phone!', { duration: 4000 });
+          } else if (currentElapsed === 30) {
+            toast.warning('⏳ Payment processing... Please wait for confirmation.', { duration: 4000 });
+          } else if (currentElapsed === 40) {
+            toast.error('⚠️ 20 seconds remaining! Please complete payment now!', { duration: 5000 });
+          } else if (currentElapsed === 50) {
+            toast.error('🚨 10 seconds left! Complete payment immediately!', { duration: 5000 });
+          } else if (currentElapsed === 55) {
+            toast.error('🚨 CRITICAL: 5 seconds remaining!', { duration: 5000 });
+          }
+          
+          // Stop timer at 60 seconds
+          if (currentElapsed >= 60) {
+            console.log('⏰ Timer reached 60s, stopping');
+            clearInterval(elapsedTimer);
+            elapsedTimer = null;
+          }
+        }, 1000); // Update every second for smooth UI updates
+      };
+      
+      checkAndStartTimer();
     } else {
       console.log(`⏸️ Timer not started: paymentStep=${paymentStep}, paymentStatus=${paymentStatus}`);
     }
@@ -162,7 +168,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
         elapsedTimer = null;
       }
     };
-  }, [paymentStep, paymentStatus, paymentElapsedTime]); // Added paymentElapsedTime to ensure timer sees current value
+  }, [paymentStep, paymentStatus]); // Removed paymentElapsedTime - it was causing timer to restart
 
   // Fetch packages from backend API - Only once when component mounts
   useEffect(() => {
