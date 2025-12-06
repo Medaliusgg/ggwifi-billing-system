@@ -154,7 +154,6 @@ const CustomerLogin = ({ onSuccess, onBack }) => {
           animate={{ opacity: 1, y: 0 }}
           sx={{
             borderRadius: 4,
-            border: '1px solid rgba(255, 199, 76, 0.25)',
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
             background: '#FFFFFF',
             border: '1px solid #EDEDED',

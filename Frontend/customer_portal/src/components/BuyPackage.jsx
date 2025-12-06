@@ -581,36 +581,6 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
   };
 
   // Location dropdown removed - no longer needed
-  // const tanzaniaLocations = [
-    'Dar es Salaam',
-    'Arusha',
-    'Mwanza',
-    'Dodoma',
-    'Mbeya',
-    'Morogoro',
-    'Tanga',
-    'Kahama',
-    'Tabora',
-    'Singida',
-    'Iringa',
-    'Mtwara',
-    'Moshi',
-    'Shinyanga',
-    'Musoma',
-    'Bukoba',
-    'Kigoma',
-    'Mpanda',
-    'Lindi',
-    'Songea',
-    'Same',
-    'Korogwe',
-    'Bagamoyo',
-    'Kilwa',
-    'Mafia',
-    'Pemba',
-    'Zanzibar',
-    'Other'
-  ];
 
   const containerVariants = {
     hidden: { opacity: 0 },
