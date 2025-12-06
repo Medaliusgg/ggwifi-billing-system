@@ -23,11 +23,10 @@ const Footer = () => {
       component="footer"
       sx={{
         position: 'relative',
-        borderTop: '3px solid #F5C400',  // Gold Prime accent bar
-        background: '#FFFFFF',  // Soft White - Premium design
-        py: 3,
+        borderTop: '4px solid #F2C94C',  // Official gold accent bar
+        background: '#FFFFFF',  // White background
+        py: 4,
         mt: 'auto',
-        boxShadow: '0 -2px 16px rgba(0, 0, 0, 0.14)',  // Premium shadow
       }}
     >
       <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
@@ -41,7 +40,7 @@ const Footer = () => {
           <Typography
             variant="body2"
             sx={{
-              color: '#8D8D8D',  // Slate Grey - Premium design
+              color: '#666666',
               textAlign: { xs: 'center', sm: 'left' },
             }}
           >
@@ -53,10 +52,10 @@ const Footer = () => {
             <IconButton
               onClick={() => window.open('tel:+255742844024', '_self')}
               sx={{
-                color: '#0B0B0B',  // Carbon Black
+                color: '#0A0A0A',
                 '&:hover': {
-                  color: '#F5C400',  // Gold Prime
-                  backgroundColor: 'rgba(245, 196, 0, 0.1)',  // Gold glass
+                  color: '#F2C94C',
+                  backgroundColor: 'rgba(242, 201, 76, 0.1)',
                 },
               }}
             >
@@ -68,7 +67,7 @@ const Footer = () => {
                 window.open(`https://wa.me/255742844024?text=${message}`, '_blank');
               }}
               sx={{
-                color: '#FFFFFF',
+                color: '#0A0A0A',
                 '&:hover': {
                   color: '#25D366',
                   backgroundColor: 'rgba(37, 211, 102, 0.1)',
@@ -80,7 +79,7 @@ const Footer = () => {
             <IconButton
               onClick={() => window.open('https://facebook.com/ggwifi', '_blank')}
               sx={{
-                color: '#FFFFFF',
+                color: '#0A0A0A',
                 '&:hover': {
                   color: '#1877F2',
                   backgroundColor: 'rgba(24, 119, 242, 0.1)',
@@ -92,7 +91,7 @@ const Footer = () => {
             <IconButton
               onClick={() => window.open('https://twitter.com/ggwifi', '_blank')}
               sx={{
-                color: '#FFFFFF',
+                color: '#0A0A0A',
                 '&:hover': {
                   color: '#1DA1F2',
                   backgroundColor: 'rgba(29, 161, 242, 0.1)',
@@ -104,7 +103,7 @@ const Footer = () => {
             <IconButton
               onClick={() => window.open('https://instagram.com/ggwifi', '_blank')}
               sx={{
-                color: '#FFFFFF',
+                color: '#0A0A0A',
                 '&:hover': {
                   color: '#E4405F',
                   backgroundColor: 'rgba(228, 64, 95, 0.1)',

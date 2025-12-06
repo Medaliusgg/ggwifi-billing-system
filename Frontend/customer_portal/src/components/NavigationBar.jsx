@@ -83,10 +83,11 @@ const NavigationBar = ({
     <AppBar
       position="fixed"
       sx={{
-        background: '#F5C400',  // Golden Yellow - matches GG-WiFi logo
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',  // Soft drop shadow
+        background: '#FFFFFF',  // White background - premium design
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',  // Subtle shadow
         zIndex: theme.zIndex.drawer + 1,
-        height: { xs: '56px', md: '64px' },  // 56px mobile, 64px desktop
+        height: { xs: '70px', md: '100px' },  // Premium height
+        transition: 'height 0.3s ease',
       }}
     >
       <Toolbar sx={{ justifyContent: 'space-between', px: { xs: 1, sm: 2 } }}>
@@ -105,8 +106,8 @@ const NavigationBar = ({
               sx={{
                 width: { xs: 40, sm: 48 },
                 height: { xs: 40, sm: 48 },
-                border: '2px solid #0B0B0B',  // Black border on pale golden yellow navbar
-                background: '#FFFFFF',  // White background
+                border: '2px solid #F2C94C',  // Gold border on white navbar
+                background: '#FFFFFF',
                 '& img': {
                   objectFit: 'contain',
                   padding: '2px',
@@ -118,7 +119,7 @@ const NavigationBar = ({
             noWrap
             sx={{
               fontWeight: 800,
-              color: '#0B0B0B',  // Black text on pale golden yellow background
+              color: '#0A0A0A',  // Black text on white background
               display: { xs: 'none', sm: 'block' },
               fontSize: { xs: '1rem', md: '1.25rem' },
             }}
@@ -134,13 +135,13 @@ const NavigationBar = ({
               startIcon={<HomeIcon />}
               onClick={onNavigateToHome}
               sx={{
-                color: '#0B0B0B',  // Black text on pale golden yellow navbar
+                color: '#0A0A0A',  // Black text on white navbar
                 fontWeight: currentView === 'landing' ? 700 : 500,
-                borderBottom: currentView === 'landing' ? '3px solid #0B0B0B' : 'none',  // Black accent when active
+                borderBottom: currentView === 'landing' ? '3px solid #F2C94C' : 'none',  // Gold accent when active
                 borderRadius: 0,
                 '&:hover': {
-                  backgroundColor: '#0B0B0B',  // Black background on hover
-                  color: '#FFFFFF',  // White text on hover
+                  backgroundColor: 'rgba(242, 201, 76, 0.1)',  // Light gold background on hover
+                  color: '#0A0A0A',
                 },
                 transition: 'all 0.2s ease',
               }}
@@ -151,13 +152,13 @@ const NavigationBar = ({
               startIcon={<ShoppingCartIcon />}
               onClick={onNavigateToPackages}
               sx={{
-                color: '#0B0B0B',  // Black text
+                color: '#0A0A0A',
                 fontWeight: currentView === 'packages' ? 700 : 500,
-                borderBottom: currentView === 'packages' ? '2px solid #0B0B0B' : 'none',
+                borderBottom: currentView === 'packages' ? '3px solid #F2C94C' : 'none',
                 borderRadius: 0,
                 '&:hover': {
-                  backgroundColor: '#0B0B0B',  // Black background on hover
-                  color: '#FFFFFF',  // White text on hover
+                  backgroundColor: 'rgba(242, 201, 76, 0.1)',
+                  color: '#0A0A0A',
                 },
                 transition: 'all 0.2s ease',
               }}
@@ -168,30 +169,30 @@ const NavigationBar = ({
               startIcon={<VpnKeyIcon />}
               onClick={onNavigateToVoucher}
               sx={{
-                color: '#0B0B0B',  // Black text
+                color: '#0A0A0A',
                 fontWeight: currentView === 'voucher' ? 700 : 500,
-                borderBottom: currentView === 'voucher' ? '2px solid #0B0B0B' : 'none',
+                borderBottom: currentView === 'voucher' ? '3px solid #F2C94C' : 'none',
                 borderRadius: 0,
                 '&:hover': {
-                  backgroundColor: '#0B0B0B',  // Black background on hover
-                  color: '#FFFFFF',  // White text on hover
+                  backgroundColor: 'rgba(242, 201, 76, 0.1)',
+                  color: '#0A0A0A',
                 },
                 transition: 'all 0.2s ease',
               }}
             >
-              Voucher Login
+              Connect
             </Button>
             <Button
               startIcon={<DashboardIcon />}
               onClick={onNavigateToCustomer}
               sx={{
-                color: '#0B0B0B',  // Black text
+                color: '#0A0A0A',
                 fontWeight: currentView === 'customer' ? 700 : 500,
-                borderBottom: currentView === 'customer' ? '2px solid #0B0B0B' : 'none',
+                borderBottom: currentView === 'customer' ? '3px solid #F2C94C' : 'none',
                 borderRadius: 0,
                 '&:hover': {
-                  backgroundColor: '#0B0B0B',  // Black background on hover
-                  color: '#FFFFFF',  // White text on hover
+                  backgroundColor: 'rgba(242, 201, 76, 0.1)',
+                  color: '#0A0A0A',
                 },
                 transition: 'all 0.2s ease',
               }}
@@ -207,10 +208,10 @@ const NavigationBar = ({
             color="inherit"
             onClick={handleMobileMenuOpen}
             sx={{
-              color: '#0B0B0B',  // Black icons on pale golden yellow navbar
+              color: '#0A0A0A',  // Black icons on white navbar
               '&:hover': {
-                backgroundColor: '#0B0B0B',  // Black background on hover
-                color: '#FFFFFF',  // White icon on hover
+                backgroundColor: 'rgba(242, 201, 76, 0.1)',  // Light gold background on hover
+                color: '#0A0A0A',
               },
             }}
           >
@@ -237,13 +238,13 @@ const NavigationBar = ({
             {/* Drawer Header */}
             <Box
               sx={{
-                background: '#F5C400',  // Golden Yellow - matches logo
-                color: '#0B0B0B',
+                background: '#FFFFFF',
+                color: '#0A0A0A',
                 p: 3,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                borderBottom: '2px solid #0B0B0B',
+                borderBottom: '2px solid #F2C94C',
               }}
             >
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -253,21 +254,21 @@ const NavigationBar = ({
                   sx={{
                     width: 48,
                     height: 48,
-                    border: '2px solid #0B0B0B',
+                    border: '2px solid #F2C94C',
                     background: '#FFFFFF',
                   }}
                 />
-                <Typography variant="h6" sx={{ fontWeight: 800, color: '#0B0B0B' }}>
+                <Typography variant="h6" sx={{ fontWeight: 800, color: '#0A0A0A' }}>
                   Menu
                 </Typography>
               </Box>
               <IconButton
                 onClick={handleMobileMenuClose}
                 sx={{
-                  color: '#0B0B0B',
+                  color: '#0A0A0A',
                   '&:hover': {
-                    backgroundColor: '#0B0B0B',
-                    color: '#FFFFFF',
+                    backgroundColor: 'rgba(242, 201, 76, 0.1)',
+                    color: '#0A0A0A',
                   },
                 }}
               >
@@ -285,30 +286,30 @@ const NavigationBar = ({
                     borderRadius: 2,
                     py: 2,
                     px: 2,
-                    backgroundColor: currentView === 'landing' ? '#FFE89C' : 'transparent',
-                    borderLeft: currentView === 'landing' ? '4px solid #F5C400' : '4px solid transparent',
+                    backgroundColor: currentView === 'landing' ? 'rgba(242, 201, 76, 0.1)' : 'transparent',
+                    borderLeft: currentView === 'landing' ? '4px solid #F2C94C' : '4px solid transparent',
                     '&:hover': {
-                      backgroundColor: '#FFE89C',
+                      backgroundColor: 'rgba(242, 201, 76, 0.1)',
                       transform: 'translateX(4px)',
                     },
                     '&.Mui-selected': {
-                      backgroundColor: '#FFE89C',
+                      backgroundColor: 'rgba(242, 201, 76, 0.1)',
                       '&:hover': {
-                        backgroundColor: '#FFE89C',
+                        backgroundColor: 'rgba(242, 201, 76, 0.15)',
                       },
                     },
                     transition: 'all 0.2s ease',
                   }}
                 >
                   <ListItemIcon sx={{ minWidth: 40 }}>
-                    <HomeIcon sx={{ color: currentView === 'landing' ? '#F5C400' : '#0B0B0B', fontSize: 28 }} />
+                    <HomeIcon sx={{ color: currentView === 'landing' ? '#F2C94C' : '#0A0A0A', fontSize: 28 }} />
                   </ListItemIcon>
                   <ListItemText
                     primary="Home"
                     primaryTypographyProps={{
                       fontWeight: currentView === 'landing' ? 700 : 500,
                       fontSize: '1.1rem',
-                      color: '#0B0B0B',
+                      color: '#0A0A0A',
                     }}
                   />
                 </ListItemButton>
@@ -338,14 +339,14 @@ const NavigationBar = ({
                   }}
                 >
                   <ListItemIcon sx={{ minWidth: 40 }}>
-                    <ShoppingCartIcon sx={{ color: currentView === 'packages' ? '#F5C400' : '#0B0B0B', fontSize: 28 }} />
+                    <ShoppingCartIcon sx={{ color: currentView === 'packages' ? '#F2C94C' : '#0A0A0A', fontSize: 28 }} />
                   </ListItemIcon>
                   <ListItemText
                     primary="Buy Packages"
                     primaryTypographyProps={{
                       fontWeight: currentView === 'packages' ? 700 : 500,
                       fontSize: '1.1rem',
-                      color: '#0B0B0B',
+                      color: '#0A0A0A',
                     }}
                   />
                 </ListItemButton>
@@ -359,30 +360,30 @@ const NavigationBar = ({
                     borderRadius: 2,
                     py: 2,
                     px: 2,
-                    backgroundColor: currentView === 'voucher' ? '#FFE89C' : 'transparent',
-                    borderLeft: currentView === 'voucher' ? '4px solid #F5C400' : '4px solid transparent',
+                    backgroundColor: currentView === 'voucher' ? 'rgba(242, 201, 76, 0.1)' : 'transparent',
+                    borderLeft: currentView === 'voucher' ? '4px solid #F2C94C' : '4px solid transparent',
                     '&:hover': {
-                      backgroundColor: '#FFE89C',
+                      backgroundColor: 'rgba(242, 201, 76, 0.1)',
                       transform: 'translateX(4px)',
                     },
                     '&.Mui-selected': {
-                      backgroundColor: '#FFE89C',
+                      backgroundColor: 'rgba(242, 201, 76, 0.1)',
                       '&:hover': {
-                        backgroundColor: '#FFE89C',
+                        backgroundColor: 'rgba(242, 201, 76, 0.15)',
                       },
                     },
                     transition: 'all 0.2s ease',
                   }}
                 >
                   <ListItemIcon sx={{ minWidth: 40 }}>
-                    <VpnKeyIcon sx={{ color: currentView === 'voucher' ? '#F5C400' : '#0B0B0B', fontSize: 28 }} />
+                    <VpnKeyIcon sx={{ color: currentView === 'voucher' ? '#F2C94C' : '#0A0A0A', fontSize: 28 }} />
                   </ListItemIcon>
                   <ListItemText
                     primary="Voucher Login"
                     primaryTypographyProps={{
                       fontWeight: currentView === 'voucher' ? 700 : 500,
                       fontSize: '1.1rem',
-                      color: '#0B0B0B',
+                      color: '#0A0A0A',
                     }}
                   />
                 </ListItemButton>
@@ -396,30 +397,30 @@ const NavigationBar = ({
                     borderRadius: 2,
                     py: 2,
                     px: 2,
-                    backgroundColor: currentView === 'customer' ? '#FFE89C' : 'transparent',
-                    borderLeft: currentView === 'customer' ? '4px solid #F5C400' : '4px solid transparent',
+                    backgroundColor: currentView === 'customer' ? 'rgba(242, 201, 76, 0.1)' : 'transparent',
+                    borderLeft: currentView === 'customer' ? '4px solid #F2C94C' : '4px solid transparent',
                     '&:hover': {
-                      backgroundColor: '#FFE89C',
+                      backgroundColor: 'rgba(242, 201, 76, 0.1)',
                       transform: 'translateX(4px)',
                     },
                     '&.Mui-selected': {
-                      backgroundColor: '#FFE89C',
+                      backgroundColor: 'rgba(242, 201, 76, 0.1)',
                       '&:hover': {
-                        backgroundColor: '#FFE89C',
+                        backgroundColor: 'rgba(242, 201, 76, 0.15)',
                       },
                     },
                     transition: 'all 0.2s ease',
                   }}
                 >
                   <ListItemIcon sx={{ minWidth: 40 }}>
-                    <DashboardIcon sx={{ color: currentView === 'customer' ? '#F5C400' : '#0B0B0B', fontSize: 28 }} />
+                    <DashboardIcon sx={{ color: currentView === 'customer' ? '#F2C94C' : '#0A0A0A', fontSize: 28 }} />
                   </ListItemIcon>
                   <ListItemText
                     primary="Dashboard"
                     primaryTypographyProps={{
                       fontWeight: currentView === 'customer' ? 700 : 500,
                       fontSize: '1.1rem',
-                      color: '#0B0B0B',
+                      color: '#0A0A0A',
                     }}
                   />
                 </ListItemButton>
@@ -427,8 +428,8 @@ const NavigationBar = ({
             </List>
 
             {/* Drawer Footer with Contact Info */}
-            <Box sx={{ p: 2, borderTop: '1px solid #EDEDED', background: '#F6F6F6' }}>
-              <Typography variant="body2" sx={{ fontWeight: 600, mb: 1, color: '#0B0B0B' }}>
+            <Box sx={{ p: 2, borderTop: '1px solid #EEEEEE', background: '#FAFAFA' }}>
+              <Typography variant="body2" sx={{ fontWeight: 600, mb: 1, color: '#0A0A0A' }}>
                 Need Help?
               </Typography>
               <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
@@ -437,11 +438,12 @@ const NavigationBar = ({
                   startIcon={<PhoneIcon />}
                   onClick={handleContactClick}
                   sx={{
-                    color: '#0B0B0B',
+                    color: '#0A0A0A',
                     fontSize: '0.75rem',
                     textTransform: 'none',
                     '&:hover': {
-                      backgroundColor: '#F5C400',
+                      backgroundColor: '#F2C94C',
+                      color: '#0A0A0A',
                     },
                   }}
                 >
@@ -452,11 +454,12 @@ const NavigationBar = ({
                   startIcon={<WhatsAppIcon />}
                   onClick={handleWhatsAppClick}
                   sx={{
-                    color: '#0B0B0B',
+                    color: '#0A0A0A',
                     fontSize: '0.75rem',
                     textTransform: 'none',
                     '&:hover': {
-                      backgroundColor: '#F5C400',
+                      backgroundColor: '#F2C94C',
+                      color: '#0A0A0A',
                     },
                   }}
                 >
@@ -467,7 +470,7 @@ const NavigationBar = ({
           </Box>
         </Drawer>
 
-        {/* Contact Icons */}
+        {/* Contact Icons - Gold colored */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, sm: 1 } }}>
           <Tooltip title="Contact Support">
             <IconButton
@@ -477,10 +480,10 @@ const NavigationBar = ({
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               sx={{
-                color: '#0B0B0B',  // Black icons
+                color: '#F2C94C',  // Gold icons
                 '&:hover': {
-                  backgroundColor: '#0B0B0B',  // Black background on hover
-                  color: '#FFFFFF',  // White icon on hover
+                  backgroundColor: '#F2C94C',
+                  color: '#0A0A0A',
                 },
               }}
             >
@@ -496,10 +499,10 @@ const NavigationBar = ({
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               sx={{
-                color: '#0B0B0B',  // Black icons
+                color: '#F2C94C',  // Gold icons
                 '&:hover': {
-                  backgroundColor: '#0B0B0B',  // Black background on hover
-                  color: '#FFFFFF',  // White icon on hover
+                  backgroundColor: '#F2C94C',
+                  color: '#0A0A0A',
                 },
               }}
             >
@@ -515,10 +518,10 @@ const NavigationBar = ({
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               sx={{
-                color: '#0B0B0B',  // Black icons
+                color: '#F2C94C',  // Gold icons
                 '&:hover': {
-                  backgroundColor: '#0B0B0B',  // Black background on hover
-                  color: '#FFFFFF',  // White icon on hover
+                  backgroundColor: '#F2C94C',
+                  color: '#0A0A0A',
                 },
               }}
             >

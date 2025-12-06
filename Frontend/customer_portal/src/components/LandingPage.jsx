@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -13,80 +13,59 @@ import {
   Avatar,
   Chip,
   Stack,
-  Badge,
+  IconButton,
 } from '@mui/material';
 import {
-  Wifi as WifiIcon,
-  ShoppingCart as ShoppingCartIcon,
-  Speed as SpeedIcon,
-  Security as SecurityIcon,
-  Support as SupportIcon,
+  Phone as PhoneIcon,
+  WhatsApp as WhatsAppIcon,
   LocationOn as LocationIcon,
+  FlashOn as FlashOnIcon,
+  Payment as PaymentIcon,
+  CardGiftcard as GiftIcon,
+  ArrowForward as ArrowForwardIcon,
   Star as StarIcon,
   CheckCircle as CheckCircleIcon,
-  TrendingUp as TrendingUpIcon,
-  People as PeopleIcon,
-  Timer as TimerIcon,
-  VerifiedUser as VerifiedUserIcon,
-  FlashOn as FlashOnIcon,
-  ArrowForward as ArrowForwardIcon,
+  Wifi as WifiIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
+import { customerPortalAPI } from '../services/customerPortalApi';
 
 const LandingPage = ({ onNavigateToVoucher, onNavigateToPackages, currentLanguage }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const [packages, setPackages] = useState([]);
+  const [isLoadingPackages, setIsLoadingPackages] = useState(false);
 
-  const stats = [
-    { icon: <PeopleIcon />, value: '50K+', label: 'Active Users', color: '#F5C400' },  // Gold Prime
-    { icon: <LocationIcon />, value: '8+', label: 'Cities Covered', color: '#0072CE' },
-    { icon: <SpeedIcon />, value: '99.9%', label: 'Uptime', color: '#1ABC9C' },
-    { icon: <StarIcon />, value: '4.8/5', label: 'User Rating', color: '#F5C400' },  // Gold Prime
-  ];
+  // Fetch top packages for display
+  useEffect(() => {
+    const fetchTopPackages = async () => {
+      try {
+        setIsLoadingPackages(true);
+        const response = await customerPortalAPI.getPackages();
+        const packagesList = response.data?.packages || response.data?.data || [];
+        
+        // Get top 4 packages
+        const topPackages = packagesList.slice(0, 4).map((pkg, index) => ({
+          ...pkg,
+          colorIndex: index % 4, // Cycle through 4 colors
+        }));
+        setPackages(topPackages);
+      } catch (error) {
+        console.error('Error fetching packages:', error);
+      } finally {
+        setIsLoadingPackages(false);
+      }
+    };
 
-  const features = [
-    {
-      icon: <FlashOnIcon />,
-      title: 'Lightning Fast Speed',
-      description: 'Experience blazing-fast internet speeds up to 100 Mbps for seamless browsing, streaming, and downloads.',
-      color: '#F5C400',  // Gold Prime
-      gradient: 'linear-gradient(135deg, #F5C400 0%, #D4A100 100%)',  // Premium gold gradient
-    },
-    {
-      icon: <SecurityIcon />,
-      title: 'Military-Grade Security',
-      description: 'Bank-level encryption and secure connections to protect your data and privacy at all times.',
-      color: '#0072CE',
-      gradient: 'linear-gradient(135deg, #0072CE 0%, #0056A3 100%)',
-    },
-    {
-      icon: <SupportIcon />,
-      title: '24/7 Expert Support',
-      description: 'Round-the-clock customer support via phone, WhatsApp, and email. We\'re always here to help.',
-      color: '#1ABC9C',
-      gradient: 'linear-gradient(135deg, #1ABC9C 0%, #17A689 100%)',
-    },
-    {
-      icon: <LocationIcon />,
-      title: 'Nationwide Coverage',
-      description: 'Access high-speed WiFi in 8+ major cities across Tanzania. Connect anywhere, anytime.',
-      color: '#F5C400',  // Gold Prime
-      gradient: 'linear-gradient(135deg, #F5C400 0%, #D4A100 100%)',  // Premium gold gradient
-    },
-    {
-      icon: <TimerIcon />,
-      title: 'Instant Activation',
-      description: 'Get connected in seconds. No waiting, no complicated setup. Just purchase and connect instantly.',
-      color: '#0072CE',
-      gradient: 'linear-gradient(135deg, #0072CE 0%, #0056A3 100%)',
-    },
-    {
-      icon: <VerifiedUserIcon />,
-      title: 'Reliable & Trusted',
-      description: 'Trusted by thousands of users. 99.9% uptime guarantee ensures you stay connected when it matters.',
-      color: '#1ABC9C',
-      gradient: 'linear-gradient(135deg, #1ABC9C 0%, #17A689 100%)',
-    },
+    fetchTopPackages();
+  }, []);
+
+  // Package color mapping (secondary palette)
+  const packageColors = [
+    { bg: '#EAF4FF', color: '#3A8DFF', name: 'Blue' },      // sec-blue-light / sec-blue
+    { bg: '#ECFDF5', color: '#10B981', name: 'Green' },     // sec-green-light / sec-green
+    { bg: '#F5E8FF', color: '#A855F7', name: 'Purple' },   // sec-purple-light / sec-purple
+    { bg: '#FFF3E6', color: '#FF8A3D', name: 'Orange' },    // sec-orange-light / sec-orange
   ];
 
   const testimonials = [
@@ -94,745 +73,685 @@ const LandingPage = ({ onNavigateToVoucher, onNavigateToPackages, currentLanguag
       name: 'John Mwangi',
       location: 'Dar es Salaam',
       rating: 5,
-      comment: 'Fast and reliable internet! The voucher system is so convenient. I can connect instantly wherever I am. Best WiFi service in Tanzania!',
+      comment: 'Fast and reliable internet! The voucher system is so convenient. Best WiFi service in Tanzania!',
       avatar: 'JM',
     },
     {
       name: 'Sarah Hassan',
       location: 'Arusha',
       rating: 5,
-      comment: 'Excellent service! The connection is stable and the customer support is outstanding. Highly recommend GG Wi-Fi to everyone.',
+      comment: 'Excellent service! The connection is stable and customer support is outstanding.',
       avatar: 'SH',
     },
     {
       name: 'David Kimathi',
       location: 'Mwanza',
       rating: 5,
-      comment: 'Great value for money. The packages are affordable and the speed is amazing. I\'ve been using it for months without any issues.',
+      comment: 'Great value for money. The packages are affordable and the speed is amazing.',
       avatar: 'DK',
     },
   ];
 
-  const benefits = [
-    { icon: <CheckCircleIcon />, text: 'No contracts or commitments' },
-    { icon: <CheckCircleIcon />, text: 'Pay as you go flexibility' },
-    { icon: <CheckCircleIcon />, text: 'Multiple package options' },
-    { icon: <CheckCircleIcon />, text: 'Easy voucher-based access' },
-    { icon: <CheckCircleIcon />, text: 'Secure and encrypted' },
-    { icon: <CheckCircleIcon />, text: '24/7 customer support' },
-  ];
+  const handleContactClick = () => {
+    window.open('tel:+255742844024', '_self');
+  };
+
+  const handleWhatsAppClick = () => {
+    const message = encodeURIComponent('Hello! I need help with GG Wi-Fi services.');
+    window.open(`https://wa.me/255742844024?text=${message}`, '_blank');
+  };
 
   return (
     <Box
       sx={{
         minHeight: '100vh',
         position: 'relative',
-        overflow: 'hidden',
-        background: '#FFFFFF',  // Soft White background - Premium design
-        pt: 0,  // No padding-top - App.jsx already accounts for fixed navbar
+        background: '#FFFFFF',
+        pt: 0,
       }}
     >
-      <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1, py: { xs: 1, md: 2 }, pt: 0 }}>
-        {/* Hero Section */}
-        <Box sx={{ 
-          pt: 0,
-          pb: { xs: 4, md: 6 },
-          textAlign: 'center',
-        }}>
-          {/* Logo with Circular Avatar */}
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0, y: -20 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, type: 'spring' }}
-            style={{ marginBottom: '2rem' }}
-          >
-            <Avatar
-              src="/gg-logo.png"
-              alt="GG Wi-Fi Logo"
-              sx={{
-                width: { xs: 120, sm: 140, md: 160 },
-                height: { xs: 120, sm: 140, md: 160 },
-                mx: 'auto',
-                border: '5px solid #F5C400',  // Gold Prime
-                boxShadow: '0 0 32px rgba(245, 196, 0, 0.6), 0 8px 40px rgba(245, 196, 0, 0.4)',  // Premium gold glow
-                background: 'linear-gradient(135deg, rgba(245, 196, 0, 0.2) 0%, rgba(245, 196, 0, 0.1) 100%)',  // Premium gold
-                filter: 'brightness(1.15)',
-                '& img': {
-                  objectFit: 'contain',
-                  padding: '6px',
-                  filter: 'brightness(1.3) contrast(1.15) drop-shadow(0 2px 8px rgba(255, 199, 44, 0.6))',
-                },
-              }}
-            />
-          </motion.div>
-
-          {/* Main Heading with Gradient */}
-          <motion.div
-            initial={{ y: 30, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-          >
-            <Typography
-              variant={isMobile ? "h3" : "h1"}
-              sx={{
-                fontWeight: 900,
-                mb: 2,
-                fontSize: { xs: '2.5rem', sm: '3.5rem', md: '4.5rem' },
-                background: 'linear-gradient(135deg, #F5C400 0%, #0B0B0B 50%, #F5C400 100%)',  // Premium gold to black gradient
-                backgroundClip: 'text',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                textShadow: '0 4px 8px rgba(0, 0, 0, 0.3)',
-                lineHeight: 1.2,
-                letterSpacing: '-0.02em',
-              }}
-            >
-              Welcome to GG Wi-Fi
-            </Typography>
-          </motion.div>
-
-          {/* Subtitle */}
-          <motion.div
-            initial={{ y: 30, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-          >
-            <Typography
-              variant={isMobile ? "h6" : "h4"}
-              sx={{
-                color: '#0B0B0B',  // Carbon Black - Premium design
-                mb: 1,
-                fontWeight: 600,
-                maxWidth: 800,
-                mx: 'auto',
-                lineHeight: 1.6,
-              }}
-            >
-              Experience Lightning-Fast, Secure, and Reliable Internet
-            </Typography>
-            <Typography
-              variant="body1"
-              sx={{
-                color: '#8D8D8D',  // Slate Grey - Premium design
-                mb: 4,
-                maxWidth: 700,
-                mx: 'auto',
-                fontSize: { xs: '1rem', md: '1.25rem' },
-                lineHeight: 1.7,
-              }}
-            >
-              Connect instantly to high-speed WiFi hotspots across Tanzania. 
-              No contracts, no hassle—just fast, secure internet when you need it.
-            </Typography>
-          </motion.div>
-
-          {/* Statistics Section */}
-          <motion.div
-            initial={{ y: 50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
-          >
-            <Grid container spacing={3} justifyContent="center" sx={{ mb: 6 }}>
-              {stats.map((stat, index) => (
-                <Grid item xs={6} sm={3} key={index}>
-                  <motion.div
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ duration: 0.5, delay: 0.8 + index * 0.1 }}
-                  >
-                    <Paper
-                      sx={{
-                        p: { xs: 2.5, md: 3.5 },
-                        textAlign: 'center',
-                        background: '#FFFFFF',
-                        border: 'none',
-                        borderRadius: 2,
-                        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
-                        position: 'relative',
-                        transition: 'all 0.2s ease',
-                        '&:hover': {
-                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                        },
-                      }}
-                    >
-                      <Box sx={{ color: '#F5C400', mb: 1.5, display: 'flex', justifyContent: 'center' }}>
-                        {React.cloneElement(stat.icon, { sx: { fontSize: { xs: 28, md: 32 } } })}
-                      </Box>
-                      <Typography
-                        variant="h4"
-                        sx={{
-                          fontWeight: 700,
-                          color: '#0B0B0B',
-                          mb: 0.5,
-                          fontSize: { xs: '2rem', md: '2.5rem' },
-                          lineHeight: 1.2,
-                        }}
-                      >
-                        {stat.value}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          color: '#8D8D8D',
-                          fontWeight: 500,
-                          fontSize: { xs: '0.875rem', md: '0.9375rem' },
-                        }}
-                      >
-                        {stat.label}
-                      </Typography>
-                    </Paper>
-                  </motion.div>
-                </Grid>
-              ))}
-            </Grid>
-          </motion.div>
-
-          {/* Central Action Buttons */}
-          <motion.div
-            initial={{ y: 50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.8, delay: 1.0 }}
-          >
-            <Grid container spacing={3} justifyContent="center" sx={{ mb: 8 }}>
-              <Grid item xs={12} sm={6} md={5}>
-                <Card
-                  component={motion.div}
-                  whileHover={{ y: -4 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={onNavigateToVoucher}
-                  sx={{
-                    background: '#FFFFFF',
-                    border: 'none',
-                    borderRadius: 2,
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
-                    height: '100%',
-                    '&:hover': {
-                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                    },
-                  }}
-                >
-                  <CardContent sx={{ p: { xs: 3, md: 4 }, textAlign: 'center' }}>
-                    <Box
-                      sx={{
-                        width: { xs: 64, md: 72 },
-                        height: { xs: 64, md: 72 },
-                        borderRadius: '50%',
-                        background: '#F5C400',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        mx: 'auto',
-                        mb: 2.5,
-                      }}
-                    >
-                      <WifiIcon sx={{ fontSize: { xs: 32, md: 36 }, color: '#0B0B0B' }} />
-                    </Box>
-                    
-                    <Typography 
-                      variant="h5" 
-                      sx={{
-                        fontWeight: 600,
-                        mb: 1.5,
-                        color: '#0B0B0B',
-                        fontSize: { xs: '1.25rem', md: '1.5rem' },
-                      }}
-                    >
-                      Connect to Hotspot
-                    </Typography>
-
-                    <Typography 
-                      variant="body2" 
-                      sx={{
-                        color: '#8D8D8D',
-                        mb: 3,
-                        fontSize: { xs: '0.875rem', md: '0.9375rem' },
-                        lineHeight: 1.6,
-                      }}
-                    >
-                      Have a voucher code? Connect to GG Wi-Fi network instantly.
-                    </Typography>
-
-                    <Button
-                      variant="contained"
-                      size="large"
-                      fullWidth
-                      endIcon={<ArrowForwardIcon />}
-                      onClick={onNavigateToVoucher}
-                      sx={{
-                        background: '#F5C400',
-                        color: '#0B0B0B',
-                        borderRadius: 2,
-                        py: 1.5,
-                        fontSize: '1rem',
-                        fontWeight: 600,
-                        textTransform: 'none',
-                        boxShadow: 'none',
-                        '&:hover': {
-                          background: '#D4A100',
-                          boxShadow: '0 2px 8px rgba(245, 196, 0, 0.3)',
-                        },
-                      }}
-                    >
-                      Connect Now
-                    </Button>
-                  </CardContent>
-                </Card>
-              </Grid>
-
-              <Grid item xs={12} sm={6} md={5}>
-                <Card
-                  component={motion.div}
-                  whileHover={{ y: -4 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={onNavigateToPackages}
-                  sx={{
-                    background: '#FFFFFF',
-                    border: 'none',
-                    borderRadius: 2,
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
-                    height: '100%',
-                    '&:hover': {
-                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                    },
-                  }}
-                >
-                  <CardContent sx={{ p: { xs: 3, md: 4 }, textAlign: 'center' }}>
-                    <Box
-                      sx={{
-                        width: { xs: 64, md: 72 },
-                        height: { xs: 64, md: 72 },
-                        borderRadius: '50%',
-                        background: '#F5C400',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        mx: 'auto',
-                        mb: 2.5,
-                      }}
-                    >
-                      <ShoppingCartIcon sx={{ fontSize: { xs: 32, md: 36 }, color: '#0B0B0B' }} />
-                    </Box>
-                    
-                    <Typography 
-                      variant="h5" 
-                      sx={{
-                        fontWeight: 600,
-                        mb: 1.5,
-                        color: '#0B0B0B',
-                        fontSize: { xs: '1.25rem', md: '1.5rem' },
-                      }}
-                    >
-                      Buy Packages
-                    </Typography>
-
-                    <Typography 
-                      variant="body2" 
-                      sx={{
-                        color: '#8D8D8D',
-                        mb: 3,
-                        fontSize: { xs: '0.875rem', md: '0.9375rem' },
-                        lineHeight: 1.6,
-                      }}
-                    >
-                      Choose from flexible packages. Pay via mobile money and get instant access.
-                    </Typography>
-
-                    <Button
-                      variant="contained"
-                      size="large"
-                      fullWidth
-                      endIcon={<ArrowForwardIcon />}
-                      onClick={onNavigateToPackages}
-                      sx={{
-                        background: '#F5C400',
-                        color: '#0B0B0B',
-                        borderRadius: 2,
-                        py: 1.5,
-                        fontSize: '1rem',
-                        fontWeight: 600,
-                        textTransform: 'none',
-                        boxShadow: 'none',
-                        '&:hover': {
-                          background: '#D4A100',
-                          boxShadow: '0 2px 8px rgba(245, 196, 0, 0.3)',
-                        },
-                      }}
-                    >
-                      View Packages
-                    </Button>
-                  </CardContent>
-                </Card>
-              </Grid>
-            </Grid>
-          </motion.div>
-
-          {/* Benefits Section */}
-          <motion.div
-            initial={{ y: 50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.8, delay: 1.6 }}
-            sx={{ mb: 8 }}
-          >
-            <Paper
-              sx={{
-                p: { xs: 3, md: 4 },
-                background: '#FFFFFF',
-                border: 'none',
-                borderRadius: 2,
-                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
-                maxWidth: 800,
-                mx: 'auto',
-              }}
-            >
-              <Typography
-                variant="h6"
-                sx={{
-                  fontWeight: 700,
-                  mb: 3,
-                  textAlign: 'center',
-                  color: '#0B0B0B',  // Carbon Black
-                }}
+      <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1, py: { xs: 2, md: 4 } }}>
+        {/* ============================================
+            HERO SECTION (Big, Bold, Emotional)
+            ============================================ */}
+        <Box
+          sx={{
+            pt: { xs: 4, md: 6 },
+            pb: { xs: 6, md: 8 },
+            textAlign: { xs: 'center', md: 'left' },
+          }}
+        >
+          <Grid container spacing={4} alignItems="center">
+            {/* Left Section - Text */}
+            <Grid item xs={12} md={6}>
+              <motion.div
+                initial={{ y: 30, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.8 }}
               >
-                Why Choose GG Wi-Fi?
-              </Typography>
-              <Grid container spacing={2}>
-                {benefits.map((benefit, index) => (
-                  <Grid item xs={12} sm={6} key={index}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                      <CheckCircleIcon sx={{ color: '#F5C400', fontSize: 24 }} />  {/* Gold Prime */}
-                      <Typography
-                        variant="body1"
-                        sx={{
-                          color: '#0B0B0B',  // Carbon Black
-                          fontWeight: 500,
-                        }}
-                      >
-                        {benefit.text}
+                <Typography
+                  variant={isMobile ? "h3" : "h1"}
+                  sx={{
+                    fontWeight: 700,
+                    mb: 2,
+                    fontSize: { xs: '2rem', sm: '3rem', md: '3.5rem' },
+                    color: '#0A0A0A',
+                    lineHeight: 1.2,
+                    letterSpacing: '-0.02em',
+                  }}
+                >
+                  Fast, Reliable, Everywhere Wi-Fi.
+                </Typography>
+                <Typography
+                  variant="body1"
+                  sx={{
+                    color: '#666666',
+                    mb: 4,
+                    fontSize: { xs: '1rem', md: '1.125rem' },
+                    lineHeight: 1.7,
+                    maxWidth: { xs: '100%', md: '90%' },
+                  }}
+                >
+                  Stay connected across all GG WiFi zones with instant hotspot access and secure payments.
+                </Typography>
+                <Stack
+                  direction={{ xs: 'column', sm: 'row' }}
+                  spacing={2}
+                  sx={{ mb: 4 }}
+                >
+                  <Button
+                    variant="contained"
+                    size="large"
+                    endIcon={<ArrowForwardIcon />}
+                    onClick={onNavigateToPackages}
+                    sx={{
+                      backgroundColor: '#F2C94C',
+                      color: '#0A0A0A',
+                      borderRadius: '12px',
+                      px: 4,
+                      py: 1.5,
+                      fontSize: '1rem',
+                      fontWeight: 600,
+                      textTransform: 'none',
+                      boxShadow: 'none',
+                      '&:hover': {
+                        backgroundColor: '#E0B335',
+                        boxShadow: '0 4px 12px rgba(242, 201, 76, 0.3)',
+                      },
+                    }}
+                  >
+                    Buy Package Now
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    size="large"
+                    endIcon={<ArrowForwardIcon />}
+                    onClick={onNavigateToVoucher}
+                    sx={{
+                      borderColor: '#F2C94C',
+                      color: '#0A0A0A',
+                      borderRadius: '12px',
+                      px: 4,
+                      py: 1.5,
+                      fontSize: '1rem',
+                      fontWeight: 600,
+                      textTransform: 'none',
+                      '&:hover': {
+                        borderColor: '#E0B335',
+                        backgroundColor: 'rgba(242, 201, 76, 0.1)',
+                      },
+                    }}
+                  >
+                    Connect With Voucher
+                  </Button>
+                </Stack>
+              </motion.div>
+            </Grid>
+
+            {/* Right Section - Floating Card */}
+            <Grid item xs={12} md={6}>
+              <motion.div
+                initial={{ y: 30, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+              >
+                <Card
+                  sx={{
+                    background: '#FFFFFF',
+                    borderRadius: '16px',
+                    boxShadow: '0 15px 40px rgba(0,0,0,0.08)',
+                    p: 4,
+                    border: '1px solid #EEEEEE',
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, gap: 2 }}>
+                    <Box
+                      sx={{
+                        width: 48,
+                        height: 48,
+                        borderRadius: '50%',
+                        background: '#F2C94C',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <LocationIcon sx={{ color: '#0A0A0A', fontSize: 24 }} />
+                    </Box>
+                    <Box>
+                      <Typography variant="body2" sx={{ color: '#666666', mb: 0.5 }}>
+                        Your Location
+                      </Typography>
+                      <Typography variant="h6" sx={{ color: '#0A0A0A', fontWeight: 600 }}>
+                        Tanzania
                       </Typography>
                     </Box>
-                  </Grid>
-                ))}
-              </Grid>
-            </Paper>
-          </motion.div>
-
-          {/* Features Section */}
-          <motion.div
-            initial={{ y: 50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.8, delay: 1.8 }}
-            sx={{ mb: 8 }}
-          >
-            <Typography
-              variant="h4"
-              sx={{
-                fontWeight: 800,
-                mb: 1,
-                textAlign: 'center',
-                color: '#0B0B0B',  // Carbon Black
-                fontSize: { xs: '1.75rem', md: '2.5rem' },
-              }}
-            >
-              Powerful Features
-            </Typography>
-            <Typography
-              variant="body1"
-              sx={{
-                color: '#8D8D8D',  // Slate Grey
-                mb: 5,
-                textAlign: 'center',
-                maxWidth: 600,
-                mx: 'auto',
-              }}
-            >
-              Everything you need for a seamless internet experience
-            </Typography>
-
-            <Grid container spacing={3}>
-              {features.map((feature, index) => (
-                <Grid item xs={12} sm={6} md={4} key={index}>
-                  <motion.div
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 2.0 + index * 0.1 }}
-                  >
-                    <Paper
-                      component={motion.div}
-                      whileHover={{ y: -4 }}
+                  </Box>
+                  <Box sx={{ mb: 3 }}>
+                    <Typography variant="body2" sx={{ color: '#666666', mb: 1 }}>
+                      Available Networks
+                    </Typography>
+                    <Chip
+                      label="GG-WiFi"
                       sx={{
-                        p: { xs: 2.5, md: 3 },
-                        height: '100%',
-                        background: '#FFFFFF',
-                        border: 'none',
-                        borderRadius: 2,
-                        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
-                        transition: 'all 0.2s ease',
-                        '&:hover': {
-                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                        },
+                        backgroundColor: '#ECFDF5',
+                        color: '#10B981',
+                        fontWeight: 600,
+                        mr: 1,
                       }}
-                    >
-                      <Box
-                        sx={{
-                          width: { xs: 48, md: 56 },
-                          height: { xs: 48, md: 56 },
-                          borderRadius: '50%',
-                          background: feature.color === '#F5C400' ? '#F5C400' : feature.color,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          mb: 2,
-                        }}
-                      >
-                        {React.cloneElement(feature.icon, { 
-                          sx: { 
-                            fontSize: { xs: 24, md: 28 }, 
-                            color: feature.color === '#F5C400' ? '#0B0B0B' : '#FFFFFF' 
-                          }
-                        })}
-                      </Box>
-                      
-                      <Typography 
-                        variant="h6" 
-                        sx={{ 
-                          fontWeight: 600, 
-                          mb: 1,
-                          color: '#0B0B0B',
-                          fontSize: { xs: '1rem', md: '1.125rem' },
-                        }}
-                      >
-                        {feature.title}
-                      </Typography>
-                      
-                      <Typography 
-                        variant="body2" 
-                        sx={{ 
-                          color: '#8D8D8D',
-                          lineHeight: 1.6,
-                          fontSize: { xs: '0.8125rem', md: '0.875rem' },
-                        }}
-                      >
-                        {feature.description}
-                      </Typography>
-                    </Paper>
-                  </motion.div>
-                </Grid>
-              ))}
+                    />
+                    <Chip
+                      label="GG-WiFi-5G"
+                      sx={{
+                        backgroundColor: '#EAF4FF',
+                        color: '#3A8DFF',
+                        fontWeight: 600,
+                      }}
+                    />
+                  </Box>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                      color: '#10B981',
+                      fontWeight: 600,
+                    }}
+                  >
+                    <CheckCircleIcon sx={{ fontSize: 20 }} />
+                    <Typography variant="body2">Live connection available</Typography>
+                  </Box>
+                </Card>
+              </motion.div>
             </Grid>
-          </motion.div>
+          </Grid>
+        </Box>
 
-          {/* Testimonials Section */}
-          <motion.div
-            initial={{ y: 50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.8, delay: 2.6 }}
-            sx={{ mb: 8 }}
-          >
-            <Typography
-              variant="h4"
-              sx={{
-                fontWeight: 800,
-                mb: 1,
-                textAlign: 'center',
-                color: '#0B0B0B',  // Carbon Black
-                fontSize: { xs: '1.75rem', md: '2.5rem' },
-              }}
-            >
-              What Our Customers Say
-            </Typography>
-            <Typography
-              variant="body1"
-              sx={{
-                color: '#8D8D8D',  // Slate Grey
-                mb: 5,
-                textAlign: 'center',
-                maxWidth: 600,
-                mx: 'auto',
-              }}
-            >
-              Join thousands of satisfied customers across Tanzania
-            </Typography>
-
-            <Grid container spacing={3} justifyContent="center">
-              {testimonials.map((testimonial, index) => (
-                <Grid item xs={12} md={4} key={index}>
-                  <motion.div
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 2.8 + index * 0.1 }}
+        {/* ============================================
+            FEATURE STRIP (Horizontal 3-Item Highlights)
+            ============================================ */}
+        <Box sx={{ py: { xs: 4, md: 6 }, background: '#FFFFFF' }}>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={4}>
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+              >
+                <Paper
+                  sx={{
+                    p: 3,
+                    textAlign: 'center',
+                    background: '#FFFFFF',
+                    borderRadius: '16px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+                    border: '1px solid #EEEEEE',
+                    height: '100%',
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 64,
+                      height: 64,
+                      borderRadius: '50%',
+                      background: '#F2C94C',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      mx: 'auto',
+                      mb: 2,
+                    }}
                   >
-                    <Paper
-                      sx={{
-                        p: { xs: 2.5, md: 3 },
-                        height: '100%',
-                        background: '#FFFFFF',
-                        border: 'none',
-                        borderRadius: 2,
-                        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
-                        transition: 'all 0.2s ease',
-                        '&:hover': {
-                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                        },
-                      }}
+                    <FlashOnIcon sx={{ color: '#0A0A0A', fontSize: 32 }} />
+                  </Box>
+                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: '#0A0A0A' }}>
+                    Instant Connection
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#666666' }}>
+                    Get connected in seconds with our fast activation system
+                  </Typography>
+                </Paper>
+              </motion.div>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+              >
+                <Paper
+                  sx={{
+                    p: 3,
+                    textAlign: 'center',
+                    background: '#FFFFFF',
+                    borderRadius: '16px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+                    border: '1px solid #EEEEEE',
+                    height: '100%',
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 64,
+                      height: 64,
+                      borderRadius: '50%',
+                      background: '#F2C94C',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      mx: 'auto',
+                      mb: 2,
+                    }}
+                  >
+                    <PaymentIcon sx={{ color: '#0A0A0A', fontSize: 32 }} />
+                  </Box>
+                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: '#0A0A0A' }}>
+                    Secure Mobile Payments
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#666666' }}>
+                    Pay safely with SELCOM/ZenoPay mobile money integration
+                  </Typography>
+                </Paper>
+              </motion.div>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+              >
+                <Paper
+                  sx={{
+                    p: 3,
+                    textAlign: 'center',
+                    background: '#FFFFFF',
+                    borderRadius: '16px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+                    border: '1px solid #EEEEEE',
+                    height: '100%',
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 64,
+                      height: 64,
+                      borderRadius: '50%',
+                      background: '#F2C94C',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      mx: 'auto',
+                      mb: 2,
+                    }}
+                  >
+                    <GiftIcon sx={{ color: '#0A0A0A', fontSize: 32 }} />
+                  </Box>
+                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: '#0A0A0A' }}>
+                    Earn GG Points
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#666666' }}>
+                    Get loyalty points on every purchase and redeem rewards
+                  </Typography>
+                </Paper>
+              </motion.div>
+            </Grid>
+          </Grid>
+        </Box>
+
+        {/* ============================================
+            TOP PACKAGES (Modern Card Grid)
+            ============================================ */}
+        <Box sx={{ py: { xs: 4, md: 6 } }}>
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: 700,
+              mb: 1,
+              textAlign: 'center',
+              color: '#0A0A0A',
+              fontSize: { xs: '1.75rem', md: '2.25rem' },
+            }}
+          >
+            Top Packages
+          </Typography>
+          <Typography
+            variant="body1"
+            sx={{
+              color: '#666666',
+              mb: 4,
+              textAlign: 'center',
+              maxWidth: 600,
+              mx: 'auto',
+            }}
+          >
+            Choose the perfect package for your needs
+          </Typography>
+
+          {isLoadingPackages ? (
+            <Box sx={{ textAlign: 'center', py: 4 }}>
+              <Typography variant="body2" sx={{ color: '#666666' }}>
+                Loading packages...
+              </Typography>
+            </Box>
+          ) : packages.length > 0 ? (
+            <Grid container spacing={3}>
+              {packages.map((pkg, index) => {
+                const colorScheme = packageColors[pkg.colorIndex || index % 4];
+                return (
+                  <Grid item xs={12} sm={6} md={3} key={pkg.id || index}>
+                    <motion.div
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ duration: 0.6, delay: index * 0.1 }}
                     >
-                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 1 }}>
-                        {[...Array(testimonial.rating)].map((_, i) => (
-                          <StarIcon
-                            key={i}
-                            sx={{
-                              color: '#F5C400',  // Gold Prime
-                              fontSize: 20,
-                            }}
-                          />
-                        ))}
-                      </Box>
-                      <Typography
-                        variant="body1"
+                      <Card
                         sx={{
-                          color: '#0B0B0B',  // Carbon Black
-                          mb: 3,
-                          fontStyle: 'italic',
-                          lineHeight: 1.7,
-                          fontSize: '1rem',
+                          background: colorScheme.bg,
+                          borderRadius: '16px',
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+                          border: `2px solid ${colorScheme.color}`,
+                          height: '100%',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          transition: 'all 0.3s ease',
+                          '&:hover': {
+                            transform: 'translateY(-4px)',
+                            boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                          },
                         }}
                       >
-                        "{testimonial.comment}"
-                      </Typography>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Avatar
-                          sx={{
-                            width: 50,
-                            height: 50,
-                            background: 'linear-gradient(135deg, #F5C400 0%, #D4A100 100%)',  // Premium gold gradient
-                            color: '#0B0B0B',  // Carbon Black text
-                            fontWeight: 700,
-                            fontSize: '1.25rem',
-                          }}
-                        >
-                          {testimonial.avatar}
-                        </Avatar>
-                        <Box>
+                        <CardContent sx={{ flex: 1, p: 3 }}>
                           <Typography
-                            variant="subtitle1"
+                            variant="h6"
                             sx={{
                               fontWeight: 700,
-                              color: '#0B0B0B',  // Carbon Black
+                              mb: 1,
+                              color: '#0A0A0A',
                             }}
                           >
-                            {testimonial.name}
+                            {pkg.name || 'Package'}
                           </Typography>
                           <Typography
-                            variant="caption"
+                            variant="body2"
                             sx={{
-                              color: '#8D8D8D',  // Slate Grey
+                              color: '#666666',
+                              mb: 2,
                             }}
                           >
-                            {testimonial.location}
+                            {pkg.duration || `${pkg.durationDays || 0} Days`}
                           </Typography>
-                        </Box>
-                      </Box>
-                    </Paper>
-                  </motion.div>
-                </Grid>
-              ))}
+                          <Box sx={{ mb: 2 }}>
+                            <Typography
+                              variant="h5"
+                              sx={{
+                                fontWeight: 700,
+                                color: colorScheme.color,
+                                mb: 0.5,
+                              }}
+                            >
+                              TZS {pkg.price?.toLocaleString() || '0'}
+                            </Typography>
+                            {pkg.loyaltyPoints && (
+                              <Chip
+                                label={`+${pkg.loyaltyPoints} GG Points`}
+                                size="small"
+                                sx={{
+                                  backgroundColor: '#F2C94C',
+                                  color: '#0A0A0A',
+                                  fontWeight: 600,
+                                }}
+                              />
+                            )}
+                          </Box>
+                          <Button
+                            variant="contained"
+                            fullWidth
+                            onClick={onNavigateToPackages}
+                            sx={{
+                              backgroundColor: '#F2C94C',
+                              color: '#0A0A0A',
+                              borderRadius: '12px',
+                              py: 1.5,
+                              fontWeight: 600,
+                              textTransform: 'none',
+                              '&:hover': {
+                                backgroundColor: '#E0B335',
+                              },
+                            }}
+                          >
+                            Buy Now
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  </Grid>
+                );
+              })}
             </Grid>
-          </motion.div>
+          ) : (
+            <Box sx={{ textAlign: 'center', py: 4 }}>
+              <Typography variant="body2" sx={{ color: '#666666' }}>
+                No packages available at the moment
+              </Typography>
+            </Box>
+          )}
+        </Box>
 
-          {/* Final CTA Section */}
-          <motion.div
-            initial={{ y: 50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.8, delay: 3.2 }}
-            sx={{ mb: 6 }}
+        {/* ============================================
+            TESTIMONIALS (Elegant, Minimal, Trust-Building)
+            ============================================ */}
+        <Box sx={{ py: { xs: 4, md: 6 } }}>
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: 700,
+              mb: 1,
+              textAlign: 'center',
+              color: '#0A0A0A',
+              fontSize: { xs: '1.75rem', md: '2.25rem' },
+            }}
           >
-            <Paper
+            What Our Customers Say
+          </Typography>
+          <Typography
+            variant="body1"
+            sx={{
+              color: '#666666',
+              mb: 4,
+              textAlign: 'center',
+              maxWidth: 600,
+              mx: 'auto',
+            }}
+          >
+            Join thousands of satisfied users across Tanzania
+          </Typography>
+
+          <Grid container spacing={3} justifyContent="center">
+            {testimonials.map((testimonial, index) => (
+              <Grid item xs={12} md={4} key={index}>
+                <motion.div
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ duration: 0.6, delay: index * 0.1 }}
+                >
+                  <Card
+                    sx={{
+                      background: '#FFFFFF',
+                      borderRadius: '16px',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+                      border: '1px solid #EEEEEE',
+                      p: 3,
+                      height: '100%',
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+                      {[...Array(testimonial.rating)].map((_, i) => (
+                        <StarIcon
+                          key={i}
+                          sx={{
+                            color: '#F2C94C',
+                            fontSize: 20,
+                          }}
+                        />
+                      ))}
+                    </Box>
+                    <Typography
+                      variant="body1"
+                      sx={{
+                        color: '#0A0A0A',
+                        mb: 3,
+                        fontStyle: 'italic',
+                        lineHeight: 1.7,
+                      }}
+                    >
+                      "{testimonial.comment}"
+                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <Avatar
+                        sx={{
+                          width: 50,
+                          height: 50,
+                          background: '#F2C94C',
+                          color: '#0A0A0A',
+                          fontWeight: 700,
+                        }}
+                      >
+                        {testimonial.avatar}
+                      </Avatar>
+                      <Box>
+                        <Typography
+                          variant="subtitle1"
+                          sx={{
+                            fontWeight: 700,
+                            color: '#0A0A0A',
+                          }}
+                        >
+                          {testimonial.name}
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            color: '#666666',
+                          }}
+                        >
+                          {testimonial.location}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Card>
+                </motion.div>
+              </Grid>
+            ))}
+          </Grid>
+        </Box>
+
+        {/* ============================================
+            CALL TO ACTION (Premium, Clean, High-Contrast)
+            ============================================ */}
+        <Box sx={{ py: { xs: 4, md: 6 } }}>
+          <Card
+            sx={{
+              background: '#FFFFFF',
+              borderRadius: '16px',
+              boxShadow: '0 12px 36px rgba(0,0,0,0.10)',
+              border: '1px solid #EEEEEE',
+              p: { xs: 4, md: 6 },
+              textAlign: 'center',
+            }}
+          >
+            <Typography
+              variant="h4"
               sx={{
-                p: { xs: 4, md: 5 },
-                background: '#FFFFFF',
-                border: 'none',
-                borderRadius: 2,
-                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
-                textAlign: 'center',
+                fontWeight: 700,
+                mb: 2,
+                color: '#0A0A0A',
+                fontSize: { xs: '1.75rem', md: '2.25rem' },
               }}
             >
-              <Typography
-                variant="h4"
+              Ready to Get Connected?
+            </Typography>
+            <Typography
+              variant="body1"
+              sx={{
+                color: '#666666',
+                mb: 4,
+                maxWidth: 600,
+                mx: 'auto',
+                fontSize: { xs: '1rem', md: '1.125rem' },
+              }}
+            >
+              Join thousands of users enjoying fast, reliable Wi-Fi across Tanzania.
+            </Typography>
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              spacing={2}
+              justifyContent="center"
+            >
+              <Button
+                variant="contained"
+                size="large"
+                endIcon={<ArrowForwardIcon />}
+                onClick={onNavigateToPackages}
                 sx={{
-                  fontWeight: 800,
-                  mb: 2,
-                  color: '#0B0B0B',  // Carbon Black
-                  fontSize: { xs: '1.75rem', md: '2.25rem' },
+                  backgroundColor: '#F2C94C',
+                  color: '#0A0A0A',
+                  borderRadius: '12px',
+                  px: 4,
+                  py: 1.5,
+                  fontSize: '1rem',
+                  fontWeight: 600,
+                  textTransform: 'none',
+                  '&:hover': {
+                    backgroundColor: '#E0B335',
+                  },
                 }}
               >
-                Ready to Get Started?
-              </Typography>
-              <Typography
-                variant="body1"
+                Buy Package Now
+              </Button>
+              <Button
+                variant="outlined"
+                size="large"
+                endIcon={<ArrowForwardIcon />}
+                onClick={onNavigateToVoucher}
                 sx={{
-                  color: '#8D8D8D',  // Slate Grey
-                  mb: 4,
-                  maxWidth: 600,
-                  mx: 'auto',
-                  fontSize: { xs: '1rem', md: '1.1rem' },
+                  borderColor: '#F2C94C',
+                  color: '#0A0A0A',
+                  borderRadius: '12px',
+                  px: 4,
+                  py: 1.5,
+                  fontSize: '1rem',
+                  fontWeight: 600,
+                  textTransform: 'none',
+                  '&:hover': {
+                    borderColor: '#E0B335',
+                    backgroundColor: 'rgba(242, 201, 76, 0.1)',
+                  },
                 }}
               >
-                Join thousands of satisfied customers. Get connected in seconds with our easy-to-use platform.
-              </Typography>
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="center">
-                <Button
-                  variant="contained"
-                  size="large"
-                  endIcon={<ArrowForwardIcon />}
-                  onClick={onNavigateToPackages}
-                  sx={{
-                    background: '#F5C400',
-                    color: '#0B0B0B',
-                    borderRadius: 2,
-                    px: 4,
-                    py: 1.5,
-                    fontSize: '1rem',
-                    fontWeight: 600,
-                    textTransform: 'none',
-                    boxShadow: 'none',
-                    '&:hover': {
-                      background: '#D4A100',
-                      boxShadow: '0 2px 8px rgba(245, 196, 0, 0.3)',
-                    },
-                  }}
-                >
-                  Buy Package Now
-                </Button>
-                <Button
-                  variant="outlined"
-                  size="large"
-                  endIcon={<ArrowForwardIcon />}
-                  onClick={onNavigateToVoucher}
-                  sx={{
-                    borderColor: '#EDEDED',
-                    color: '#0B0B0B',
-                    borderRadius: 2,
-                    px: 4,
-                    py: 1.5,
-                    fontSize: '1rem',
-                    fontWeight: 600,
-                    textTransform: 'none',
-                    borderWidth: 1,
-                    '&:hover': {
-                      borderColor: '#F5C400',
-                      background: 'rgba(245, 196, 0, 0.05)',
-                      borderWidth: 1,
-                    },
-                  }}
-                >
-                  Connect with Voucher
-                </Button>
-              </Stack>
-            </Paper>
-          </motion.div>
+                Connect With Voucher
+              </Button>
+            </Stack>
+          </Card>
         </Box>
       </Container>
     </Box>
