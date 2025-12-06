@@ -24,7 +24,8 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/customer-portal")
-@CrossOrigin(origins = "*")
+// CORS is handled globally via CorsConfig, CorsFilter, and WebMvcCorsConfig
+// No need for @CrossOrigin annotation here
 public class CustomerPortalController {
 
     @Autowired
