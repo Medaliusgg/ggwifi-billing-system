@@ -198,7 +198,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
               popular: false,
               features: ['High Speed', 'Secure Connection', 'Easy Setup'],
               icon: <FlashOnIcon />,
-              color: '#F5C400',  // Gold Prime
+              color: '#F2C94C',  // Official Gold
             },
             { 
               id: 2, 
@@ -231,7 +231,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
               popular: true,
               features: ['Maximum Speed', 'Priority Support', 'Best Deal'],
               icon: <TrendingUpIcon />,
-              color: '#F5C400',  // Gold Prime
+              color: '#F2C94C',  // Official Gold
             },
           ]);
         }
@@ -250,7 +250,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
             popular: false,
             features: ['High Speed', 'Secure Connection', 'Easy Setup'],
             icon: <FlashOnIcon />,
-            color: '#F5C400',  // Gold Prime
+            color: '#F2C94C',  // Official Gold
           },
           { 
             id: 2, 
@@ -283,7 +283,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
             popular: true,
             features: ['Maximum Speed', 'Priority Support', 'Best Deal'],
             icon: <TrendingUpIcon />,
-            color: '#F5C400',  // Gold Prime
+            color: '#F2C94C',  // Official Gold
           },
         ]);
       } finally {
@@ -679,7 +679,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                 boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',  // Subtle shadow
                 '&:hover': {
                   background: 'rgba(245, 196, 0, 0.1)',  // Gold glass on hover
-                  borderColor: '#F5C400',  // Yellow border
+                  borderColor: '#F2C94C',  // Official Gold border
                   transform: 'translateX(-4px)',
                 },
                 transition: 'all 0.2s ease',
@@ -705,7 +705,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                     width: { xs: 80, sm: 100 },
                     height: { xs: 80, sm: 100 },
                     mx: 'auto',
-                    border: '4px solid #F5C400',  // Gold Prime
+                    border: '4px solid #F2C94C',  // Official Gold
                     boxShadow: '0 0 32px rgba(245, 196, 0, 0.6), 0 8px 30px rgba(245, 196, 0, 0.4)',  // Premium gold glow
                     background: 'linear-gradient(135deg, rgba(245, 196, 0, 0.2) 0%, rgba(245, 196, 0, 0.1) 100%)',  // Premium gold
                     filter: 'brightness(1.1)',
@@ -737,7 +737,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
               {/* Features */}
               <Stack direction="row" spacing={2} justifyContent="center" sx={{ mb: 6 }}>
                 {[
-                  { icon: <SpeedIcon />, text: 'Lightning Fast', color: '#F5C400' },  // Gold Prime
+                  { icon: <SpeedIcon />, text: 'Lightning Fast', color: '#F2C94C' },  // Official Gold
                   { icon: <SecurityIcon />, text: 'Secure & Reliable', color: '#1ABC9C' },
                   { icon: <PublicIcon />, text: 'Wide Coverage', color: '#0072CE' },
                 ].map((feature, index) => (
@@ -828,7 +828,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                             icon={<StarIcon />}
                             label="Most Popular"
                             sx={{
-                              background: 'linear-gradient(135deg, #F5C400 0%, #D4A100 100%)',  // Premium gold gradient
+                              background: 'linear-gradient(135deg, #F2C94C 0%, #E0B335 100%)',  // Official gold gradient
                               color: '#000000',
                               fontWeight: 700,
                               fontSize: '0.8rem',
@@ -1021,7 +1021,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                               mb: 2,
                               borderRadius: 2,
                               background: '#FFFFFF',  // White background
-                              border: '2px solid #F5C400',  // Yellow border
+                              border: '2px solid #F2C94C',  // Official Gold border
                               '& .MuiAlert-icon': {
                                 color: '#F2C94C',  // Yellow icon
                               },
@@ -1305,7 +1305,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                     left: 0,
                     right: 0,
                     height: '3px',
-                    background: 'linear-gradient(90deg, #F5C400 0%, #D4A100 100%)',
+                    background: 'linear-gradient(90deg, #F2C94C 0%, #E0B335 100%)',
                     borderRadius: '4px 4px 0 0',
                   },
                 }}>
@@ -1336,7 +1336,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                   <StepLabel 
                     StepIconProps={{
                       sx: {
-                        '&.Mui-active': { color: '#F5C400' },
+                        '&.Mui-active': { color: '#F2C94C' },
                         '&.Mui-completed': { color: '#1ABC9C' },
                       }
                     }}
@@ -1348,7 +1348,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                   <StepLabel
                     StepIconProps={{
                       sx: {
-                        '&.Mui-active': { color: '#F5C400' },
+                        '&.Mui-active': { color: '#F2C94C' },
                         '&.Mui-completed': { color: '#1ABC9C' },
                       }
                     }}
@@ -1360,7 +1360,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                   <StepLabel
                     StepIconProps={{
                       sx: {
-                        '&.Mui-active': { color: '#F5C400' },
+                        '&.Mui-active': { color: '#F2C94C' },
                         '&.Mui-completed': { color: '#1ABC9C' },
                       }
                     }}
@@ -1502,7 +1502,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                 <Box sx={{ textAlign: 'center', py: 4 }}>
                   {paymentStatus === 'processing' && (
                     <>
-                      <CircularProgress size={60} sx={{ color: '#F5C400', mb: 3 }} />
+                      <CircularProgress size={60} sx={{ color: '#F2C94C', mb: 3 }} />
                       <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: '#0B0B0B' }}>
                         Processing Payment...
                       </Typography>
@@ -1548,7 +1548,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                           </Typography>
                         </Box>
                       )}
-                      <Alert severity="warning" sx={{ borderRadius: 2, background: '#FFF9E6', border: '1px solid #F5C400' }}>
+                      <Alert severity="warning" sx={{ borderRadius: 2, background: '#FFF9E6', border: '1px solid #F2C94C' }}>
                         <Typography variant="body2" sx={{ color: '#0B0B0B' }}>
                           ⚠️ Do not close this window until payment is complete.
                         </Typography>
@@ -1638,7 +1638,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                       {paymentMessage && (
                         <Box sx={{ 
                           background: '#FFF9E6', 
-                          border: '1px solid #F5C400', 
+                          border: '1px solid #F2C94C', 
                           borderRadius: 2, 
                           p: 2, 
                           mb: 2 
@@ -1761,7 +1761,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                   onClick={handleProceedToPayment}
                   disabled={!customerDetails.fullName || !customerDetails.phoneNumber}
                   sx={{
-                    background: '#F5C400',
+                    backgroundColor: '#F2C94C',
                     color: '#0B0B0B',
                     px: 4,
                     py: 1.5,
@@ -1787,7 +1787,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                   variant="contained"
                   onClick={handleProceedToPayment}
                     sx={{
-                      background: '#F5C400',
+                      backgroundColor: '#F2C94C',
                       color: '#0B0B0B',
                       px: 4,
                       py: 1.5,
