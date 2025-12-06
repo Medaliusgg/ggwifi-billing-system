@@ -165,6 +165,7 @@ class PaymentService {
     const maxElapsedSeconds = 60; // Maximum 60 seconds
     let attempts = 0;
     let pollInterval = null;
+    let currentInterval = interval; // Track current polling interval
     
     // Immediate first poll (don't wait for interval)
     const performPoll = async () => {
