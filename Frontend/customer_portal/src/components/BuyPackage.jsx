@@ -492,7 +492,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
               }
             }
           },
-          45, // Max attempts (90 seconds with 2s interval) - Reduced from 3 minutes for better UX
+          30, // Max attempts (60 seconds with 2s interval) - Matches USSD timeout
           2000 // Interval (2 seconds - more responsive)
         );
         
