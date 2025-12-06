@@ -61,7 +61,7 @@ pages_build_output_dir = "dist"
 Set these in **Cloudflare Dashboard** → **Pages** → **Settings** → **Environment Variables**:
 - `VITE_API_URL`: `https://api.ggwifi.co.tz/api/v1`
 - `VITE_APP_NAME`: `GGWIFI Customer Portal`
-- `VITE_APP_DOMAIN`: `connect.ggwifi.co.tz`
+- `VITE_APP_DOMAIN`: `hotspot.ggwifi.co.tz`
 - `VITE_ENVIRONMENT`: `production`
 
 ## Next Steps
