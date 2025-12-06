@@ -414,13 +414,19 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
           currentPollingStop();
         }
         
-        // Set initial status
+        // Set initial status with clear instructions
         setPaymentStatus('processing');
-        setPaymentMessage('Payment initiated. Please complete the payment on your mobile device.');
+        setPaymentMessage('Payment request sent! Check your phone for the USSD prompt and enter your mobile money PIN.');
         setOrderId(result.order_id);
         setPaymentStep(2);
         setPaymentElapsedTime(0);
         setPaymentPollingAttempts(0);
+        
+        // Show initial instruction toast
+        toast.info('📱 Check your phone for payment instructions!', {
+          duration: 5000,
+          position: 'top-center'
+        });
         
         // Start enhanced payment status polling with optimized settings
         const stopPolling = await paymentService.pollPaymentStatus(
@@ -431,6 +437,21 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
             // Update elapsed time and attempts
             if (statusData.elapsedSeconds !== undefined) {
               setPaymentElapsedTime(statusData.elapsedSeconds);
+              
+              // Progressive warnings with toast notifications
+              if (statusData.elapsedSeconds === 10) {
+                toast.warning('📱 Check your phone for the USSD prompt!', { duration: 4000 });
+              } else if (statusData.elapsedSeconds === 20) {
+                toast.warning('🔐 Please enter your mobile money PIN on your phone!', { duration: 4000 });
+              } else if (statusData.elapsedSeconds === 30) {
+                toast.warning('⏳ Payment processing... Please wait for confirmation.', { duration: 4000 });
+              } else if (statusData.elapsedSeconds === 40) {
+                toast.error('⚠️ 20 seconds remaining! Please complete payment now!', { duration: 5000 });
+              } else if (statusData.elapsedSeconds === 50) {
+                toast.error('🚨 10 seconds left! Complete payment immediately!', { duration: 5000 });
+              } else if (statusData.elapsedSeconds === 55) {
+                toast.error('🚨 CRITICAL: 5 seconds remaining!', { duration: 5000 });
+              }
             }
             if (statusData.attempt !== undefined) {
               setPaymentPollingAttempts(statusData.attempt);
@@ -1547,43 +1568,154 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                   {paymentStatus === 'processing' && (
                     <>
                       <CircularProgress size={60} sx={{ color: '#F2C94C', mb: 3 }} />
+                      
+                      {/* Dynamic Status Title */}
                       <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: '#0B0B0B' }}>
-                        Processing Payment...
+                        {paymentElapsedTime < 10 && '📱 Payment Request Sent'}
+                        {paymentElapsedTime >= 10 && paymentElapsedTime < 30 && '⏳ Waiting for Your Response'}
+                        {paymentElapsedTime >= 30 && paymentElapsedTime < 50 && '🔄 Processing Payment'}
+                        {paymentElapsedTime >= 50 && paymentElapsedTime < 60 && '⚠️ Almost Timeout - Please Complete'}
+                        {paymentElapsedTime >= 60 && '⏰ Payment Timeout'}
                       </Typography>
                       
-                      {/* Progress Indicator */}
-                      <Box sx={{ mb: 3 }}>
-                        <Typography variant="body2" sx={{ color: '#8D8D8D', mb: 1 }}>
-                          {paymentElapsedTime > 0 ? `⏱️ Waiting for payment confirmation... (${paymentElapsedTime}s)` : '⏱️ Waiting for payment confirmation...'}
-                        </Typography>
-                        {paymentPollingAttempts > 0 && (
-                          <Typography variant="caption" sx={{ color: '#8D8D8D' }}>
-                            Checking status... (Attempt {paymentPollingAttempts})
+                      {/* Progress Bar */}
+                      <Box sx={{ mb: 3, px: 2 }}>
+                        <Box sx={{ 
+                          width: '100%', 
+                          height: 8, 
+                          backgroundColor: '#EDEDED', 
+                          borderRadius: 4,
+                          overflow: 'hidden',
+                          mb: 1
+                        }}>
+                          <Box sx={{
+                            width: `${Math.min((paymentElapsedTime / 60) * 100, 100)}%`,
+                            height: '100%',
+                            backgroundColor: paymentElapsedTime < 30 ? '#10B981' : 
+                                            paymentElapsedTime < 50 ? '#F2C94C' : 
+                                            paymentElapsedTime < 60 ? '#FF8A3D' : '#E74C3C',
+                            transition: 'width 0.3s ease, background-color 0.3s ease',
+                            borderRadius: 4
+                          }} />
+                        </Box>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <Typography variant="caption" sx={{ color: '#8D8D8D', fontWeight: 600 }}>
+                            {paymentElapsedTime}s / 60s
                           </Typography>
-                        )}
+                          <Typography variant="caption" sx={{ color: '#8D8D8D' }}>
+                            {60 - paymentElapsedTime > 0 ? `${60 - paymentElapsedTime}s remaining` : 'Timeout reached'}
+                          </Typography>
+                        </Box>
                       </Box>
                       
-                      <Alert severity="info" sx={{ mb: 2, borderRadius: 2, background: '#F0F7FF' }}>
+                      {/* Step-by-Step Instructions */}
+                      <Box sx={{ mb: 3, textAlign: 'left', maxWidth: 500, mx: 'auto' }}>
+                        <Typography variant="body2" sx={{ color: '#0B0B0B', fontWeight: 600, mb: 1.5 }}>
+                          📋 What's Happening:
+                        </Typography>
+                        <Box sx={{ pl: 2 }}>
+                          <Typography variant="body2" sx={{ color: paymentElapsedTime >= 0 ? '#10B981' : '#8D8D8D', mb: 0.5, display: 'flex', alignItems: 'center' }}>
+                            <span style={{ marginRight: 8 }}>{paymentElapsedTime >= 0 ? '✅' : '⏳'}</span>
+                            Payment request sent to your phone
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: paymentElapsedTime >= 5 ? '#10B981' : '#8D8D8D', mb: 0.5, display: 'flex', alignItems: 'center' }}>
+                            <span style={{ marginRight: 8 }}>{paymentElapsedTime >= 5 ? '✅' : '⏳'}</span>
+                            USSD prompt received on your phone
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: paymentElapsedTime >= 15 ? '#10B981' : '#8D8D8D', mb: 0.5, display: 'flex', alignItems: 'center' }}>
+                            <span style={{ marginRight: 8 }}>{paymentElapsedTime >= 15 ? '✅' : '⏳'}</span>
+                            Enter your mobile money PIN
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: paymentElapsedTime >= 25 ? '#10B981' : '#8D8D8D', mb: 0.5, display: 'flex', alignItems: 'center' }}>
+                            <span style={{ marginRight: 8 }}>{paymentElapsedTime >= 25 ? '✅' : '⏳'}</span>
+                            Payment being processed
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: paymentElapsedTime >= 35 ? '#10B981' : '#8D8D8D', mb: 0.5, display: 'flex', alignItems: 'center' }}>
+                            <span style={{ marginRight: 8 }}>{paymentElapsedTime >= 35 ? '✅' : '⏳'}</span>
+                            Confirming payment status
+                          </Typography>
+                        </Box>
+                      </Box>
+                      
+                      {/* Progressive Warnings */}
+                      <Alert 
+                        severity={
+                          paymentElapsedTime < 10 ? 'info' :
+                          paymentElapsedTime < 30 ? 'info' :
+                          paymentElapsedTime < 50 ? 'warning' :
+                          paymentElapsedTime < 60 ? 'warning' : 'error'
+                        }
+                        sx={{ 
+                          mb: 2, 
+                          borderRadius: 2, 
+                          background: paymentElapsedTime < 30 ? '#F0F7FF' :
+                                     paymentElapsedTime < 50 ? '#FFF9E6' :
+                                     paymentElapsedTime < 60 ? '#FFF3E6' : '#FFEBEE',
+                          border: paymentElapsedTime < 30 ? '1px solid #3A8DFF' :
+                                 paymentElapsedTime < 50 ? '1px solid #F2C94C' :
+                                 paymentElapsedTime < 60 ? '1px solid #FF8A3D' : '1px solid #E74C3C'
+                        }}
+                      >
                         <Typography variant="body2" sx={{ color: '#0B0B0B', fontWeight: 600, mb: 0.5 }}>
-                          📱 Check Your Phone
+                          {paymentElapsedTime < 10 && '📱 Step 1: Check Your Phone'}
+                          {paymentElapsedTime >= 10 && paymentElapsedTime < 20 && '📱 Step 2: Look for USSD Prompt'}
+                          {paymentElapsedTime >= 20 && paymentElapsedTime < 30 && '🔐 Step 3: Enter Your PIN'}
+                          {paymentElapsedTime >= 30 && paymentElapsedTime < 40 && '⏳ Step 4: Payment Processing'}
+                          {paymentElapsedTime >= 40 && paymentElapsedTime < 50 && '⚠️ Step 5: Almost Timeout - Complete Now'}
+                          {paymentElapsedTime >= 50 && paymentElapsedTime < 55 && '⏰ Step 6: 10 Seconds Left!'}
+                          {paymentElapsedTime >= 55 && paymentElapsedTime < 60 && '🚨 Step 7: 5 Seconds Left - Complete Immediately!'}
+                          {paymentElapsedTime >= 60 && '⏰ Payment Timeout'}
                         </Typography>
-                        <Typography variant="body2" sx={{ color: '#505050' }}>
-                          {paymentMessage || 'Please check your phone for payment instructions. Complete the payment on your mobile device.'}
+                        <Typography variant="body2" sx={{ color: '#505050', mb: 1 }}>
+                          {paymentElapsedTime < 10 && 'A payment request has been sent to your phone. Please check for the USSD prompt.'}
+                          {paymentElapsedTime >= 10 && paymentElapsedTime < 20 && 'You should see a USSD prompt on your phone. If not, check your phone\'s notification or dial *150*00# to check pending transactions.'}
+                          {paymentElapsedTime >= 20 && paymentElapsedTime < 30 && 'Please enter your mobile money PIN on your phone to complete the payment. The prompt will expire in ' + (60 - paymentElapsedTime) + ' seconds.'}
+                          {paymentElapsedTime >= 30 && paymentElapsedTime < 40 && 'If you\'ve already entered your PIN, the payment is being processed. Please wait for confirmation. Time remaining: ' + (60 - paymentElapsedTime) + ' seconds.'}
+                          {paymentElapsedTime >= 40 && paymentElapsedTime < 50 && '⚠️ Payment is taking longer than expected. Please check your phone immediately and complete the payment. Only ' + (60 - paymentElapsedTime) + ' seconds remaining!'}
+                          {paymentElapsedTime >= 50 && paymentElapsedTime < 55 && '🚨 URGENT: Only ' + (60 - paymentElapsedTime) + ' seconds left! Please complete the payment on your phone NOW or it will expire!'}
+                          {paymentElapsedTime >= 55 && paymentElapsedTime < 60 && '🚨 CRITICAL: Only ' + (60 - paymentElapsedTime) + ' seconds remaining! Complete the payment immediately!'}
+                          {paymentElapsedTime >= 60 && 'The USSD prompt has expired after 60 seconds. Please initiate a new payment to try again.'}
                         </Typography>
-                        {paymentElapsedTime > 20 && paymentElapsedTime < 40 && (
-                          <Typography variant="caption" sx={{ color: '#505050', display: 'block', mt: 1, fontStyle: 'italic' }}>
-                            💡 If you've already entered your PIN, the payment is being processed. Please wait...
-                          </Typography>
+                        
+                        {/* Action Items */}
+                        {paymentElapsedTime < 30 && (
+                          <Box sx={{ mt: 1.5, p: 1.5, background: 'rgba(58, 141, 255, 0.1)', borderRadius: 1 }}>
+                            <Typography variant="caption" sx={{ color: '#0B0B0B', fontWeight: 600, display: 'block', mb: 0.5 }}>
+                              ✅ What to do now:
+                            </Typography>
+                            <Typography variant="caption" sx={{ color: '#505050', display: 'block' }}>
+                              1. Check your phone for the USSD prompt<br/>
+                              2. Enter your mobile money PIN when prompted<br/>
+                              3. Confirm the payment amount<br/>
+                              4. Wait for confirmation (this page will update automatically)
+                            </Typography>
+                          </Box>
                         )}
-                        {paymentElapsedTime >= 40 && paymentElapsedTime < 60 && (
-                          <Typography variant="caption" sx={{ color: '#FF8A3D', display: 'block', mt: 1, fontWeight: 600 }}>
-                            ⚠️ Payment is taking longer than expected. Please check your phone and complete the payment.
-                          </Typography>
+                        
+                        {paymentElapsedTime >= 30 && paymentElapsedTime < 50 && (
+                          <Box sx={{ mt: 1.5, p: 1.5, background: 'rgba(242, 201, 76, 0.1)', borderRadius: 1 }}>
+                            <Typography variant="caption" sx={{ color: '#0B0B0B', fontWeight: 600, display: 'block', mb: 0.5 }}>
+                              ⚠️ If you haven't completed payment:
+                            </Typography>
+                            <Typography variant="caption" sx={{ color: '#505050', display: 'block' }}>
+                              1. Check your phone immediately<br/>
+                              2. Look for the USSD prompt<br/>
+                              3. Enter your PIN quickly<br/>
+                              4. Only {60 - paymentElapsedTime} seconds remaining!
+                            </Typography>
+                          </Box>
                         )}
-                        {paymentElapsedTime >= 60 && (
-                          <Typography variant="caption" sx={{ color: '#E74C3C', display: 'block', mt: 1, fontWeight: 600 }}>
-                            ⏰ Payment timeout reached (60s). USSD prompt has expired. Please initiate a new payment.
-                          </Typography>
+                        
+                        {paymentElapsedTime >= 50 && (
+                          <Box sx={{ mt: 1.5, p: 1.5, background: 'rgba(255, 138, 61, 0.15)', borderRadius: 1 }}>
+                            <Typography variant="caption" sx={{ color: '#E74C3C', fontWeight: 600, display: 'block', mb: 0.5 }}>
+                              🚨 URGENT ACTION REQUIRED:
+                            </Typography>
+                            <Typography variant="caption" sx={{ color: '#505050', display: 'block' }}>
+                              Complete the payment on your phone NOW!<br/>
+                              Only {60 - paymentElapsedTime} seconds left before timeout!
+                            </Typography>
+                          </Box>
                         )}
                       </Alert>
                       {orderId && (
