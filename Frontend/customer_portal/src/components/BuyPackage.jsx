@@ -437,38 +437,39 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
             console.log('📊 Payment status update received:', statusData);
             
             // Update elapsed time and attempts
-            // Always update elapsed time - it should be calculated from start time
-            if (statusData.elapsedSeconds !== undefined && statusData.elapsedSeconds !== null) {
-              console.log(`⏱️ Updating elapsed time: ${statusData.elapsedSeconds}s`);
-              setPaymentElapsedTime(statusData.elapsedSeconds);
-              
-              // Progressive warnings with toast notifications
-              if (statusData.elapsedSeconds === 10) {
-                toast.warning('📱 Check your phone for the USSD prompt!', { duration: 4000 });
-              } else if (statusData.elapsedSeconds === 20) {
-                toast.warning('🔐 Please enter your mobile money PIN on your phone!', { duration: 4000 });
-              } else if (statusData.elapsedSeconds === 30) {
-                toast.warning('⏳ Payment processing... Please wait for confirmation.', { duration: 4000 });
-              } else if (statusData.elapsedSeconds === 40) {
-                toast.error('⚠️ 20 seconds remaining! Please complete payment now!', { duration: 5000 });
-              } else if (statusData.elapsedSeconds === 50) {
-                toast.error('🚨 10 seconds left! Complete payment immediately!', { duration: 5000 });
-              } else if (statusData.elapsedSeconds === 55) {
-                toast.error('🚨 CRITICAL: 5 seconds remaining!', { duration: 5000 });
-              }
-            } else {
-              // Fallback: Calculate elapsed time from when payment was initiated
-              // This ensures UI updates even if elapsedSeconds is not provided
+            // CRITICAL: Always update elapsed time to ensure UI updates
+            let elapsedToUse = statusData.elapsedSeconds;
+            
+            // Fallback: Calculate elapsed time if not provided or if it's 0 and we have a start time
+            if (elapsedToUse === undefined || elapsedToUse === null || (elapsedToUse === 0 && paymentStartTimeRef.current)) {
               if (paymentStartTimeRef.current) {
-                const currentTime = Date.now();
-                const calculatedElapsed = Math.floor((currentTime - paymentStartTimeRef.current) / 1000);
-                console.log(`⏱️ Fallback: Calculated elapsed time: ${calculatedElapsed}s (from payment start)`);
-                if (calculatedElapsed > paymentElapsedTime) {
-                  setPaymentElapsedTime(calculatedElapsed);
-                }
+                elapsedToUse = Math.floor((Date.now() - paymentStartTimeRef.current) / 1000);
+                console.log(`⏱️ Fallback: Calculated elapsed time: ${elapsedToUse}s (from payment start, was: ${statusData.elapsedSeconds})`);
               } else {
                 console.warn('⚠️ elapsedSeconds not provided and no payment start time available');
+                elapsedToUse = statusData.elapsedSeconds || paymentElapsedTime; // Use provided or keep current
               }
+            }
+            
+            // Always update elapsed time (even if same value, to ensure React re-renders)
+            console.log(`⏱️ Setting paymentElapsedTime to: ${elapsedToUse}s (previous: ${paymentElapsedTime}s, statusData provided: ${statusData.elapsedSeconds})`);
+            if (elapsedToUse !== paymentElapsedTime || elapsedToUse === 0) {
+              setPaymentElapsedTime(elapsedToUse);
+            }
+            
+            // Progressive warnings with toast notifications
+            if (elapsedToUse === 10) {
+              toast.warning('📱 Check your phone for the USSD prompt!', { duration: 4000 });
+            } else if (elapsedToUse === 20) {
+              toast.warning('🔐 Please enter your mobile money PIN on your phone!', { duration: 4000 });
+            } else if (elapsedToUse === 30) {
+              toast.warning('⏳ Payment processing... Please wait for confirmation.', { duration: 4000 });
+            } else if (elapsedToUse === 40) {
+              toast.error('⚠️ 20 seconds remaining! Please complete payment now!', { duration: 5000 });
+            } else if (elapsedToUse === 50) {
+              toast.error('🚨 10 seconds left! Complete payment immediately!', { duration: 5000 });
+            } else if (elapsedToUse === 55) {
+              toast.error('🚨 CRITICAL: 5 seconds remaining!', { duration: 5000 });
             }
             if (statusData.attempt !== undefined) {
               setPaymentPollingAttempts(statusData.attempt);
