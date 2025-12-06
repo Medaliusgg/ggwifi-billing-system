@@ -83,8 +83,8 @@ const NavigationBar = ({
     <AppBar
       position="fixed"
       sx={{
-        background: '#FFFFFF',  // White background - premium design
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',  // Subtle shadow
+        background: '#F2C94C',  // Official gold background
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',  // Shadow for gold background
         zIndex: theme.zIndex.drawer + 1,
         height: { xs: '70px', md: '100px' },  // Premium height
         transition: 'height 0.3s ease',
@@ -106,7 +106,7 @@ const NavigationBar = ({
               sx={{
                 width: { xs: 40, sm: 48 },
                 height: { xs: 40, sm: 48 },
-                border: '2px solid #F2C94C',  // Gold border on white navbar
+                border: '2px solid #0A0A0A',  // Black border on gold navbar
                 background: '#FFFFFF',
                 '& img': {
                   objectFit: 'contain',
@@ -135,12 +135,12 @@ const NavigationBar = ({
               startIcon={<HomeIcon />}
               onClick={onNavigateToHome}
               sx={{
-                color: '#0A0A0A',  // Black text on white navbar
+                color: '#0A0A0A',  // Black text on gold navbar
                 fontWeight: currentView === 'landing' ? 700 : 500,
-                borderBottom: currentView === 'landing' ? '3px solid #F2C94C' : 'none',  // Gold accent when active
+                borderBottom: currentView === 'landing' ? '3px solid #0A0A0A' : 'none',  // Black accent when active
                 borderRadius: 0,
                 '&:hover': {
-                  backgroundColor: 'rgba(242, 201, 76, 0.1)',  // Light gold background on hover
+                  backgroundColor: '#E0B335',  // Darker gold on hover
                   color: '#0A0A0A',
                 },
                 transition: 'all 0.2s ease',
@@ -154,10 +154,10 @@ const NavigationBar = ({
               sx={{
                 color: '#0A0A0A',
                 fontWeight: currentView === 'packages' ? 700 : 500,
-                borderBottom: currentView === 'packages' ? '3px solid #F2C94C' : 'none',
+                borderBottom: currentView === 'packages' ? '3px solid #0A0A0A' : 'none',
                 borderRadius: 0,
                 '&:hover': {
-                  backgroundColor: 'rgba(242, 201, 76, 0.1)',
+                  backgroundColor: '#E0B335',
                   color: '#0A0A0A',
                 },
                 transition: 'all 0.2s ease',
@@ -171,10 +171,10 @@ const NavigationBar = ({
               sx={{
                 color: '#0A0A0A',
                 fontWeight: currentView === 'voucher' ? 700 : 500,
-                borderBottom: currentView === 'voucher' ? '3px solid #F2C94C' : 'none',
+                borderBottom: currentView === 'voucher' ? '3px solid #0A0A0A' : 'none',
                 borderRadius: 0,
                 '&:hover': {
-                  backgroundColor: 'rgba(242, 201, 76, 0.1)',
+                  backgroundColor: '#E0B335',
                   color: '#0A0A0A',
                 },
                 transition: 'all 0.2s ease',
@@ -188,10 +188,10 @@ const NavigationBar = ({
               sx={{
                 color: '#0A0A0A',
                 fontWeight: currentView === 'customer' ? 700 : 500,
-                borderBottom: currentView === 'customer' ? '3px solid #F2C94C' : 'none',
+                borderBottom: currentView === 'customer' ? '3px solid #0A0A0A' : 'none',
                 borderRadius: 0,
                 '&:hover': {
-                  backgroundColor: 'rgba(242, 201, 76, 0.1)',
+                  backgroundColor: '#E0B335',
                   color: '#0A0A0A',
                 },
                 transition: 'all 0.2s ease',
@@ -208,9 +208,9 @@ const NavigationBar = ({
             color="inherit"
             onClick={handleMobileMenuOpen}
             sx={{
-              color: '#0A0A0A',  // Black icons on white navbar
+              color: '#0A0A0A',  // Black icons on gold navbar
               '&:hover': {
-                backgroundColor: 'rgba(242, 201, 76, 0.1)',  // Light gold background on hover
+                backgroundColor: '#E0B335',  // Darker gold on hover
                 color: '#0A0A0A',
               },
             }}
@@ -238,13 +238,13 @@ const NavigationBar = ({
             {/* Drawer Header */}
             <Box
               sx={{
-                background: '#FFFFFF',
+                background: '#F2C94C',
                 color: '#0A0A0A',
                 p: 3,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                borderBottom: '2px solid #F2C94C',
+                borderBottom: '2px solid #0A0A0A',
               }}
             >
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -267,7 +267,7 @@ const NavigationBar = ({
                 sx={{
                   color: '#0A0A0A',
                   '&:hover': {
-                    backgroundColor: 'rgba(242, 201, 76, 0.1)',
+                    backgroundColor: '#E0B335',
                     color: '#0A0A0A',
                   },
                 }}
@@ -286,23 +286,23 @@ const NavigationBar = ({
                     borderRadius: 2,
                     py: 2,
                     px: 2,
-                    backgroundColor: currentView === 'landing' ? 'rgba(242, 201, 76, 0.1)' : 'transparent',
-                    borderLeft: currentView === 'landing' ? '4px solid #F2C94C' : '4px solid transparent',
+                    backgroundColor: currentView === 'landing' ? '#E0B335' : 'transparent',
+                    borderLeft: currentView === 'landing' ? '4px solid #0A0A0A' : '4px solid transparent',
                     '&:hover': {
-                      backgroundColor: 'rgba(242, 201, 76, 0.1)',
+                      backgroundColor: '#E0B335',
                       transform: 'translateX(4px)',
                     },
                     '&.Mui-selected': {
-                      backgroundColor: 'rgba(242, 201, 76, 0.1)',
+                      backgroundColor: '#E0B335',
                       '&:hover': {
-                        backgroundColor: 'rgba(242, 201, 76, 0.15)',
+                        backgroundColor: '#D4A100',
                       },
                     },
                     transition: 'all 0.2s ease',
                   }}
                 >
                   <ListItemIcon sx={{ minWidth: 40 }}>
-                    <HomeIcon sx={{ color: currentView === 'landing' ? '#F2C94C' : '#0A0A0A', fontSize: 28 }} />
+                    <HomeIcon sx={{ color: '#0A0A0A', fontSize: 28 }} />
                   </ListItemIcon>
                   <ListItemText
                     primary="Home"
@@ -339,7 +339,7 @@ const NavigationBar = ({
                   }}
                 >
                   <ListItemIcon sx={{ minWidth: 40 }}>
-                    <ShoppingCartIcon sx={{ color: currentView === 'packages' ? '#F2C94C' : '#0A0A0A', fontSize: 28 }} />
+                    <ShoppingCartIcon sx={{ color: '#0A0A0A', fontSize: 28 }} />
                   </ListItemIcon>
                   <ListItemText
                     primary="Buy Packages"
@@ -376,7 +376,7 @@ const NavigationBar = ({
                   }}
                 >
                   <ListItemIcon sx={{ minWidth: 40 }}>
-                    <VpnKeyIcon sx={{ color: currentView === 'voucher' ? '#F2C94C' : '#0A0A0A', fontSize: 28 }} />
+                    <VpnKeyIcon sx={{ color: '#0A0A0A', fontSize: 28 }} />
                   </ListItemIcon>
                   <ListItemText
                     primary="Voucher Login"
@@ -413,7 +413,7 @@ const NavigationBar = ({
                   }}
                 >
                   <ListItemIcon sx={{ minWidth: 40 }}>
-                    <DashboardIcon sx={{ color: currentView === 'customer' ? '#F2C94C' : '#0A0A0A', fontSize: 28 }} />
+                    <DashboardIcon sx={{ color: '#0A0A0A', fontSize: 28 }} />
                   </ListItemIcon>
                   <ListItemText
                     primary="Dashboard"
@@ -428,7 +428,7 @@ const NavigationBar = ({
             </List>
 
             {/* Drawer Footer with Contact Info */}
-            <Box sx={{ p: 2, borderTop: '1px solid #EEEEEE', background: '#FAFAFA' }}>
+            <Box sx={{ p: 2, borderTop: '1px solid #0A0A0A', background: '#F2C94C' }}>
               <Typography variant="body2" sx={{ fontWeight: 600, mb: 1, color: '#0A0A0A' }}>
                 Need Help?
               </Typography>
@@ -442,7 +442,7 @@ const NavigationBar = ({
                     fontSize: '0.75rem',
                     textTransform: 'none',
                     '&:hover': {
-                      backgroundColor: '#F2C94C',
+                      backgroundColor: '#E0B335',
                       color: '#0A0A0A',
                     },
                   }}
@@ -458,7 +458,7 @@ const NavigationBar = ({
                     fontSize: '0.75rem',
                     textTransform: 'none',
                     '&:hover': {
-                      backgroundColor: '#F2C94C',
+                      backgroundColor: '#E0B335',
                       color: '#0A0A0A',
                     },
                   }}
@@ -470,7 +470,7 @@ const NavigationBar = ({
           </Box>
         </Drawer>
 
-        {/* Contact Icons - Gold colored */}
+        {/* Contact Icons - Black on gold background */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, sm: 1 } }}>
           <Tooltip title="Contact Support">
             <IconButton
@@ -480,9 +480,9 @@ const NavigationBar = ({
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               sx={{
-                color: '#F2C94C',  // Gold icons
+                color: '#0A0A0A',  // Black icons on gold navbar
                 '&:hover': {
-                  backgroundColor: '#F2C94C',
+                  backgroundColor: '#E0B335',  // Darker gold on hover
                   color: '#0A0A0A',
                 },
               }}
@@ -499,9 +499,9 @@ const NavigationBar = ({
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               sx={{
-                color: '#F2C94C',  // Gold icons
+                color: '#0A0A0A',  // Black icons on gold navbar
                 '&:hover': {
-                  backgroundColor: '#F2C94C',
+                  backgroundColor: '#E0B335',  // Darker gold on hover
                   color: '#0A0A0A',
                 },
               }}
@@ -518,9 +518,9 @@ const NavigationBar = ({
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               sx={{
-                color: '#F2C94C',  // Gold icons
+                color: '#0A0A0A',  // Black icons on gold navbar
                 '&:hover': {
-                  backgroundColor: '#F2C94C',
+                  backgroundColor: '#E0B335',  // Darker gold on hover
                   color: '#0A0A0A',
                 },
               }}

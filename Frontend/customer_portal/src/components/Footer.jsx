@@ -23,8 +23,7 @@ const Footer = () => {
       component="footer"
       sx={{
         position: 'relative',
-        borderTop: '4px solid #F2C94C',  // Official gold accent bar
-        background: '#FFFFFF',  // White background
+        background: '#F2C94C',  // Official gold background
         py: 4,
         mt: 'auto',
       }}
@@ -40,8 +39,9 @@ const Footer = () => {
           <Typography
             variant="body2"
             sx={{
-              color: '#666666',
+              color: '#0A0A0A',
               textAlign: { xs: 'center', sm: 'left' },
+              fontWeight: 500,
             }}
           >
             © {currentYear} GG Wi-Fi. All rights reserved.
@@ -54,8 +54,8 @@ const Footer = () => {
               sx={{
                 color: '#0A0A0A',
                 '&:hover': {
-                  color: '#F2C94C',
-                  backgroundColor: 'rgba(242, 201, 76, 0.1)',
+                  backgroundColor: '#E0B335',
+                  color: '#0A0A0A',
                 },
               }}
             >
@@ -69,8 +69,8 @@ const Footer = () => {
               sx={{
                 color: '#0A0A0A',
                 '&:hover': {
-                  color: '#25D366',
-                  backgroundColor: 'rgba(37, 211, 102, 0.1)',
+                  backgroundColor: '#E0B335',
+                  color: '#0A0A0A',
                 },
               }}
             >
@@ -81,8 +81,8 @@ const Footer = () => {
               sx={{
                 color: '#0A0A0A',
                 '&:hover': {
-                  color: '#1877F2',
-                  backgroundColor: 'rgba(24, 119, 242, 0.1)',
+                  backgroundColor: '#E0B335',
+                  color: '#0A0A0A',
                 },
               }}
             >
@@ -93,8 +93,8 @@ const Footer = () => {
               sx={{
                 color: '#0A0A0A',
                 '&:hover': {
-                  color: '#1DA1F2',
-                  backgroundColor: 'rgba(29, 161, 242, 0.1)',
+                  backgroundColor: '#E0B335',
+                  color: '#0A0A0A',
                 },
               }}
             >
@@ -105,8 +105,8 @@ const Footer = () => {
               sx={{
                 color: '#0A0A0A',
                 '&:hover': {
-                  color: '#E4405F',
-                  backgroundColor: 'rgba(228, 64, 95, 0.1)',
+                  backgroundColor: '#E0B335',
+                  color: '#0A0A0A',
                 },
               }}
             >
