@@ -117,16 +117,21 @@ class PaymentService {
    */
   getStatusMessage(status) {
     const statusMessages = {
+      // Backend enum statuses
       'PENDING': 'Payment is still being processed. Please complete the payment on your phone.',
       'PROCESSING': 'Payment is being processed. Please wait...',
       'COMPLETED': 'Payment completed successfully! Your voucher code has been generated.',
+      'SUCCESSFUL': 'Payment completed successfully! Your voucher code has been generated.',
       'SUCCESS': 'Payment completed successfully! Your voucher code has been generated.',
       'FAILED': 'Payment failed. Please check your mobile money balance and try again.',
       'CANCELLED': 'Payment was cancelled. Please try again.',
+      'REFUNDED': 'Payment has been refunded.',
+      'EXPIRED': 'Payment has expired. Please initiate a new payment.',
+      
+      // Webhook-specific statuses
       'INSUFFICIENT_BALANCE': 'Insufficient balance in your mobile money account. Please top up and try again.',
       'INVALID_PIN': 'Invalid PIN entered. Please try again with the correct PIN.',
       'USER_CANCELLED': 'Payment was cancelled by user. Please try again.',
-      'EXPIRED': 'Payment has expired. Please initiate a new payment.',
       'TIMEOUT': 'Payment timed out. Please try again.',
       'NETWORK_ERROR': 'Network error occurred. Please try again.',
       'ERROR': 'An error occurred during payment. Please try again.'

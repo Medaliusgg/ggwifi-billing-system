@@ -440,19 +440,21 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
             const normalizedStatus = (statusData.status || '').toUpperCase();
             
             // Map status to UI state (keep original status for display)
-            // Handle both COMPLETED and SUCCESSFUL from backend enum
+            // Handle ALL possible statuses from backend enum and webhook
             let uiStatus = 'processing';
             if (normalizedStatus === 'COMPLETED' || normalizedStatus === 'SUCCESS' || normalizedStatus === 'SUCCESSFUL') {
               uiStatus = 'success';
-            } else if (['FAILED', 'CANCELLED', 'INSUFFICIENT_BALANCE', 'INVALID_PIN', 
+            } else if (['FAILED', 'CANCELLED', 'REFUNDED', 'INSUFFICIENT_BALANCE', 'INVALID_PIN', 
                         'USER_CANCELLED', 'EXPIRED', 'TIMEOUT', 'NETWORK_ERROR', 'ERROR'].includes(normalizedStatus)) {
               uiStatus = 'failed';
+            } else if (normalizedStatus === 'PENDING' || normalizedStatus === 'PROCESSING') {
+              uiStatus = 'processing';
             }
             
             setPaymentStatus(uiStatus);
             setPaymentMessage(statusData.message);
             
-            // Handle success - support both COMPLETED and SUCCESSFUL from backend enum
+            // Handle success - support COMPLETED, SUCCESSFUL, and SUCCESS from backend enum
             if (normalizedStatus === 'COMPLETED' || normalizedStatus === 'SUCCESS' || normalizedStatus === 'SUCCESSFUL') {
               if (statusData.voucherCode) {
                 setVoucherCode(statusData.voucherCode);
@@ -464,7 +466,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                 currentPollingStop();
                 setCurrentPollingStop(null);
               }
-            } else if (['FAILED', 'CANCELLED', 'INSUFFICIENT_BALANCE', 'INVALID_PIN', 
+            } else if (['FAILED', 'CANCELLED', 'REFUNDED', 'INSUFFICIENT_BALANCE', 'INVALID_PIN', 
                         'USER_CANCELLED', 'EXPIRED', 'TIMEOUT', 'NETWORK_ERROR', 'ERROR'].includes(normalizedStatus)) {
               // All failure states
               // Show appropriate toast based on failure type

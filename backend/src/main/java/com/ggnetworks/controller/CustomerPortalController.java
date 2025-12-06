@@ -453,17 +453,33 @@ public class CustomerPortalController {
             response.put("confirmed_at", payment.getConfirmedAt());
             response.put("processed_at", payment.getProcessedAt());
             
-            // Add appropriate message based on status
+            // Add appropriate message based on status - Handle ALL enum values
             switch (paymentStatus) {
                 case COMPLETED:
                     response.put("message", "Payment completed successfully. Voucher generated.");
                     break;
-                case FAILED:
-                    String failureReason = payment.getFailureReason();
-                    response.put("message", failureReason != null ? failureReason : "Payment failed. Please try again.");
+                case SUCCESSFUL:
+                    response.put("message", "Payment completed successfully. Voucher generated.");
+                    break;
+                case PROCESSING:
+                    response.put("message", "Payment is being processed. Please wait...");
                     break;
                 case PENDING:
                     response.put("message", "Payment is still being processed. Please complete the payment on your phone.");
+                    break;
+                case FAILED:
+                    String failureReason = payment.getFailureReason();
+                    response.put("message", failureReason != null ? failureReason : "Payment failed. Please try again.");
+                    response.put("failure_reason", failureReason);
+                    break;
+                case CANCELLED:
+                    response.put("message", "Payment was cancelled. Please try again.");
+                    break;
+                case EXPIRED:
+                    response.put("message", "Payment has expired. Please initiate a new payment.");
+                    break;
+                case REFUNDED:
+                    response.put("message", "Payment has been refunded.");
                     break;
                 default:
                     response.put("message", "Payment status: " + statusString);
