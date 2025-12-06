@@ -4,16 +4,16 @@
 name = "ggwifi-customer-portal"
 compatibility_date = "2024-01-01"
 
+# Pages build output directory (must be at root level for Cloudflare Pages)
+pages_build_output_dir = "Frontend/customer_portal/dist"
+
 [build]
-command = "npm run build"
-cwd = "Frontend/customer_portal"
+command = "cd Frontend/customer_portal && npm run build"
+cwd = "."
 
 [build.environment_variables]
 VITE_API_URL = "https://api.ggwifi.co.tz/api/v1"
 VITE_APP_NAME = "GGWIFI Customer Portal"
 VITE_APP_DOMAIN = "connect.ggwifi.co.tz"
 VITE_ENVIRONMENT = "production"
-
-# Pages build output directory
-pages_build_output_dir = "dist"
 
