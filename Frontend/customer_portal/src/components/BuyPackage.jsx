@@ -1573,9 +1573,14 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                             💡 If you've already entered your PIN, the payment is being processed. Please wait...
                           </Typography>
                         )}
-                        {paymentElapsedTime >= 60 && (
+                        {paymentElapsedTime >= 60 && paymentElapsedTime < 90 && (
                           <Typography variant="caption" sx={{ color: '#FF8A3D', display: 'block', mt: 1, fontWeight: 600 }}>
-                            ⚠️ Payment is taking longer than expected. Click "Check Payment Status" below to refresh.
+                            ⚠️ Payment is taking longer than expected. Please check your phone and complete the payment.
+                          </Typography>
+                        )}
+                        {paymentElapsedTime >= 90 && (
+                          <Typography variant="caption" sx={{ color: '#E74C3C', display: 'block', mt: 1, fontWeight: 600 }}>
+                            ⏰ Payment timeout approaching. If you've completed payment, click "Check Payment Status" below.
                           </Typography>
                         )}
                       </Alert>
