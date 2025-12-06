@@ -1578,6 +1578,89 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                         {paymentElapsedTime >= 60 && '⏰ Payment Timeout'}
                       </Typography>
                       
+                      {/* Countdown Timer - Prominent 30 Second Warning */}
+                      {paymentElapsedTime >= 30 && paymentElapsedTime < 60 && (
+                        <Box sx={{ 
+                          mb: 4, 
+                          display: 'flex', 
+                          flexDirection: 'column', 
+                          alignItems: 'center',
+                          animation: paymentElapsedTime >= 50 ? 'pulse 1s infinite' : 'none',
+                          '@keyframes pulse': {
+                            '0%, 100%': { transform: 'scale(1)' },
+                            '50%': { transform: 'scale(1.05)' }
+                          }
+                        }}>
+                          <Typography variant="caption" sx={{ color: '#8D8D8D', mb: 1, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 }}>
+                            ⏰ Time Remaining
+                          </Typography>
+                          <Box sx={{
+                            width: 120,
+                            height: 120,
+                            borderRadius: '50%',
+                            background: paymentElapsedTime >= 55 ? 'linear-gradient(135deg, #E74C3C 0%, #C0392B 100%)' :
+                                       paymentElapsedTime >= 50 ? 'linear-gradient(135deg, #FF8A3D 0%, #FF6B1A 100%)' :
+                                       'linear-gradient(135deg, #F2C94C 0%, #E0B335 100%)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            boxShadow: paymentElapsedTime >= 50 ? '0 0 30px rgba(231, 76, 60, 0.6)' : '0 4px 20px rgba(242, 201, 76, 0.3)',
+                            border: '4px solid',
+                            borderColor: paymentElapsedTime >= 55 ? '#E74C3C' :
+                                        paymentElapsedTime >= 50 ? '#FF8A3D' : '#F2C94C',
+                            transition: 'all 0.3s ease',
+                            position: 'relative',
+                            '&::before': {
+                              content: '""',
+                              position: 'absolute',
+                              width: '100%',
+                              height: '100%',
+                              borderRadius: '50%',
+                              border: '4px solid',
+                              borderColor: paymentElapsedTime >= 55 ? 'rgba(231, 76, 60, 0.3)' :
+                                          paymentElapsedTime >= 50 ? 'rgba(255, 138, 61, 0.3)' : 'rgba(242, 201, 76, 0.3)',
+                              animation: paymentElapsedTime >= 50 ? 'ripple 2s infinite' : 'none',
+                              '@keyframes ripple': {
+                                '0%': { transform: 'scale(1)', opacity: 1 },
+                                '100%': { transform: 'scale(1.3)', opacity: 0 }
+                              }
+                            }
+                          }}>
+                            <Typography 
+                              variant="h2" 
+                              sx={{ 
+                                color: '#FFFFFF',
+                                fontWeight: 700,
+                                fontSize: '3rem',
+                                textShadow: '0 2px 10px rgba(0,0,0,0.3)',
+                                fontFamily: 'monospace',
+                                letterSpacing: 2
+                              }}
+                            >
+                              {60 - paymentElapsedTime}
+                            </Typography>
+                          </Box>
+                          <Typography 
+                            variant="h6" 
+                            sx={{ 
+                              color: paymentElapsedTime >= 55 ? '#E74C3C' :
+                                    paymentElapsedTime >= 50 ? '#FF8A3D' : '#F2C94C',
+                              fontWeight: 700,
+                              mt: 1.5,
+                              textTransform: 'uppercase',
+                              letterSpacing: 1
+                            }}
+                          >
+                            {paymentElapsedTime >= 55 ? '🚨 CRITICAL!' :
+                             paymentElapsedTime >= 50 ? '⚠️ URGENT!' : '⏰ HURRY!'}
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: '#505050', mt: 0.5, fontWeight: 600 }}>
+                            {paymentElapsedTime >= 55 ? 'Complete payment NOW!' :
+                             paymentElapsedTime >= 50 ? 'Enter PIN immediately!' : 'Seconds remaining'}
+                          </Typography>
+                        </Box>
+                      )}
+                      
                       {/* Progress Bar */}
                       <Box sx={{ mb: 3, px: 2 }}>
                         <Box sx={{ 
@@ -1603,7 +1686,8 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                             {paymentElapsedTime}s / 60s
                           </Typography>
                           <Typography variant="caption" sx={{ color: '#8D8D8D' }}>
-                            {60 - paymentElapsedTime > 0 ? `${60 - paymentElapsedTime}s remaining` : 'Timeout reached'}
+                            {paymentElapsedTime < 30 ? `${30 - paymentElapsedTime}s until countdown starts` :
+                             paymentElapsedTime < 60 ? `${60 - paymentElapsedTime}s remaining` : 'Timeout reached'}
                           </Typography>
                         </Box>
                       </Box>
