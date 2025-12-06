@@ -38,7 +38,7 @@ wrangler pages deploy dist \
 
 echo ""
 echo "✅ Deployment complete!"
-echo "🌐 Your customer portal should be live at: https://portal.ggwifi.co.tz"
+echo "🌐 Your customer portal should be live at: https://hotspot.ggwifi.co.tz"
 echo ""
 echo "📝 Next steps:"
 echo "   1. Verify the deployment in Cloudflare Dashboard"
