@@ -27,10 +27,15 @@ public class CorsConfig {
             "https://139.84.241.182",     // HTTPS production IP without port
             "https://admin.ggwifi.co.tz",
             "https://connect.ggwifi.co.tz",
+            "https://hotspot.ggwifi.co.tz", // Customer portal
             "https://www.ggwifi.co.tz",
+            "https://api.ggwifi.co.tz",   // API domain
             "http://admin.ggwifi.co.tz",
             "http://connect.ggwifi.co.tz",
+            "http://hotspot.ggwifi.co.tz", // Customer portal HTTP
             "http://www.ggwifi.co.tz",
+            "https://*.ggwifi.co.tz",     // All ggwifi subdomains
+            "http://*.ggwifi.co.tz",      // All ggwifi subdomains HTTP
             "https://*.pages.dev",        // Cloudflare Pages
             "https://*.cloudflarepages.app" // Cloudflare Pages alternative
         ));
@@ -42,6 +47,7 @@ public class CorsConfig {
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"));
         
         // Allow all headers (but not "*" when credentials are enabled)
+        // Include all common headers that browsers might send
         configuration.setAllowedHeaders(Arrays.asList(
             "Content-Type",
             "Authorization",
@@ -49,7 +55,14 @@ public class CorsConfig {
             "Accept",
             "Origin",
             "Access-Control-Request-Method",
-            "Access-Control-Request-Headers"
+            "Access-Control-Request-Headers",
+            "X-Requested-With",
+            "Cache-Control",
+            "Pragma",
+            "X-CSRF-TOKEN",
+            "X-Auth-Token",
+            "Accept-Language",
+            "Accept-Encoding"
         ));
         
         // Expose headers for frontend access

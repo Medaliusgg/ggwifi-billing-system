@@ -35,11 +35,21 @@ public class CorsFilter implements Filter {
         "https://139.84.241.182",
         "https://admin.ggwifi.co.tz",
         "https://connect.ggwifi.co.tz",
+        "https://hotspot.ggwifi.co.tz", // Customer portal
         "https://www.ggwifi.co.tz",
+        "https://api.ggwifi.co.tz",     // API domain
         "http://admin.ggwifi.co.tz",
         "http://connect.ggwifi.co.tz",
+        "http://hotspot.ggwifi.co.tz",  // Customer portal HTTP
         "http://www.ggwifi.co.tz"
     );
+    
+    // Explicit list of allowed headers (cannot use "*" when allowCredentials is true)
+    private static final String ALLOWED_HEADERS = 
+        "Content-Type, Authorization, X-Requested-With, Accept, Origin, " +
+        "Access-Control-Request-Method, Access-Control-Request-Headers, " +
+        "Cache-Control, Pragma, X-CSRF-TOKEN, X-Auth-Token, " +
+        "Accept-Language, Accept-Encoding";
 
     @Override
     public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
@@ -85,7 +95,8 @@ public class CorsFilter implements Filter {
             }
             response.setHeader("Access-Control-Allow-Credentials", "true");
             response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD");
-            response.setHeader("Access-Control-Allow-Headers", "*");
+            // CRITICAL: Cannot use "*" when allowCredentials is true - must explicitly list headers
+            response.setHeader("Access-Control-Allow-Headers", ALLOWED_HEADERS);
             response.setHeader("Access-Control-Expose-Headers", 
                 "Access-Control-Allow-Origin, Access-Control-Allow-Credentials, Content-Type, Authorization, X-Requested-With");
             response.setHeader("Access-Control-Max-Age", "3600");
