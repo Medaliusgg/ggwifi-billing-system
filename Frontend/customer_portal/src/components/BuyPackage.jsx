@@ -423,9 +423,10 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
         setPaymentPollingAttempts(0);
         
         // Show initial instruction toast
-        toast.info('📱 Check your phone for payment instructions!', {
+        toast('📱 Check your phone for payment instructions!', {
           duration: 5000,
-          position: 'top-center'
+          position: 'top-center',
+          icon: '📱'
         });
         
         // Start enhanced payment status polling with optimized settings
