@@ -66,7 +66,6 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
   const [customerDetails, setCustomerDetails] = useState({
     fullName: '',
     phoneNumber: '',
-    location: '',
   });
   const [paymentStep, setPaymentStep] = useState(0);
   const [paymentStatus, setPaymentStatus] = useState('pending');
@@ -311,7 +310,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
 
   const handleProceedToPayment = async () => {
     // Client-side validation
-    if (!customerDetails.fullName || !customerDetails.phoneNumber || !customerDetails.location) {
+    if (!customerDetails.fullName || !customerDetails.phoneNumber) {
       toast.error('Please fill in all required fields');
       return;
     }
@@ -330,11 +329,6 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
       return;
     }
 
-    // Validate location
-    if (customerDetails.location.trim().length < 2) {
-      toast.error('Please enter a valid location');
-      return;
-    }
 
     // Validate package selection
     if (!selectedPackage || !selectedPackage.id) {
@@ -366,7 +360,6 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
       const validation = paymentService.validatePaymentData({
         customerName: customerDetails.fullName.trim(),
         phoneNumber: formattedPhone,
-        location: customerDetails.location.trim(),
         packageId: selectedPackage.id,
         amount: selectedPackage.price,
       });
@@ -383,7 +376,6 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
       const paymentData = {
         customerName: customerDetails.fullName.trim(),
         phoneNumber: formattedPhone,
-        location: customerDetails.location.trim(),
         packageId: String(selectedPackage.id),  // Convert to string
         packageName: selectedPackage.name,
         amount: String(selectedPackage.price),  // Convert to string
@@ -570,7 +562,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
     setOrderId('');
     setPaymentElapsedTime(0);
     setPaymentPollingAttempts(0);
-    setCustomerDetails({ fullName: '', phoneNumber: '', location: '' });
+    setCustomerDetails({ fullName: '', phoneNumber: '' });
   };
 
   const handlePurchase = () => {
@@ -579,7 +571,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
       return;
     }
     
-    if (!customerDetails.fullName || !customerDetails.phoneNumber || !customerDetails.location) {
+    if (!customerDetails.fullName || !customerDetails.phoneNumber) {
       toast.error('Please fill in all required fields');
       return;
     }
@@ -588,8 +580,8 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
     handleProceedToPayment();
   };
 
-  // Tanzania locations
-  const tanzaniaLocations = [
+  // Location dropdown removed - no longer needed
+  // const tanzaniaLocations = [
     'Dar es Salaam',
     'Arusha',
     'Mwanza',
@@ -763,7 +755,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                       },
                       '&:hover': {
                         background: '#FFE89C',  // Pale yellow on hover
-                        borderColor: '#F5C400',  // Yellow border
+                        borderColor: '#F2C94C',  // Yellow border
                       },
                     }}
                   />
@@ -1031,7 +1023,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                               background: '#FFFFFF',  // White background
                               border: '2px solid #F5C400',  // Yellow border
                               '& .MuiAlert-icon': {
-                                color: '#F5C400',  // Yellow icon
+                                color: '#F2C94C',  // Yellow icon
                               },
                               '& .MuiAlert-message': {
                                 color: '#1A1A1A',  // Charcoal text
@@ -1426,10 +1418,10 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                         background: '#FFFFFF',
                         border: '1px solid #EDEDED',
                         '&:hover': {
-                          borderColor: '#F5C400',
+                          borderColor: '#F2C94C',
                         },
                         '&.Mui-focused': {
-                          borderColor: '#F5C400',
+                          borderColor: '#F2C94C',
                         },
                         '& .MuiOutlinedInput-notchedOutline': {
                           borderColor: '#EDEDED',
@@ -1438,7 +1430,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                       '& .MuiInputLabel-root': {
                         color: '#8D8D8D',
                         '&.Mui-focused': {
-                          color: '#F5C400',
+                          color: '#F2C94C',
                         },
                       },
                       '& .MuiInputBase-input': {
@@ -1468,10 +1460,10 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                         background: '#FFFFFF',
                         border: '1px solid #EDEDED',
                         '&:hover': {
-                          borderColor: '#F5C400',
+                          borderColor: '#F2C94C',
                         },
                         '&.Mui-focused': {
-                          borderColor: '#F5C400',
+                          borderColor: '#F2C94C',
                         },
                         '& .MuiOutlinedInput-notchedOutline': {
                           borderColor: '#EDEDED',
@@ -1480,7 +1472,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                       '& .MuiInputLabel-root': {
                         color: '#8D8D8D',
                         '&.Mui-focused': {
-                          color: '#F5C400',
+                          color: '#F2C94C',
                         },
                       },
                       '& .MuiInputBase-input': {
@@ -1489,65 +1481,6 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                     }}
                   />
 
-                  <FormControl fullWidth required>
-                    <InputLabel sx={{ color: '#8D8D8D' }}>Location</InputLabel>
-                    <Select
-                      value={customerDetails.location}
-                      onChange={(e) => {
-                        handleCustomerDetailsChange('location', e.target.value);
-                        toast.success(`Location set to ${e.target.value}`);
-                      }}
-                      label="Location"
-                      sx={{
-                        borderRadius: 2,
-                        background: '#FFFFFF',
-                        border: '1px solid #EDEDED',
-                        '&:hover': {
-                          borderColor: '#F5C400',
-                        },
-                        '& .MuiOutlinedInput-notchedOutline': {
-                          borderColor: '#EDEDED',
-                        },
-                        '&.Mui-focused': {
-                          borderColor: '#F5C400',
-                          '& .MuiOutlinedInput-notchedOutline': {
-                            borderColor: '#F5C400',
-                          },
-                        },
-                        '& .MuiSvgIcon-root': {
-                          color: '#8D8D8D',
-                        },
-                      }}
-                      MenuProps={{
-                        PaperProps: {
-                          sx: {
-                            background: '#FFFFFF',
-                            border: '1px solid #EDEDED',
-                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                            '& .MuiMenuItem-root': {
-                              color: '#0B0B0B',
-                              '&:hover': {
-                                background: '#FFE89C',
-                              },
-                              '&.Mui-selected': {
-                                background: '#F5C400',
-                                color: '#0B0B0B',
-                                '&:hover': {
-                                  background: '#D4A100',
-                                },
-                              },
-                            },
-                          },
-                        },
-                      }}
-                    >
-                      {tanzaniaLocations.map((location) => (
-                        <MenuItem key={location} value={location}>
-                          {location}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
 
                   {/* Payment Method Info */}
                   <Alert severity="info" sx={{ borderRadius: 2, background: '#F0F7FF', border: '1px solid #0072CE' }}>
@@ -1790,7 +1723,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                           setPaymentPollingAttempts(0);
                         }}
                         sx={{ 
-                          backgroundColor: '#F5C400',
+                          backgroundColor: '#F2C94C',
                           color: '#0B0B0B',
                           fontWeight: 600,
                           '&:hover': { 
@@ -1826,7 +1759,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                 <Button
                   variant="contained"
                   onClick={handleProceedToPayment}
-                  disabled={!customerDetails.fullName || !customerDetails.phoneNumber || !customerDetails.location}
+                  disabled={!customerDetails.fullName || !customerDetails.phoneNumber}
                   sx={{
                     background: '#F5C400',
                     color: '#0B0B0B',

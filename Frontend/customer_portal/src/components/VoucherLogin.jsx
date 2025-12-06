@@ -163,9 +163,9 @@ const VoucherLogin = ({ onBack, currentLanguage }) => {
   };
 
   const features = [
-    { icon: <SpeedIcon />, text: 'Lightning Fast', color: '#F5C400' },  // Gold Prime
-    { icon: <SecurityIcon />, text: 'Secure Connection', color: '#1ABC9C' },
-    { icon: <StarIcon />, text: 'Premium Quality', color: '#0072CE' },
+    { icon: <SpeedIcon />, text: 'Lightning Fast', color: '#F2C94C' },
+    { icon: <SecurityIcon />, text: 'Secure Connection', color: '#10B981' },
+    { icon: <StarIcon />, text: 'Premium Quality', color: '#3A8DFF' },
   ];
 
   const containerVariants = {
@@ -192,8 +192,8 @@ const VoucherLogin = ({ onBack, currentLanguage }) => {
         position: 'relative',
         overflow: 'hidden',
         py: 1,
-        background: '#FFFFFF',  // Soft White - Premium design
-        pt: 0,  // No padding-top - App.jsx already accounts for fixed navbar
+        background: '#FFFFFF',  // Official white background
+        pt: 0,
       }}
     >
       <Container maxWidth="sm" sx={{ position: 'relative', zIndex: 1 }}>
@@ -208,12 +208,13 @@ const VoucherLogin = ({ onBack, currentLanguage }) => {
               onClick={onBack}
               sx={{
                 mb: 2,
-                background: '#FFFFFF',  // Soft White
-                border: '1px solid #EDEDED',  // Frost Grey
-                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',  // Subtle shadow
+                background: '#FFFFFF',
+                border: '1px solid #EEEEEE',
+                boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+                color: '#0A0A0A',
                 '&:hover': {
-                  background: 'rgba(245, 196, 0, 0.1)',  // Gold glass
-                  borderColor: '#F5C400',  // Gold Prime
+                  background: 'rgba(242, 201, 76, 0.1)',
+                  borderColor: '#F2C94C',
                   transform: 'translateX(-4px)',
                 },
                 transition: 'all 0.3s ease',
@@ -227,10 +228,10 @@ const VoucherLogin = ({ onBack, currentLanguage }) => {
           <motion.div variants={itemVariants}>
             <Card
               sx={{
-                background: '#FFFFFF',  // Soft White - Premium design
-                borderRadius: 4,
-                boxShadow: '0 2px 16px rgba(0, 0, 0, 0.14)',  // Premium shadow
-                border: '1px solid #EDEDED',  // Frost Grey
+                background: '#FFFFFF',
+                borderRadius: '16px',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+                border: '1px solid #EEEEEE',
                 overflow: 'hidden',
                 position: 'relative',
                 '&::before': {
@@ -239,13 +240,13 @@ const VoucherLogin = ({ onBack, currentLanguage }) => {
                   top: 0,
                   left: 0,
                   right: 0,
-                  height: '3px',
-                  background: 'linear-gradient(90deg, #F5C400 0%, #D4A100 100%)',  // Gold accent bar
-                  borderRadius: '4px 4px 0 0',
+                  height: '4px',
+                  background: '#F2C94C',  // Official gold accent bar
+                  borderRadius: '16px 16px 0 0',
                 },
               }}
             >
-              <CardContent sx={{ p: 6 }}>
+              <CardContent sx={{ p: { xs: 4, md: 6 } }}>
                 {/* Header */}
                 <Box sx={{ textAlign: 'center', mb: 4 }}>
                   <motion.div
@@ -261,14 +262,12 @@ const VoucherLogin = ({ onBack, currentLanguage }) => {
                       sx={{
                         width: { xs: 80, sm: 100 },
                         height: { xs: 80, sm: 100 },
-                        border: '4px solid #F5C400',  // Gold Prime
-                        boxShadow: '0 0 32px rgba(245, 196, 0, 0.6), 0 8px 30px rgba(245, 196, 0, 0.4)',  // Premium gold glow
-                        background: 'linear-gradient(135deg, rgba(245, 196, 0, 0.2) 0%, rgba(245, 196, 0, 0.1) 100%)',  // Premium gold
-                        filter: 'brightness(1.1)',
+                        border: '3px solid #F2C94C',
+                        boxShadow: '0 4px 12px rgba(242, 201, 76, 0.3)',
+                        background: '#FFFFFF',
                         '& img': {
                           objectFit: 'contain',
                           padding: '4px',
-                          filter: 'brightness(1.25) contrast(1.1) drop-shadow(0 2px 6px rgba(255, 199, 44, 0.5))',
                         },
                       }}
                     />
@@ -277,24 +276,21 @@ const VoucherLogin = ({ onBack, currentLanguage }) => {
                   <Typography
                     variant="h4"
                     sx={{
-                      fontWeight: 800,
-                      color: 'text.primary',
+                      fontWeight: 700,
+                      color: '#0A0A0A',
                       mb: 2,
-                      background: 'linear-gradient(135deg, #F5C400 0%, #0B0B0B 50%, #F5C400 100%)',  // Premium gold to black gradient
-                      backgroundClip: 'text',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
+                      fontSize: { xs: '1.75rem', md: '2rem' },
                     }}
                   >
                     Connect to GG Wi-Fi
                   </Typography>
 
-                  <Typography variant="body1" sx={{ color: '#8D8D8D', mb: 3 }}>  {/* Slate Grey */}
+                  <Typography variant="body1" sx={{ color: '#666666', mb: 3 }}>
                     Enter your voucher code and phone number to access our high-speed internet
                   </Typography>
 
                   {/* Features */}
-                  <Stack direction="row" spacing={1} justifyContent="center" sx={{ mb: 4 }}>
+                  <Stack direction="row" spacing={1} justifyContent="center" sx={{ mb: 4, flexWrap: 'wrap' }}>
                     {features.map((feature, index) => (
                       <Chip
                         key={index}
@@ -302,10 +298,9 @@ const VoucherLogin = ({ onBack, currentLanguage }) => {
                         label={feature.text}
                         size="small"
                         sx={{
-                          background: 'rgba(0, 0, 0, 0.6)',
-                          color: feature.color,
-                          border: `1px solid ${feature.color}60`,
-                          backdropFilter: 'blur(10px)',
+                          background: '#FFFFFF',
+                          color: '#0A0A0A',
+                          border: `1px solid ${feature.color}`,
                           '& .MuiChip-icon': {
                             color: feature.color,
                           },
@@ -315,7 +310,7 @@ const VoucherLogin = ({ onBack, currentLanguage }) => {
                   </Stack>
                 </Box>
 
-                <Divider sx={{ mb: 4 }} />
+                <Divider sx={{ mb: 4, borderColor: '#EEEEEE' }} />
 
                 {/* Session Status */}
                 {sessionStatus && (
@@ -353,35 +348,30 @@ const VoucherLogin = ({ onBack, currentLanguage }) => {
                       }}
                       sx={{
                         '& .MuiOutlinedInput-root': {
-                          borderRadius: 3,
-                          background: 'rgba(255, 255, 255, 0.1)',
-                          color: '#FFFFFF',
-                          '&:hover': {
-                            background: 'rgba(255, 255, 255, 0.15)',
-                            '& .MuiOutlinedInput-notchedOutline': {
-                              borderColor: '#FFC72C',
-                            },
+                          borderRadius: '12px',
+                          background: '#FFFFFF',
+                          '&:hover .MuiOutlinedInput-notchedOutline': {
+                            borderColor: '#F2C94C',
                           },
                           '&.Mui-focused': {
-                            background: 'rgba(255, 255, 255, 0.15)',
                             '& .MuiOutlinedInput-notchedOutline': {
-                              borderColor: '#FFC72C',
-                              borderWidth: 2,
+                              borderColor: '#F2C94C',
+                              borderWidth: '2px',
                             },
+                            boxShadow: '0 0 0 3px rgba(242, 201, 76, 0.35)',
                           },
                           '& .MuiOutlinedInput-notchedOutline': {
-                            borderColor: 'rgba(255, 255, 255, 0.3)',
+                            borderColor: '#E0E0E0',
                           },
                         },
                         '& .MuiInputLabel-root': {
-                          fontWeight: 600,
-                          color: 'rgba(255, 255, 255, 0.7)',
+                          color: '#666666',
                           '&.Mui-focused': {
-                            color: '#FFC72C',
+                            color: '#F2C94C',
                           },
                         },
                         '& .MuiInputBase-input': {
-                          color: '#FFFFFF',
+                          color: '#0A0A0A',
                         },
                       }}
                     />
@@ -406,35 +396,30 @@ const VoucherLogin = ({ onBack, currentLanguage }) => {
                       }}
                       sx={{
                         '& .MuiOutlinedInput-root': {
-                          borderRadius: 3,
-                          background: 'rgba(255, 255, 255, 0.1)',
-                          color: '#FFFFFF',
-                          '&:hover': {
-                            background: 'rgba(255, 255, 255, 0.15)',
-                            '& .MuiOutlinedInput-notchedOutline': {
-                              borderColor: '#0072CE',
-                            },
+                          borderRadius: '12px',
+                          background: '#FFFFFF',
+                          '&:hover .MuiOutlinedInput-notchedOutline': {
+                            borderColor: '#F2C94C',
                           },
                           '&.Mui-focused': {
-                            background: 'rgba(255, 255, 255, 0.15)',
                             '& .MuiOutlinedInput-notchedOutline': {
-                              borderColor: '#0072CE',
-                              borderWidth: 2,
+                              borderColor: '#F2C94C',
+                              borderWidth: '2px',
                             },
+                            boxShadow: '0 0 0 3px rgba(242, 201, 76, 0.35)',
                           },
                           '& .MuiOutlinedInput-notchedOutline': {
-                            borderColor: 'rgba(255, 255, 255, 0.3)',
+                            borderColor: '#E0E0E0',
                           },
                         },
                         '& .MuiInputLabel-root': {
-                          fontWeight: 600,
-                          color: 'rgba(255, 255, 255, 0.7)',
+                          color: '#666666',
                           '&.Mui-focused': {
-                            color: '#0072CE',
+                            color: '#F2C94C',
                           },
                         },
                         '& .MuiInputBase-input': {
-                          color: '#FFFFFF',
+                          color: '#0A0A0A',
                         },
                       }}
                     />
@@ -450,25 +435,24 @@ const VoucherLogin = ({ onBack, currentLanguage }) => {
                       disabled={isLoading || !voucherCode || !phoneNumber}
                       startIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : <WifiIcon />}
                       sx={{
-                        borderRadius: 4,
-                        py: 2.5,
-                        fontSize: '1.2rem',
-                        fontWeight: 700,
+                        borderRadius: '12px',
+                        py: 2,
+                        fontSize: '1rem',
+                        fontWeight: 600,
                         textTransform: 'none',
-                        background: 'linear-gradient(135deg, #FFC72C 0%, #FFB300 100%)',
-                        color: '#000000',
-                        boxShadow: '0 12px 40px rgba(255, 199, 44, 0.4)',
+                        backgroundColor: '#F2C94C',
+                        color: '#0A0A0A',
+                        boxShadow: 'none',
                         '&:hover': {
-                          background: 'linear-gradient(135deg, #FFB300 0%, #FFA000 100%)',
-                          transform: 'translateY(-2px)',
-                          boxShadow: '0 16px 50px rgba(255, 199, 44, 0.5)',
+                          backgroundColor: '#E0B335',
+                          boxShadow: '0 4px 12px rgba(242, 201, 76, 0.3)',
                         },
                         '&:disabled': {
-                          background: 'rgba(0, 0, 0, 0.12)',
-                          color: 'rgba(0, 0, 0, 0.26)',
+                          background: '#EEEEEE',
+                          color: '#666666',
                           boxShadow: 'none',
                         },
-                        transition: 'all 0.3s ease-in-out',
+                        transition: 'all 0.3s ease',
                       }}
                     >
                       {isLoading ? 'Connecting...' : 'Connect Now'}
@@ -480,15 +464,15 @@ const VoucherLogin = ({ onBack, currentLanguage }) => {
                     <Alert
                       severity="info"
                       sx={{
-                        borderRadius: 3,
-                        background: 'rgba(0, 114, 206, 0.1)',
-                        border: '1px solid rgba(0, 114, 206, 0.2)',
+                        borderRadius: '12px',
+                        background: '#EAF4FF',
+                        border: '1px solid #3A8DFF',
                         '& .MuiAlert-icon': {
-                          color: '#0072CE',
+                          color: '#3A8DFF',
                         },
                       }}
                     >
-                      <Typography variant="body2">
+                      <Typography variant="body2" sx={{ color: '#0A0A0A' }}>
                         <strong>Need help?</strong> Contact our 24/7 support team via WhatsApp or phone call.
                       </Typography>
                     </Alert>
