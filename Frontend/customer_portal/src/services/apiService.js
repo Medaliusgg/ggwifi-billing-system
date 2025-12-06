@@ -11,11 +11,24 @@ class ApiService {
   // Generic API call method with professional error handling
   async makeRequest(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`;
+    
+    // Only include Content-Type for requests with body (POST, PUT, PATCH)
+    // GET requests don't need Content-Type and it causes unnecessary CORS preflight
+    const hasBody = options.body !== undefined && options.body !== null;
+    const method = (options.method || 'GET').toUpperCase();
+    const needsContentType = hasBody && ['POST', 'PUT', 'PATCH'].includes(method);
+    
+    const defaultHeaders = {
+      'Accept': 'application/json',
+    };
+    
+    // Only add Content-Type if there's a body
+    if (needsContentType) {
+      defaultHeaders['Content-Type'] = 'application/json';
+    }
+    
     const defaultOptions = {
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
+      headers: defaultHeaders,
       mode: 'cors', // Explicitly enable CORS
       credentials: 'include', // Include credentials for CORS
     };
