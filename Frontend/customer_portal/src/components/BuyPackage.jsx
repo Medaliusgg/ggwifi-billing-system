@@ -1858,7 +1858,9 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                                   setCurrentPollingStop(null);
                                 }
                               } else {
-                                toast.info(`Status: ${paymentStatus || 'PENDING'}. Still processing...`);
+                                toast(`Status: ${paymentStatus || 'PENDING'}. Still processing...`, {
+                                  icon: 'ℹ️'
+                                });
                               }
                             } catch (error) {
                               console.error('❌ Manual status check failed:', error);
@@ -1886,7 +1888,9 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                             if (currentPollingStop) {
                               currentPollingStop();
                               setCurrentPollingStop(null);
-                              toast.info('Polling stopped. Click "Check Payment Status" to manually check.');
+                              toast('Polling stopped. Click "Check Payment Status" to manually check.', {
+                                icon: 'ℹ️'
+                              });
                             }
                           }}
                           sx={{
