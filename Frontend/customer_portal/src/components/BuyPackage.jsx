@@ -1631,8 +1631,8 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                                   currentPollingStop();
                                   setCurrentPollingStop(null);
                                 }
-                              } else if (['FAILED', 'CANCELLED', 'INSUFFICIENT_BALANCE', 'INVALID_PIN', 
-                                         'USER_CANCELLED', 'EXPIRED', 'TIMEOUT', 'NETWORK_ERROR', 'ERROR'].includes(paymentStatus)) {
+                              } else if (['FAILED', 'CANCELLED', 'REFUNDED', 'INSUFFICIENT_BALANCE', 'INVALID_PIN', 
+                                         'USER_CANCELLED', 'EXPIRED', 'TIMEOUT', 'NETWORK_ERROR', 'ERROR'].includes(paymentStatus.toUpperCase())) {
                                 setPaymentStatus('failed');
                                 setPaymentMessage(statusData.message || 'Payment failed');
                                 toast.error(statusData.message || 'Payment failed');
