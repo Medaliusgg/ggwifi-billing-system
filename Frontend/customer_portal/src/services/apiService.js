@@ -105,19 +105,22 @@ class ApiService {
 
   // Payment Initiation API
   async initiatePayment(paymentData) {
+    const requestBody = {
+      customerName: paymentData.customerName,
+      phoneNumber: paymentData.phoneNumber,
+      packageId: paymentData.packageId,
+      amount: paymentData.amount,
+    };
+    
+    // Include optional fields only if provided
+    if (paymentData.packageName) requestBody.packageName = paymentData.packageName;
+    if (paymentData.currency) requestBody.currency = paymentData.currency;
+    if (paymentData.paymentMethod) requestBody.paymentMethod = paymentData.paymentMethod;
+    // Location is no longer required - removed from request
+    
     return this.makeRequest('/customer-portal/payment', {
       method: 'POST',
-      body: JSON.stringify({
-        customerName: paymentData.customerName,
-        phoneNumber: paymentData.phoneNumber,
-        location: paymentData.location,
-        packageId: paymentData.packageId,
-        packageName: paymentData.packageName,
-        amount: paymentData.amount,
-        currency: paymentData.currency || 'TZS',
-        paymentMethod: paymentData.paymentMethod || 'ZENOPAY',
-        voucherCode: paymentData.voucherCode, // Include voucher code if provided
-      }),
+      body: JSON.stringify(requestBody),
     });
   }
 

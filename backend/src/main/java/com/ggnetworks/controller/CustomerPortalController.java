@@ -333,10 +333,17 @@ public class CustomerPortalController {
                     pendingPayment.setDescription("Payment initiated for package: " + packageId);
                     pendingPayment.setStatus(com.ggnetworks.entity.Payment.PaymentStatus.PENDING);
                     pendingPayment.setGatewayReference((String) zenoPayResponse.get("payment_reference"));
+                    
+                    // Set invoice and customer to null for PENDING payments (will be set when payment completes)
+                    // Note: These fields are nullable in the entity, so this is safe
+                    pendingPayment.setInvoiceId(null);
+                    pendingPayment.setCustomerId(null);
+                    
                     pendingPayment = paymentRepository.save(pendingPayment);
                     System.out.println("✅ PENDING payment record created with ID: " + pendingPayment.getId());
                 } catch (Exception e) {
                     System.err.println("⚠️ Failed to create PENDING payment record (non-critical): " + e.getMessage());
+                    e.printStackTrace();
                     // Continue - payment initiation was successful
                 }
                 
@@ -389,6 +396,8 @@ public class CustomerPortalController {
             
             // Map PaymentStatus enum to string
             String statusString = paymentStatus.name();
+            
+            System.out.println("📊 Payment Status: " + statusString + " (enum: " + paymentStatus + ")");
             
             // Check if voucher exists for this payment (findByOrderId returns List)
             List<com.ggnetworks.entity.Voucher> vouchers = voucherRepository.findByOrderId(orderId);
@@ -486,7 +495,8 @@ public class CustomerPortalController {
             System.out.println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
             
             // Process based on payment status
-            if ("SUCCESS".equals(paymentStatus) || "COMPLETED".equals(paymentStatus)) {
+            // Map webhook status to PaymentStatus enum: SUCCESS/COMPLETED -> COMPLETED, FAILED -> FAILED, etc.
+            if ("SUCCESS".equals(paymentStatus) || "COMPLETED".equals(paymentStatus) || "SUCCESSFUL".equals(paymentStatus)) {
                 System.out.println("🎉 Payment successful! Processing voucher creation...");
                 System.out.println("   Order ID: " + orderId);
                 System.out.println("   Amount: " + amount);
@@ -561,6 +571,7 @@ public class CustomerPortalController {
                 payment.setCurrency("TZS");
                 payment.setPaymentMethod(com.ggnetworks.entity.Payment.PaymentMethod.MPESA);
                 payment.setPaymentGateway("ZENOPAY");
+                // Use COMPLETED status (matches enum, SUCCESSFUL is also valid but COMPLETED is more standard)
                 payment.setStatus(com.ggnetworks.entity.Payment.PaymentStatus.COMPLETED);
                 payment.setPhoneNumber(phoneNumber);
                 payment.setDescription("Internet package payment: " + internetPackage.getName());

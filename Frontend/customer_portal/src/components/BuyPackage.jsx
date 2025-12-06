@@ -440,8 +440,9 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
             const normalizedStatus = (statusData.status || '').toUpperCase();
             
             // Map status to UI state (keep original status for display)
+            // Handle both COMPLETED and SUCCESSFUL from backend enum
             let uiStatus = 'processing';
-            if (normalizedStatus === 'COMPLETED' || normalizedStatus === 'SUCCESS') {
+            if (normalizedStatus === 'COMPLETED' || normalizedStatus === 'SUCCESS' || normalizedStatus === 'SUCCESSFUL') {
               uiStatus = 'success';
             } else if (['FAILED', 'CANCELLED', 'INSUFFICIENT_BALANCE', 'INVALID_PIN', 
                         'USER_CANCELLED', 'EXPIRED', 'TIMEOUT', 'NETWORK_ERROR', 'ERROR'].includes(normalizedStatus)) {
@@ -451,8 +452,8 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
             setPaymentStatus(uiStatus);
             setPaymentMessage(statusData.message);
             
-            // Handle success
-            if (normalizedStatus === 'COMPLETED' || normalizedStatus === 'SUCCESS') {
+            // Handle success - support both COMPLETED and SUCCESSFUL from backend enum
+            if (normalizedStatus === 'COMPLETED' || normalizedStatus === 'SUCCESS' || normalizedStatus === 'SUCCESSFUL') {
               if (statusData.voucherCode) {
                 setVoucherCode(statusData.voucherCode);
                 toast.success(`✅ Payment successful! Voucher code: ${statusData.voucherCode}`);

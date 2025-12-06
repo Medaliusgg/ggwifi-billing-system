@@ -19,11 +19,11 @@ public class Payment {
     private String paymentId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "invoice_id", nullable = false)
+    @JoinColumn(name = "invoice_id", nullable = true) // Allow null for PENDING payments
     private Invoice invoice;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "customer_id", nullable = false)
+    @JoinColumn(name = "customer_id", nullable = true) // Allow null for PENDING payments
     private Customer customer;
 
     @Column(name = "amount", nullable = false, precision = 10, scale = 2)
