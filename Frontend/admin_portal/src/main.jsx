@@ -11,9 +11,11 @@ import { SnackbarProvider } from 'notistack';
 import App from './App.jsx';
 import ggTheme from './theme/index.js';
 import muiTheme from './theme/muiTheme.js';
+import { ggwifiOfficialTheme } from './theme/ggwifiOfficialTheme.js';
 import './index.css';
 import './styles/design-system.css';
 import './styles/premium-design-system.css';
+import './styles/ggwifi-official-theme.css';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -30,7 +32,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <ThemeProvider theme={muiTheme}>
+        <ThemeProvider theme={ggwifiOfficialTheme}>
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <SnackbarProvider 
               maxSnack={3}

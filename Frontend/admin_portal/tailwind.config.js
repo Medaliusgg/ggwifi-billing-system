@@ -7,24 +7,49 @@ export default {
   theme: {
     extend: {
       colors: {
-        // GGWIFI Brand Colors - Official Brand Palette
-        'gg-gold': '#FFC72C', // Golden Yellow - Primary Brand Color
-        'gg-gold-dark': '#E6B800', // Darker Golden Yellow
-        'gg-gold-light': '#FFD700', // Bright Golden Yellow
-        'gg-black': '#000000', // Black - Main text, headings, overlays
-        'gg-blue': '#0072CE', // Blue - Secondary Accent Color
-        'gg-white': '#FFFFFF', // White - Backgrounds, clean layout areas
-        'gg-text-primary': '#000000', // Black - Main text
-        'gg-text-secondary': '#333333', // Dark Gray - Secondary text
-        'gg-text-muted': '#666666', // Medium Gray - Muted text
+        // ✅ GG WiFi — OFFICIAL BRAND COLORS
+        gg: {
+          white: "#FFFFFF",
+          black: "#0A0A0A",
+          gold: "#F2C94C",
+          goldStrong: "#E0B335",
+        },
+        // Secondary UI Colors (Packages, Analytics, Highlights Only)
+        sec: {
+          blue: "#3A8DFF",
+          blueLight: "#EAF4FF",
+          green: "#10B981",
+          greenLight: "#ECFDF5",
+          purple: "#A855F7",
+          purpleLight: "#F5E8FF",
+          orange: "#FF8A3D",
+          orangeLight: "#FFF3E6",
+        },
+        // Neutrals
+        neutral: {
+          50: "#FAFAFA",
+          100: "#F6F6F6",
+          200: "#EEEEEE",
+          300: "#E0E0E0",
+          600: "#666666",
+        },
       },
       fontFamily: {
-        'sans': ['Inter', 'Poppins', 'system-ui', 'sans-serif'],
+        primary: ["Inter", "sans-serif"],
+        sans: ["Inter", "sans-serif"],
+      },
+      borderRadius: {
+        sm: "8px",
+        md: "12px",
+        lg: "16px",
       },
       boxShadow: {
-        'gg-glow': '0 0 15px rgba(255, 215, 0, 0.3)',
-        'gg-glow-strong': '0 0 25px rgba(255, 215, 0, 0.5)',
-        'gg-glow-subtle': '0 0 10px rgba(255, 215, 0, 0.2)',
+        xs: "0 1px 2px rgba(0,0,0,0.04)",
+        sm: "0 4px 12px rgba(0,0,0,0.06)",
+        lg: "0 12px 36px rgba(0,0,0,0.10)",
+        'gg-glow': '0 0 15px rgba(242, 201, 76, 0.3)',
+        'gg-glow-strong': '0 0 25px rgba(242, 201, 76, 0.5)',
+        'gg-glow-subtle': '0 0 10px rgba(242, 201, 76, 0.2)',
       },
       animation: {
         'glow-pulse': 'glow-pulse 2s ease-in-out infinite alternate',

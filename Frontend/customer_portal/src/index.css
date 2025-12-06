@@ -1,5 +1,6 @@
 /* GG Wi-Fi Customer Portal - Premium Design System */
 @import './styles/premium-design-system.css';
+@import './styles/ggwifi-official-theme.css';
 
 * {
   box-sizing: border-box;

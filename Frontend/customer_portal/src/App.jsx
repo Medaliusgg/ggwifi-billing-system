@@ -14,6 +14,7 @@ import Footer from './components/Footer';
 import LoadingSpinner from './components/LoadingSpinner';
 import AnimatedBackground from './components/AnimatedBackground';
 import theme from './theme';
+import { ggwifiOfficialTheme } from './theme/ggwifiOfficialTheme.js';
 import './styles/design-system.css';
 
 // Enhanced GGNetworks theme is now imported from theme/index.js
@@ -185,7 +186,7 @@ const AppContent = () => {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider theme={theme}>
+      <ThemeProvider theme={ggwifiOfficialTheme}>
         <CssBaseline />
         <AppContent />
         <Toaster
