@@ -1568,19 +1568,19 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                         <Typography variant="body2" sx={{ color: '#505050' }}>
                           {paymentMessage || 'Please check your phone for payment instructions. Complete the payment on your mobile device.'}
                         </Typography>
-                        {paymentElapsedTime > 30 && paymentElapsedTime < 60 && (
+                        {paymentElapsedTime > 20 && paymentElapsedTime < 40 && (
                           <Typography variant="caption" sx={{ color: '#505050', display: 'block', mt: 1, fontStyle: 'italic' }}>
                             💡 If you've already entered your PIN, the payment is being processed. Please wait...
                           </Typography>
                         )}
-                        {paymentElapsedTime >= 60 && paymentElapsedTime < 90 && (
+                        {paymentElapsedTime >= 40 && paymentElapsedTime < 60 && (
                           <Typography variant="caption" sx={{ color: '#FF8A3D', display: 'block', mt: 1, fontWeight: 600 }}>
                             ⚠️ Payment is taking longer than expected. Please check your phone and complete the payment.
                           </Typography>
                         )}
-                        {paymentElapsedTime >= 90 && (
+                        {paymentElapsedTime >= 60 && (
                           <Typography variant="caption" sx={{ color: '#E74C3C', display: 'block', mt: 1, fontWeight: 600 }}>
-                            ⏰ Payment timeout approaching. If you've completed payment, click "Check Payment Status" below.
+                            ⏰ Payment timeout reached (60s). USSD prompt has expired. Please initiate a new payment.
                           </Typography>
                         )}
                       </Alert>
