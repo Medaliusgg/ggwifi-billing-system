@@ -106,21 +106,30 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
   useEffect(() => {
     let elapsedTimer = null;
     
+    // Only start timer when payment is processing and we have a start time
     if (paymentStep === 2 && paymentStatus === 'processing' && paymentStartTimeRef.current) {
       console.log('⏰ Starting independent elapsed time timer');
       elapsedTimer = setInterval(() => {
+        if (!paymentStartTimeRef.current) {
+          console.log('⚠️ No payment start time, stopping timer');
+          clearInterval(elapsedTimer);
+          return;
+        }
+        
         const currentElapsed = Math.floor((Date.now() - paymentStartTimeRef.current) / 1000);
         console.log(`⏱️ Timer update: ${currentElapsed}s elapsed`);
+        
         setPaymentElapsedTime(prev => {
-          // Only update if it's different to trigger re-render
+          // Always update to trigger re-render (even if same value initially)
           if (currentElapsed !== prev) {
             console.log(`⏱️ Updating elapsed time: ${prev}s → ${currentElapsed}s`);
             return currentElapsed;
           }
-          return prev;
+          // Force update even if same to ensure UI re-renders
+          return currentElapsed;
         });
         
-        // Progressive warnings
+        // Progressive warnings (only show once)
         if (currentElapsed === 10) {
           toast.warning('📱 Check your phone for the USSD prompt!', { duration: 4000 });
         } else if (currentElapsed === 20) {
@@ -139,6 +148,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
         if (currentElapsed >= 60) {
           console.log('⏰ Timer reached 60s, stopping');
           clearInterval(elapsedTimer);
+          elapsedTimer = null;
         }
       }, 1000); // Update every second for smooth UI updates
     }
@@ -147,9 +157,10 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
       if (elapsedTimer) {
         console.log('🛑 Cleaning up elapsed time timer');
         clearInterval(elapsedTimer);
+        elapsedTimer = null;
       }
     };
-  }, [paymentStep, paymentStatus, paymentStartTimeRef.current]);
+  }, [paymentStep, paymentStatus]); // Removed paymentStartTimeRef.current from deps (refs don't trigger re-renders)
 
   // Fetch packages from backend API - Only once when component mounts
   useEffect(() => {
