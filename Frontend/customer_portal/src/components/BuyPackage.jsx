@@ -106,9 +106,16 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
   useEffect(() => {
     let elapsedTimer = null;
     
+    console.log(`🔍 Timer useEffect triggered: paymentStep=${paymentStep}, paymentStatus=${paymentStatus}, paymentStartTimeRef=${paymentStartTimeRef.current}`);
+    
     // Only start timer when payment is processing and we have a start time
-    if (paymentStep === 2 && paymentStatus === 'processing' && paymentStartTimeRef.current) {
-      console.log('⏰ Starting independent elapsed time timer');
+    if (paymentStep === 2 && paymentStatus === 'processing') {
+      if (!paymentStartTimeRef.current) {
+        console.warn('⚠️ Timer condition met but paymentStartTimeRef is null, cannot start timer');
+        return;
+      }
+      
+      console.log('⏰ Starting independent elapsed time timer, startTime:', paymentStartTimeRef.current);
       elapsedTimer = setInterval(() => {
         if (!paymentStartTimeRef.current) {
           console.log('⚠️ No payment start time, stopping timer');
@@ -117,19 +124,12 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
         }
         
         const currentElapsed = Math.floor((Date.now() - paymentStartTimeRef.current) / 1000);
-        console.log(`⏱️ Timer update: ${currentElapsed}s elapsed`);
+        console.log(`⏱️ Timer update: ${currentElapsed}s elapsed (paymentElapsedTime was: ${paymentElapsedTime})`);
         
-        setPaymentElapsedTime(prev => {
-          // Always update to trigger re-render (even if same value initially)
-          if (currentElapsed !== prev) {
-            console.log(`⏱️ Updating elapsed time: ${prev}s → ${currentElapsed}s`);
-            return currentElapsed;
-          }
-          // Force update even if same to ensure UI re-renders
-          return currentElapsed;
-        });
+        // Always update state to trigger re-render
+        setPaymentElapsedTime(currentElapsed);
         
-        // Progressive warnings (only show once)
+        // Progressive warnings (only show once per second)
         if (currentElapsed === 10) {
           toast.warning('📱 Check your phone for the USSD prompt!', { duration: 4000 });
         } else if (currentElapsed === 20) {
@@ -151,6 +151,8 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
           elapsedTimer = null;
         }
       }, 1000); // Update every second for smooth UI updates
+    } else {
+      console.log(`⏸️ Timer not started: paymentStep=${paymentStep}, paymentStatus=${paymentStatus}`);
     }
     
     return () => {
@@ -160,7 +162,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
         elapsedTimer = null;
       }
     };
-  }, [paymentStep, paymentStatus]); // Removed paymentStartTimeRef.current from deps (refs don't trigger re-renders)
+  }, [paymentStep, paymentStatus, paymentElapsedTime]); // Added paymentElapsedTime to ensure timer sees current value
 
   // Fetch packages from backend API - Only once when component mounts
   useEffect(() => {
