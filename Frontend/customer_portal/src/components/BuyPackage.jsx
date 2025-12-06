@@ -79,6 +79,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
   const packagesLoadedRef = React.useRef(false); // Track if packages have been loaded
   const [paymentElapsedTime, setPaymentElapsedTime] = useState(0); // Track elapsed time in seconds
   const [paymentPollingAttempts, setPaymentPollingAttempts] = useState(0); // Track polling attempts
+  const [cardStyle, setCardStyle] = useState('detailed'); // 'detailed' or 'colorful' - card style toggle
 
   // Cleanup polling on unmount and when dialog closes
   useEffect(() => {
@@ -593,6 +594,14 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
     }
   };
 
+  // Package color mapping (secondary palette) - for colorful card style
+  const packageColors = [
+    { bg: '#EAF4FF', color: '#3A8DFF', name: 'Blue' },      // sec-blue-light / sec-blue
+    { bg: '#ECFDF5', color: '#10B981', name: 'Green' },     // sec-green-light / sec-green
+    { bg: '#F5E8FF', color: '#A855F7', name: 'Purple' },   // sec-purple-light / sec-purple
+    { bg: '#FFF3E6', color: '#FF8A3D', name: 'Orange' },    // sec-orange-light / sec-orange
+  ];
+
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 }
@@ -705,7 +714,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
               </Typography>
 
               {/* Features */}
-              <Stack direction="row" spacing={2} justifyContent="center" sx={{ mb: 6 }}>
+              <Stack direction="row" spacing={2} justifyContent="center" sx={{ mb: 4 }}>
                 {[
                   { icon: <SpeedIcon />, text: 'Lightning Fast', color: '#F2C94C' },  // Official Gold
                   { icon: <SecurityIcon />, text: 'Secure & Reliable', color: '#1ABC9C' },
@@ -731,6 +740,48 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                   />
                 ))}
               </Stack>
+
+              {/* Card Style Toggle */}
+              <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4, gap: 2 }}>
+                <Button
+                  variant={cardStyle === 'detailed' ? 'contained' : 'outlined'}
+                  onClick={() => setCardStyle('detailed')}
+                  sx={{
+                    backgroundColor: cardStyle === 'detailed' ? '#F2C94C' : 'transparent',
+                    color: cardStyle === 'detailed' ? '#0A0A0A' : '#666666',
+                    borderColor: '#F2C94C',
+                    borderRadius: '12px',
+                    px: 3,
+                    py: 1,
+                    fontWeight: 600,
+                    textTransform: 'none',
+                    '&:hover': {
+                      backgroundColor: cardStyle === 'detailed' ? '#E0B335' : 'rgba(242, 201, 76, 0.1)',
+                    },
+                  }}
+                >
+                  Detailed View
+                </Button>
+                <Button
+                  variant={cardStyle === 'colorful' ? 'contained' : 'outlined'}
+                  onClick={() => setCardStyle('colorful')}
+                  sx={{
+                    backgroundColor: cardStyle === 'colorful' ? '#F2C94C' : 'transparent',
+                    color: cardStyle === 'colorful' ? '#0A0A0A' : '#666666',
+                    borderColor: '#F2C94C',
+                    borderRadius: '12px',
+                    px: 3,
+                    py: 1,
+                    fontWeight: 600,
+                    textTransform: 'none',
+                    '&:hover': {
+                      backgroundColor: cardStyle === 'colorful' ? '#E0B335' : 'rgba(242, 201, 76, 0.1)',
+                    },
+                  }}
+                >
+                  Colorful View
+                </Button>
+              </Box>
             </Box>
           </motion.div>
 
@@ -755,35 +806,49 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                     </Alert>
                   </Grid>
                 ) : (
-                  packages.map((pkg) => (
-                <Grid item xs={12} sm={6} lg={3} key={pkg.id}>
-                  <motion.div
-                    variants={cardVariants}
-                    whileHover="hover"
-                  >
-                    <Card
-                      onClick={() => handleSelectPackage(pkg)}
-                      sx={{
-                        height: '100%',
-                        cursor: 'pointer',
-                        background: '#FFFFFF',  // White background - ZenoPay Style
-                        borderRadius: 4,  // 16px rounded corners
-                        border: selectedPackage?.id === pkg.id 
-                          ? `3px solid ${pkg.color}`  // Package color border when selected
-                          : `1px solid #FFE89C`,  // Pale yellow border
-                        boxShadow: selectedPackage?.id === pkg.id 
-                          ? `0 8px 24px ${pkg.color}40`  // Colored shadow when selected
-                          : '0 2px 8px rgba(0, 0, 0, 0.08)',  // Soft shadow
-                        transition: 'all 0.2s ease-in-out',
-                        position: 'relative',
-                        overflow: 'hidden',
-                        '&:hover': {
-                          transform: { xs: 'translateY(-4px)', md: 'translateY(-6px)' },
-                          boxShadow: `0 8px 24px ${pkg.color}30`,  // Colored shadow on hover
-                          borderColor: pkg.color,  // Package color border on hover
-                        },
-                      }}
-                    >
+                  packages.map((pkg, index) => {
+                    // Get color scheme for colorful style
+                    const colorScheme = packageColors[index % 4];
+                    const isColorfulStyle = cardStyle === 'colorful';
+                    
+                    return (
+                    <Grid item xs={12} sm={6} lg={3} key={pkg.id}>
+                      <motion.div
+                        variants={cardVariants}
+                        whileHover="hover"
+                      >
+                        <Card
+                          onClick={() => handleSelectPackage(pkg)}
+                          sx={{
+                            height: '100%',
+                            cursor: 'pointer',
+                            // Colorful style: secondary color background, Detailed style: white background
+                            background: isColorfulStyle ? colorScheme.bg : '#FFFFFF',
+                            borderRadius: isColorfulStyle ? '16px' : 4,
+                            border: isColorfulStyle 
+                              ? `2px solid ${colorScheme.color}`  // Colorful: 2px solid secondary color
+                              : selectedPackage?.id === pkg.id 
+                                ? `3px solid ${pkg.color}`  // Detailed: Package color border when selected
+                                : `1px solid #FFE89C`,  // Detailed: Pale yellow border
+                            boxShadow: isColorfulStyle
+                              ? '0 4px 12px rgba(0,0,0,0.06)'  // Colorful: Soft shadow
+                              : selectedPackage?.id === pkg.id 
+                                ? `0 8px 24px ${pkg.color}40`  // Detailed: Colored shadow when selected
+                                : '0 2px 8px rgba(0, 0, 0, 0.08)',  // Detailed: Soft shadow
+                            transition: 'all 0.3s ease',
+                            position: 'relative',
+                            overflow: 'hidden',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            '&:hover': {
+                              transform: 'translateY(-4px)',
+                              boxShadow: isColorfulStyle
+                                ? '0 8px 24px rgba(0,0,0,0.12)'  // Colorful: Deeper shadow
+                                : `0 8px 24px ${pkg.color}30`,  // Detailed: Colored shadow on hover
+                              borderColor: isColorfulStyle ? colorScheme.color : pkg.color,
+                            },
+                          }}
+                        >
                       {/* Popular Badge */}
                       {pkg.popular && (
                         <Box
@@ -885,34 +950,36 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                         </Box>
                       )}
 
-                      <CardContent sx={{ p: 4, textAlign: 'center' }}>
-                        {/* Package Icon */}
-                        <Avatar
-                          sx={{
-                            background: `${pkg.color}15`,  // Light tint of package color
-                            width: 80,  // Big icon
-                            height: 80,
-                            mx: 'auto',
-                            mb: 3,
-                            boxShadow: `0 4px 12px ${pkg.color}20`,
-                            border: `2px solid ${pkg.color}40`,
-                            '& .MuiSvgIcon-root': {
-                              fontSize: 40,
-                              color: pkg.color,  // Package color icon
-                            },
-                          }}
-                        >
-                          {pkg.icon}
-                        </Avatar>
+                      <CardContent sx={{ flex: 1, p: isColorfulStyle ? 3 : 4, textAlign: 'center', display: 'flex', flexDirection: 'column' }}>
+                        {/* Package Icon - Only show in detailed style */}
+                        {!isColorfulStyle && (
+                          <Avatar
+                            sx={{
+                              background: `${pkg.color}15`,  // Light tint of package color
+                              width: 80,  // Big icon
+                              height: 80,
+                              mx: 'auto',
+                              mb: 3,
+                              boxShadow: `0 4px 12px ${pkg.color}20`,
+                              border: `2px solid ${pkg.color}40`,
+                              '& .MuiSvgIcon-root': {
+                                fontSize: 40,
+                                color: pkg.color,  // Package color icon
+                              },
+                            }}
+                          >
+                            {pkg.icon}
+                          </Avatar>
+                        )}
 
-                        {/* Package Name - Colored by Package Type */}
+                        {/* Package Name */}
                         <Typography
-                          variant="h5"
+                          variant={isColorfulStyle ? "h6" : "h5"}
                           sx={{
-                            fontWeight: 800,
-                            color: pkg.color,  // Package color for name (Blue/Green/Purple/Orange)
+                            fontWeight: 700,
+                            color: isColorfulStyle ? '#0A0A0A' : pkg.color,
                             mb: 1,
-                            fontSize: { xs: '1.25rem', md: '1.5rem' },
+                            fontSize: isColorfulStyle ? { xs: '1rem', md: '1.125rem' } : { xs: '1.25rem', md: '1.5rem' },
                           }}
                         >
                           {pkg.name}
@@ -920,14 +987,13 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
 
                         {/* Duration */}
                         <Typography
-                          variant="body1"
+                          variant="body2"
                           sx={{
-                            color: '#505050',  // Label grey for duration
-                            fontWeight: 600,
+                            color: isColorfulStyle ? '#666666' : '#505050',
                             mb: 2,
                           }}
                         >
-                          {pkg.duration}
+                          {pkg.duration || `${pkg.durationDays || 0} Days`}
                         </Typography>
 
                         {/* Price with Discount */}
@@ -935,10 +1001,10 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                           {pkg.originalPrice && pkg.originalPrice > pkg.price ? (
                             <>
                               <Typography
-                                variant="h6"
+                                variant={isColorfulStyle ? "body2" : "h6"}
                                 sx={{
                                   textDecoration: 'line-through',
-                                  color: '#8D8D8D',  // Slate grey on white background
+                                  color: '#666666',
                                   opacity: 0.8,
                                   mb: 0.5,
                                 }}
@@ -946,11 +1012,12 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                                 TZS {pkg.originalPrice.toLocaleString()}
                               </Typography>
                               <Typography
-                                variant="h3"
+                                variant={isColorfulStyle ? "h5" : "h3"}
                                 sx={{
-                                  fontWeight: 900,
-                                  color: pkg.color,  // Package color for discounted price
-                                  fontSize: { xs: '2rem', md: '2.5rem' },
+                                  fontWeight: 700,
+                                  color: isColorfulStyle ? colorScheme.color : pkg.color,
+                                  mb: 0.5,
+                                  fontSize: isColorfulStyle ? { xs: '1.5rem', md: '1.75rem' } : { xs: '2rem', md: '2.5rem' },
                                 }}
                               >
                                 TZS {pkg.price.toLocaleString()}
@@ -971,11 +1038,11 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                             </>
                           ) : (
                             <Typography
-                              variant="h3"
+                              variant={isColorfulStyle ? "h5" : "h3"}
                               sx={{
-                                fontWeight: 900,
-                                color: '#1A1A1A',  // Charcoal Black on white background
-                                fontSize: { xs: '2rem', md: '2.5rem' },
+                                fontWeight: 700,
+                                color: isColorfulStyle ? colorScheme.color : '#1A1A1A',
+                                fontSize: isColorfulStyle ? { xs: '1.5rem', md: '1.75rem' } : { xs: '2rem', md: '2.5rem' },
                               }}
                             >
                               TZS {pkg.price.toLocaleString()}
@@ -983,8 +1050,22 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                           )}
                         </Box>
 
-                        {/* Time-Based Offer Info */}
-                        {pkg.isTimeBasedOffer && pkg.offerDescription && (
+                        {/* GG Points - Only in colorful style */}
+                        {isColorfulStyle && pkg.loyaltyPoints && (
+                          <Chip
+                            label={`+${pkg.loyaltyPoints} GG Points`}
+                            size="small"
+                            sx={{
+                              backgroundColor: '#F2C94C',
+                              color: '#0A0A0A',
+                              fontWeight: 600,
+                              mb: 2,
+                            }}
+                          />
+                        )}
+
+                        {/* Time-Based Offer Info - Only in detailed style */}
+                        {!isColorfulStyle && pkg.isTimeBasedOffer && pkg.offerDescription && (
                           <Alert
                             severity="info"
                             sx={{
@@ -1014,92 +1095,82 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                           </Alert>
                         )}
 
-                        {/* Description */}
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            color: '#1A1A1A',  // Charcoal Black for description (different from name)
-                            mb: 3,
-                            minHeight: 40,
-                            lineHeight: 1.5,
-                            fontWeight: 400,
-                          }}
-                        >
-                          {pkg.description}
-                        </Typography>
+                        {/* Description - Only in detailed style */}
+                        {!isColorfulStyle && (
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              color: '#1A1A1A',  // Charcoal Black for description
+                              mb: 3,
+                              minHeight: 40,
+                              lineHeight: 1.5,
+                              fontWeight: 400,
+                            }}
+                          >
+                            {pkg.description}
+                          </Typography>
+                        )}
 
-                        {/* Features */}
-                        <Stack spacing={1} sx={{ mb: 3 }}>
-                          {pkg.features.map((feature, index) => (
-                            <Box
-                              key={index}
-                              sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 1,
-                                justifyContent: 'center',
-                              }}
-                            >
-                              <CheckCircleIcon
+                        {/* Features - Only in detailed style */}
+                        {!isColorfulStyle && (
+                          <Stack spacing={1} sx={{ mb: 3 }}>
+                            {pkg.features.map((feature, index) => (
+                              <Box
+                                key={index}
                                 sx={{
-                                  fontSize: 16,
-                                  color: pkg.color,
-                                }}
-                              />
-                              <Typography
-                                variant="body2"
-                                sx={{
-                                  color: '#1A1A1A',  // Charcoal Black text
-                                  fontWeight: 500,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 1,
+                                  justifyContent: 'center',
                                 }}
                               >
-                                {feature}
-                              </Typography>
-                            </Box>
-                          ))}
-                        </Stack>
+                                <CheckCircleIcon
+                                  sx={{
+                                    fontSize: 16,
+                                    color: pkg.color,
+                                  }}
+                                />
+                                <Typography
+                                  variant="body2"
+                                  sx={{
+                                    color: '#1A1A1A',  // Charcoal Black text
+                                    fontWeight: 500,
+                                  }}
+                                >
+                                  {feature}
+                                </Typography>
+                              </Box>
+                            ))}
+                          </Stack>
+                        )}
 
-                        {/* Select Button */}
+                        {/* Select/Buy Button */}
                         <Button
-                          variant={selectedPackage?.id === pkg.id ? "contained" : "outlined"}
+                          variant="contained"
                           fullWidth
+                          onClick={() => handleSelectPackage(pkg)}
                           sx={{
-                            borderRadius: 3,
+                            backgroundColor: '#F2C94C',
+                            color: '#0A0A0A',
+                            borderRadius: isColorfulStyle ? '12px' : 3,
                             py: 1.5,
-                            fontWeight: 700,
+                            fontWeight: 600,
                             textTransform: 'none',
-                            ...(selectedPackage?.id === pkg.id ? {
-                              background: pkg.color,  // Package color background when selected
-                              color: '#FFFFFF',  // White text
-                              border: `2px solid ${pkg.color}`,
-                              boxShadow: `0 4px 12px ${pkg.color}40`,
-                              '&:hover': {
-                                background: pkg.color,
-                                opacity: 0.9,
-                                transform: 'translateY(-2px)',
-                                boxShadow: `0 6px 16px ${pkg.color}50`,
-                              },
-                            } : {
-                              background: '#FFFFFF',  // White button
-                              color: pkg.color,  // Package color text
-                              border: `2px solid ${pkg.color}`,  // Package color border
-                              '&:hover': {
-                                background: `${pkg.color}10`,  // Light package color tint
-                                color: pkg.color,  // Package color text
-                                border: `2px solid ${pkg.color}`,
-                                transform: 'translateY(-2px)',
-                                boxShadow: `0 4px 12px ${pkg.color}30`,
-                              },
-                            }),
+                            mt: 'auto',  // Push button to bottom
+                            '&:hover': {
+                              backgroundColor: '#E0B335',
+                              boxShadow: '0 4px 12px rgba(242, 201, 76, 0.3)',
+                            },
                           }}
                         >
-                          {selectedPackage?.id === pkg.id ? 'Selected' : 'Select Package'}
+                          {isColorfulStyle ? 'Buy Now' : (selectedPackage?.id === pkg.id ? 'Selected' : 'Select Package')}
                         </Button>
                       </CardContent>
                     </Card>
                   </motion.div>
                 </Grid>
-                  ))
+                    );
+                  })
                 )}
               </Grid>
             </motion.div>
