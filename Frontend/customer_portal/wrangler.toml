@@ -1,19 +1,11 @@
 # Cloudflare Pages Configuration for Customer Portal
-# This file configures the build settings for Cloudflare Pages
+# Note: Cloudflare Pages uses build settings from the dashboard or .cf-pages-config.json
+# This file only contains Pages-specific metadata
 
 name = "ggwifi-customer-portal"
 compatibility_date = "2024-01-01"
 
-# Pages build output directory (must be at root level for Cloudflare Pages)
-pages_build_output_dir = "Frontend/customer_portal/dist"
-
-[build]
-command = "cd Frontend/customer_portal && npm run build"
-cwd = "."
-
-[build.environment_variables]
-VITE_API_URL = "https://api.ggwifi.co.tz/api/v1"
-VITE_APP_NAME = "GGWIFI Customer Portal"
-VITE_APP_DOMAIN = "connect.ggwifi.co.tz"
-VITE_ENVIRONMENT = "production"
+# Pages build output directory
+# Note: This is relative to the root directory specified in Cloudflare Pages settings
+pages_build_output_dir = "dist"
 
