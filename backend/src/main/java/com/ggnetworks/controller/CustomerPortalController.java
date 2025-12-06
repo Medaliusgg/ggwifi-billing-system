@@ -78,6 +78,9 @@ public class CustomerPortalController {
     
     @Autowired
     private com.ggnetworks.service.RedisSessionService redisSessionService;
+    
+    @Autowired
+    private com.ggnetworks.repository.WebhookProcessingRepository webhookProcessingRepository;
 
     /**
      * Resolve the currently authenticated customer's phone number from the security context.
@@ -480,20 +483,45 @@ public class CustomerPortalController {
 
     /**
      * Handle ZenoPay webhook notifications
+     * Enhanced with idempotency checks and audit logging
      */
     @PostMapping("/webhook/zenopay")
-    public ResponseEntity<Map<String, Object>> handleZenoPayWebhook(@RequestBody Map<String, Object> webhookData) {
+    public ResponseEntity<Map<String, Object>> handleZenoPayWebhook(
+            @RequestBody Map<String, Object> webhookData,
+            jakarta.servlet.http.HttpServletRequest request) {
         Map<String, Object> response = new HashMap<>();
+        com.ggnetworks.entity.WebhookProcessing webhookRecord = null;
         
         try {
+            // Get client IP for audit
+            String clientIp = getClientIpAddress(request);
+            
             System.out.println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
             System.out.println("🔔 ZENOPAY WEBHOOK RECEIVED");
             System.out.println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
             System.out.println("📥 Timestamp: " + java.time.LocalDateTime.now());
+            System.out.println("🌐 Client IP: " + clientIp);
             System.out.println("📦 Webhook Data: " + webhookData);
             System.out.println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
             
-            // Validate webhook data
+            // STEP 1: IDEMPOTENCY CHECK - Prevent duplicate processing
+            String webhookId = generateWebhookId(webhookData);
+            Optional<com.ggnetworks.entity.WebhookProcessing> existingWebhook = 
+                webhookProcessingRepository.findByWebhookId(webhookId);
+            
+            if (existingWebhook.isPresent()) {
+                com.ggnetworks.entity.WebhookProcessing processed = existingWebhook.get();
+                System.out.println("✅ Webhook already processed: " + webhookId + " at " + processed.getProcessedAt());
+                
+                response.put("status", "success");
+                response.put("message", "Webhook already processed");
+                response.put("webhook_id", webhookId);
+                response.put("processed_at", processed.getProcessedAt().toString());
+                response.put("processing_result", processed.getProcessingResult());
+                return ResponseEntity.ok(response);
+            }
+            
+            // STEP 2: Validate webhook data
             Map<String, Object> validationResult = validateWebhookData(webhookData);
             String validationStatus = (String) validationResult.get("status");
             
@@ -512,14 +540,30 @@ public class CustomerPortalController {
                 return ResponseEntity.ok(response);
             }
             
+            // STEP 3: Create webhook processing record (for idempotency and audit)
+            webhookRecord = new com.ggnetworks.entity.WebhookProcessing();
+            webhookRecord.setWebhookId(webhookId);
+            webhookRecord.setGateway("ZENOPAY");
+            webhookRecord.setIpAddress(clientIp);
+            try {
+                webhookRecord.setWebhookPayload(new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(webhookData));
+            } catch (Exception e) {
+                webhookRecord.setWebhookPayload("Error serializing payload: " + e.getMessage());
+            }
+            
             // Extract validated data
             String orderId = (String) validationResult.get("order_id");
             String paymentStatus = (String) validationResult.get("payment_status");
             String amount = (String) validationResult.get("amount");
             String phoneNumber = (String) validationResult.get("msisdn");
             
+            webhookRecord.setOrderId(orderId);
+            webhookRecord.setPaymentStatus(paymentStatus);
+            webhookRecord.setTransactionId((String) webhookData.get("transid"));
+            
             System.out.println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
             System.out.println("✅ Processing webhook for order: " + orderId + " with status: " + paymentStatus);
+            System.out.println("🔐 Webhook ID: " + webhookId);
             System.out.println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
             
             // Process based on payment status
@@ -852,11 +896,69 @@ public class CustomerPortalController {
         } catch (Exception e) {
             System.err.println("❌ Error processing webhook: " + e.getMessage());
             e.printStackTrace();
+            
+            // Mark webhook as processed with error
+            try {
+                if (webhookRecord != null && webhookRecord.getWebhookId() != null) {
+                    webhookRecord.setProcessed(true);
+                    webhookRecord.setProcessingResult("ERROR");
+                    webhookRecord.setErrorMessage(e.getMessage());
+                    webhookProcessingRepository.save(webhookRecord);
+                }
+            } catch (Exception saveError) {
+                System.err.println("⚠️ Failed to save webhook error record: " + saveError.getMessage());
+            }
+            
             response.put("status", "error");
             response.put("message", "Error processing webhook: " + e.getMessage());
         }
         
         return ResponseEntity.ok(response);
+    }
+    
+    /**
+     * Generate unique webhook ID for idempotency
+     * Uses order_id + payment_status + transaction_id (if available)
+     */
+    private String generateWebhookId(Map<String, Object> webhookData) {
+        String orderId = (String) webhookData.get("order_id");
+        if (orderId == null) orderId = (String) webhookData.get("orderId");
+        
+        String paymentStatus = (String) webhookData.get("payment_status");
+        if (paymentStatus == null) paymentStatus = (String) webhookData.get("status");
+        
+        String transactionId = (String) webhookData.get("transid");
+        if (transactionId == null) transactionId = (String) webhookData.get("transaction_id");
+        
+        // Create unique ID: orderId_status_transactionId (or timestamp if no transaction ID)
+        String uniquePart = transactionId != null && !transactionId.isEmpty() 
+            ? transactionId 
+            : String.valueOf(System.currentTimeMillis());
+        return "WH_" + orderId + "_" + paymentStatus + "_" + uniquePart;
+    }
+    
+    /**
+     * Get client IP address from request (handles proxies and load balancers)
+     */
+    private String getClientIpAddress(jakarta.servlet.http.HttpServletRequest request) {
+        String ip = request.getHeader("X-Forwarded-For");
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("X-Real-IP");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("Proxy-Client-IP");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("WL-Proxy-Client-IP");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getRemoteAddr();
+        }
+        // Handle comma-separated IPs (X-Forwarded-For can have multiple)
+        if (ip != null && ip.contains(",")) {
+            ip = ip.split(",")[0].trim();
+        }
+        return ip;
     }
 
     /**

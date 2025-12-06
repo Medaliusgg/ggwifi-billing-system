@@ -26,7 +26,11 @@ public class RateLimitingConfig implements WebMvcConfigurer {
         
         registry.addInterceptor(generalRateLimitingInterceptor())
                 .addPathPatterns("/api/v1/**")
-                .excludePathPatterns("/api/v1/customer-portal/**");
+                .excludePathPatterns("/api/v1/customer-portal/packages", "/api/v1/customer-portal/test");
+        
+        // Webhook-specific rate limiting (more restrictive)
+        registry.addInterceptor(webhookRateLimitingInterceptor())
+                .addPathPatterns("/api/v1/customer-portal/webhook/**");
     }
 
     @Bean
@@ -73,6 +77,36 @@ public class RateLimitingConfig implements WebMvcConfigurer {
                 if (info.getCount() >= MAX_REQUESTS_PER_MINUTE) {
                     response.setStatus(429);
                     response.getWriter().write("{\"status\":\"error\",\"message\":\"Rate limit exceeded. Please try again later.\"}");
+                    response.setContentType("application/json");
+                    return false;
+                }
+                
+                info.increment();
+                return true;
+            }
+        };
+    }
+    
+    @Bean
+    public HandlerInterceptor webhookRateLimitingInterceptor() {
+        return new HandlerInterceptor() {
+            private static final int MAX_WEBHOOK_REQUESTS_PER_MINUTE = 20;
+            
+            @Override
+            public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+                String clientIp = getClientIp(request);
+                String key = "webhook:" + clientIp;
+                
+                RateLimitInfo info = rateLimitMap.computeIfAbsent(key, k -> new RateLimitInfo());
+                
+                // Clean old entries
+                cleanOldEntries();
+                
+                // Check webhook rate limit (more restrictive)
+                if (info.getCount() >= MAX_WEBHOOK_REQUESTS_PER_MINUTE) {
+                    System.err.println("⚠️ Webhook rate limit exceeded for IP: " + clientIp);
+                    response.setStatus(429);
+                    response.getWriter().write("{\"status\":\"error\",\"message\":\"Webhook rate limit exceeded. Please try again later.\"}");
                     response.setContentType("application/json");
                     return false;
                 }
