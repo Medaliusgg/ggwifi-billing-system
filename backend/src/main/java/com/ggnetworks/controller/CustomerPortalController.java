@@ -382,17 +382,45 @@ public class CustomerPortalController {
             
             if (paymentOpt.isEmpty()) {
                 // Payment not found - might still be pending
+                // Check if payment was initiated more than 5 minutes ago (likely expired)
                 response.put("status", "success");
                 response.put("payment_status", "PENDING");
-                response.put("message", "Payment is still being processed. Please wait...");
+                response.put("message", "Payment is still being processed. Please complete the payment on your phone.");
                 response.put("order_id", orderId);
                 response.put("voucher_code", null);
                 response.put("voucher_generated", false);
+                response.put("timeout_warning", false);
                 return ResponseEntity.ok(response);
             }
             
             com.ggnetworks.entity.Payment payment = paymentOpt.get();
             com.ggnetworks.entity.Payment.PaymentStatus paymentStatus = payment.getStatus();
+            
+            // Check for timeout: If payment is PENDING for more than 5 minutes, suggest it may have expired
+            if (paymentStatus == com.ggnetworks.entity.Payment.PaymentStatus.PENDING && payment.getCreatedAt() != null) {
+                java.time.Duration timeSinceCreation = java.time.Duration.between(
+                    payment.getCreatedAt(), 
+                    java.time.LocalDateTime.now()
+                );
+                long minutesPending = timeSinceCreation.toMinutes();
+                
+                if (minutesPending >= 5) {
+                    // Payment has been pending for 5+ minutes - likely expired or user didn't complete
+                    response.put("status", "success");
+                    response.put("payment_status", "EXPIRED");
+                    response.put("message", "Payment has expired. Please initiate a new payment.");
+                    response.put("order_id", orderId);
+                    response.put("voucher_code", null);
+                    response.put("voucher_generated", false);
+                    response.put("timeout_warning", true);
+                    response.put("minutes_pending", minutesPending);
+                    return ResponseEntity.ok(response);
+                } else if (minutesPending >= 2) {
+                    // Payment pending for 2+ minutes - add warning
+                    response.put("timeout_warning", true);
+                    response.put("minutes_pending", minutesPending);
+                }
+            }
             
             // Map PaymentStatus enum to string
             String statusString = paymentStatus.name();

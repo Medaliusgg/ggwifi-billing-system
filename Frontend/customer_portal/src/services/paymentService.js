@@ -137,7 +137,7 @@ class PaymentService {
   /**
    * Poll payment status with enhanced tracking
    */
-  async pollPaymentStatus(orderId, onStatusUpdate, maxAttempts = 90, interval = 2000) {
+  async pollPaymentStatus(orderId, onStatusUpdate, maxAttempts = 45, interval = 2000) {
     console.log(`🔄 Starting payment status polling for order: ${orderId}`);
     console.log(`   Max attempts: ${maxAttempts}, Interval: ${interval}ms`);
     

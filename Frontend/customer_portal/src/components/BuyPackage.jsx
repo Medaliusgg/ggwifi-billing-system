@@ -492,7 +492,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
               }
             }
           },
-          90, // Max attempts (3 minutes with 2s interval)
+          45, // Max attempts (90 seconds with 2s interval) - Reduced from 3 minutes for better UX
           2000 // Interval (2 seconds - more responsive)
         );
         
