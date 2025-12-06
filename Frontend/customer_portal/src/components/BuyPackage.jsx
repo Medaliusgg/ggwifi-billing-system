@@ -492,6 +492,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
         setPaymentStep(2);
         setPaymentElapsedTime(0);
         setPaymentPollingAttempts(0);
+        setActualPaymentStep('request_sent'); // Initial step: request sent
         
         // Store payment start time for fallback elapsed time calculation
         paymentStartTimeRef.current = Date.now();
@@ -558,11 +559,26 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
             let uiStatus = 'processing';
             if (normalizedStatus === 'COMPLETED' || normalizedStatus === 'SUCCESS' || normalizedStatus === 'SUCCESSFUL') {
               uiStatus = 'success';
+              setActualPaymentStep('completed'); // Payment completed
             } else if (['FAILED', 'CANCELLED', 'REFUNDED', 'INSUFFICIENT_BALANCE', 'INVALID_PIN', 
                         'USER_CANCELLED', 'EXPIRED', 'TIMEOUT', 'NETWORK_ERROR', 'ERROR'].includes(normalizedStatus)) {
               uiStatus = 'failed';
-            } else if (normalizedStatus === 'PENDING' || normalizedStatus === 'PROCESSING') {
+              setActualPaymentStep('failed'); // Payment failed
+            } else if (normalizedStatus === 'PROCESSING') {
               uiStatus = 'processing';
+              setActualPaymentStep('processing'); // Payment being processed by gateway
+            } else if (normalizedStatus === 'PENDING') {
+              uiStatus = 'processing';
+              // Determine step based on elapsed time and status
+              // If elapsed time > 5s, user likely received USSD prompt
+              // If elapsed time > 10s, user likely entered PIN
+              if (elapsedToUse >= 10) {
+                setActualPaymentStep('pin_entered'); // User likely entered PIN
+              } else if (elapsedToUse >= 5) {
+                setActualPaymentStep('ussd_received'); // User likely received USSD
+              } else {
+                setActualPaymentStep('request_sent'); // Just sent request
+              }
             }
             
             setPaymentStatus(uiStatus);
@@ -1662,13 +1678,20 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                     <>
                       <CircularProgress size={60} sx={{ color: '#F2C94C', mb: 3 }} />
                       
-                      {/* Dynamic Status Title */}
+                      {/* Dynamic Status Title - Based on actual payment step */}
                       <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: '#0B0B0B' }}>
-                        {paymentElapsedTime < 10 && '📱 Payment Request Sent'}
-                        {paymentElapsedTime >= 10 && paymentElapsedTime < 30 && '⏳ Waiting for Your Response'}
-                        {paymentElapsedTime >= 30 && paymentElapsedTime < 50 && '🔄 Processing Payment'}
-                        {paymentElapsedTime >= 50 && paymentElapsedTime < 60 && '⚠️ Almost Timeout - Please Complete'}
-                        {paymentElapsedTime >= 60 && '⏰ Payment Timeout'}
+                        {actualPaymentStep === 'request_sent' && '📱 Payment Request Sent'}
+                        {actualPaymentStep === 'ussd_received' && '📱 Check Your Phone - USSD Prompt Received'}
+                        {actualPaymentStep === 'pin_entered' && '🔐 PIN Entered - Processing Payment'}
+                        {actualPaymentStep === 'processing' && '🔄 Payment Processing...'}
+                        {actualPaymentStep === 'completed' && '✅ Payment Completed!'}
+                        {actualPaymentStep === 'failed' && '❌ Payment Failed'}
+                        {/* Fallback to time-based if step not set */}
+                        {!actualPaymentStep && paymentElapsedTime < 10 && '📱 Payment Request Sent'}
+                        {!actualPaymentStep && paymentElapsedTime >= 10 && paymentElapsedTime < 30 && '⏳ Waiting for Your Response'}
+                        {!actualPaymentStep && paymentElapsedTime >= 30 && paymentElapsedTime < 50 && '🔄 Processing Payment'}
+                        {!actualPaymentStep && paymentElapsedTime >= 50 && paymentElapsedTime < 60 && '⚠️ Almost Timeout - Please Complete'}
+                        {!actualPaymentStep && paymentElapsedTime >= 60 && '⏰ Payment Timeout'}
                       </Typography>
                       
                       {/* Countdown Timer - Prominent 30 Second Warning */}
@@ -1834,19 +1857,33 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                         }}
                       >
                         <Typography variant="body2" sx={{ color: '#0B0B0B', fontWeight: 600, mb: 0.5 }}>
-                          {paymentElapsedTime < 10 && '📱 Step 1: Check Your Phone'}
-                          {paymentElapsedTime >= 10 && paymentElapsedTime < 20 && '📱 Step 2: Look for USSD Prompt'}
-                          {paymentElapsedTime >= 20 && paymentElapsedTime < 30 && '🔐 Step 3: Enter Your PIN'}
-                          {paymentElapsedTime >= 30 && paymentElapsedTime < 40 && '⏳ Step 4: Payment Processing'}
-                          {paymentElapsedTime >= 40 && paymentElapsedTime < 50 && '⚠️ Step 5: Almost Timeout - Complete Now'}
-                          {paymentElapsedTime >= 50 && paymentElapsedTime < 55 && '⏰ Step 6: 10 Seconds Left!'}
-                          {paymentElapsedTime >= 55 && paymentElapsedTime < 60 && '🚨 Step 7: 5 Seconds Left - Complete Immediately!'}
-                          {paymentElapsedTime >= 60 && '⏰ Payment Timeout'}
+                          {actualPaymentStep === 'request_sent' && '📱 Step 1: Payment Request Sent'}
+                          {actualPaymentStep === 'ussd_received' && '📱 Step 2: USSD Prompt Received'}
+                          {actualPaymentStep === 'pin_entered' && '🔐 Step 3: PIN Entered - Processing'}
+                          {actualPaymentStep === 'processing' && '⏳ Step 4: Payment Processing...'}
+                          {actualPaymentStep === 'completed' && '✅ Step 5: Payment Completed!'}
+                          {actualPaymentStep === 'failed' && '❌ Payment Failed'}
+                          {/* Fallback to time-based if step not set */}
+                          {!actualPaymentStep && paymentElapsedTime < 10 && '📱 Step 1: Check Your Phone'}
+                          {!actualPaymentStep && paymentElapsedTime >= 10 && paymentElapsedTime < 20 && '📱 Step 2: Look for USSD Prompt'}
+                          {!actualPaymentStep && paymentElapsedTime >= 20 && paymentElapsedTime < 30 && '🔐 Step 3: Enter Your PIN'}
+                          {!actualPaymentStep && paymentElapsedTime >= 30 && paymentElapsedTime < 40 && '⏳ Step 4: Payment Processing'}
+                          {!actualPaymentStep && paymentElapsedTime >= 40 && paymentElapsedTime < 50 && '⚠️ Step 5: Almost Timeout - Complete Now'}
+                          {!actualPaymentStep && paymentElapsedTime >= 50 && paymentElapsedTime < 55 && '⏰ Step 6: 10 Seconds Left!'}
+                          {!actualPaymentStep && paymentElapsedTime >= 55 && paymentElapsedTime < 60 && '🚨 Step 7: 5 Seconds Left - Complete Immediately!'}
+                          {!actualPaymentStep && paymentElapsedTime >= 60 && '⏰ Payment Timeout'}
                         </Typography>
                         <Typography variant="body2" sx={{ color: '#505050', mb: 1 }}>
-                          {paymentElapsedTime < 10 && 'A payment request has been sent to your phone. Please check for the USSD prompt.'}
-                          {paymentElapsedTime >= 10 && paymentElapsedTime < 20 && 'You should see a USSD prompt on your phone. If not, check your phone\'s notification or dial *150*00# to check pending transactions.'}
-                          {paymentElapsedTime >= 20 && paymentElapsedTime < 30 && 'Please enter your mobile money PIN on your phone to complete the payment. The prompt will expire in ' + (60 - paymentElapsedTime) + ' seconds.'}
+                          {actualPaymentStep === 'request_sent' && 'A payment request has been sent to your phone. Please check for the USSD prompt.'}
+                          {actualPaymentStep === 'ussd_received' && 'You should see a USSD prompt on your phone. Please enter your mobile money PIN to complete the payment.'}
+                          {actualPaymentStep === 'pin_entered' && 'Your PIN has been entered. The payment is being processed. Please wait for confirmation.'}
+                          {actualPaymentStep === 'processing' && 'Your payment is being processed by the payment gateway. This may take a few seconds.'}
+                          {actualPaymentStep === 'completed' && 'Payment completed successfully! Your voucher code has been generated.'}
+                          {actualPaymentStep === 'failed' && paymentMessage}
+                          {/* Fallback to time-based if step not set */}
+                          {!actualPaymentStep && paymentElapsedTime < 10 && 'A payment request has been sent to your phone. Please check for the USSD prompt.'}
+                          {!actualPaymentStep && paymentElapsedTime >= 10 && paymentElapsedTime < 20 && 'You should see a USSD prompt on your phone. If not, check your phone\'s notification or dial *150*00# to check pending transactions.'}
+                          {!actualPaymentStep && paymentElapsedTime >= 20 && paymentElapsedTime < 30 && 'Please enter your mobile money PIN on your phone to complete the payment. The prompt will expire in ' + (60 - paymentElapsedTime) + ' seconds.'}
                           {paymentElapsedTime >= 30 && paymentElapsedTime < 40 && 'If you\'ve already entered your PIN, the payment is being processed. Please wait for confirmation. Time remaining: ' + (60 - paymentElapsedTime) + ' seconds.'}
                           {paymentElapsedTime >= 40 && paymentElapsedTime < 50 && '⚠️ Payment is taking longer than expected. Please check your phone immediately and complete the payment. Only ' + (60 - paymentElapsedTime) + ' seconds remaining!'}
                           {paymentElapsedTime >= 50 && paymentElapsedTime < 55 && '🚨 URGENT: Only ' + (60 - paymentElapsedTime) + ' seconds left! Please complete the payment on your phone NOW or it will expire!'}
