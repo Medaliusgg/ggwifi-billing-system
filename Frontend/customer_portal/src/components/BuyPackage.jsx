@@ -423,6 +423,10 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
         setPaymentElapsedTime(0);
         setPaymentPollingAttempts(0);
         
+        // Store payment start time for fallback elapsed time calculation
+        paymentStartTimeRef.current = Date.now();
+        console.log('⏰ Payment start time recorded:', paymentStartTimeRef.current);
+        
         // Show initial instruction toast
         toast('📱 Check your phone for payment instructions!', {
           duration: 5000,
