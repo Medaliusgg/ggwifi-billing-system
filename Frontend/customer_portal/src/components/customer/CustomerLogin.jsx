@@ -136,7 +136,8 @@ const CustomerLogin = ({ onSuccess, onBack }) => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        p: 3,
+        p: { xs: 2, md: 3 },
+        pt: { xs: 1, md: 2 },
       }}
     >
       <Stack spacing={3} sx={{ width: '100%', maxWidth: 520 }}>
@@ -154,9 +155,10 @@ const CustomerLogin = ({ onSuccess, onBack }) => {
           sx={{
             borderRadius: 4,
             border: '1px solid rgba(255, 199, 76, 0.25)',
-            boxShadow: '0 30px 80px rgba(0,0,0,0.25)',
-            background: 'rgba(15, 15, 15, 0.92)',
-            color: '#fff',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+            background: '#FFFFFF',
+            border: '1px solid #EDEDED',
+            color: '#0B0B0B',
           }}
         >
           {isSubmitting && <LinearProgress color="warning" />}
@@ -170,16 +172,16 @@ const CustomerLogin = ({ onSuccess, onBack }) => {
                   variant="outlined"
                   sx={{ mb: 2 }}
                 />
-                <Typography variant="h4" fontWeight={700} gutterBottom>
+                <Typography variant="h4" fontWeight={700} gutterBottom sx={{ color: '#0B0B0B' }}>
                   Access your customer portal
                 </Typography>
-                <Typography variant="body2" color="rgba(255,255,255,0.8)">
+                <Typography variant="body2" sx={{ color: '#8D8D8D' }}>
                   Use your registered phone number to receive a one-time password (OTP). No password
                   needed.
                 </Typography>
               </Box>
 
-              <Divider sx={{ borderColor: 'rgba(255,255,255,0.12)' }} />
+              <Divider sx={{ borderColor: '#EDEDED' }} />
 
               {step === 'PHONE' ? (
                 <Stack spacing={2}>
@@ -198,12 +200,14 @@ const CustomerLogin = ({ onSuccess, onBack }) => {
                     fullWidth
                     variant="outlined"
                     sx={{
-                      '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.7)' },
+                      '& .MuiInputLabel-root': { color: '#8D8D8D' },
                       '& .MuiOutlinedInput-root': {
-                        color: '#fff',
-                        '& fieldset': { borderColor: 'rgba(255,255,255,0.3)' },
-                        '&:hover fieldset': { borderColor: 'rgba(255,199,76,0.7)' },
-                        '&.Mui-focused fieldset': { borderColor: '#FFC72C' },
+                        color: '#0B0B0B',
+                        background: '#FFFFFF',
+                        border: '1px solid #EDEDED',
+                        '& fieldset': { borderColor: '#EDEDED' },
+                        '&:hover fieldset': { borderColor: '#F5C400' },
+                        '&.Mui-focused fieldset': { borderColor: '#F5C400' },
                       },
                     }}
                   />
@@ -222,16 +226,18 @@ const CustomerLogin = ({ onSuccess, onBack }) => {
                       py: 1.5,
                       fontWeight: 600,
                       fontSize: '1rem',
-                      background: 'linear-gradient(135deg, #FFC72C, #F5A623)',
-                      color: '#1a1a1a',
+                      background: '#F5C400',
+                      color: '#0B0B0B',
+                      boxShadow: 'none',
                       '&:hover': {
-                        background: 'linear-gradient(135deg, #FFD56A, #FFB347)',
+                        background: '#D4A100',
+                        boxShadow: '0 2px 8px rgba(245, 196, 0, 0.3)',
                       },
                     }}
                   >
                     Request OTP
                   </Button>
-                  <Typography variant="caption" color="rgba(255,255,255,0.65)" align="center">
+                  <Typography variant="caption" sx={{ color: '#8D8D8D' }} align="center">
                     By continuing you agree to our Terms of Service and Privacy Policy.
                   </Typography>
                 </Stack>
@@ -241,7 +247,7 @@ const CustomerLogin = ({ onSuccess, onBack }) => {
                     <IconButton size="small" onClick={handleBackToPhone} color="inherit">
                       <ArrowBackIcon />
                     </IconButton>
-                    <Typography variant="body2" color="rgba(255,255,255,0.75)">
+                    <Typography variant="body2" sx={{ color: '#0B0B0B' }}>
                       Enter the code sent to <strong>{maskedPhone}</strong>
                     </Typography>
                   </Stack>
@@ -267,12 +273,14 @@ const CustomerLogin = ({ onSuccess, onBack }) => {
                         letterSpacing: '0.5rem',
                         fontSize: '1.5rem',
                       },
-                      '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.7)' },
+                      '& .MuiInputLabel-root': { color: '#8D8D8D' },
                       '& .MuiOutlinedInput-root': {
-                        color: '#fff',
-                        '& fieldset': { borderColor: 'rgba(255,255,255,0.3)' },
-                        '&:hover fieldset': { borderColor: 'rgba(255,199,76,0.7)' },
-                        '&.Mui-focused fieldset': { borderColor: '#00B4D8' },
+                        color: '#0B0B0B',
+                        background: '#FFFFFF',
+                        border: '1px solid #EDEDED',
+                        '& fieldset': { borderColor: '#EDEDED' },
+                        '&:hover fieldset': { borderColor: '#F5C400' },
+                        '&.Mui-focused fieldset': { borderColor: '#F5C400' },
                       },
                     }}
                   />
@@ -290,9 +298,12 @@ const CustomerLogin = ({ onSuccess, onBack }) => {
                       py: 1.5,
                       fontWeight: 600,
                       fontSize: '1rem',
-                      background: 'linear-gradient(135deg, #00C9A7, #00B4D8)',
+                      background: '#F5C400',
+                      color: '#0B0B0B',
+                      boxShadow: 'none',
                       '&:hover': {
-                        background: 'linear-gradient(135deg, #29E7CD, #00D4FF)',
+                        background: '#D4A100',
+                        boxShadow: '0 2px 8px rgba(245, 196, 0, 0.3)',
                       },
                     }}
                   >
@@ -303,7 +314,7 @@ const CustomerLogin = ({ onSuccess, onBack }) => {
                     startIcon={<ReplayIcon />}
                     onClick={handleResend}
                     disabled={countdown > 0 || isSubmitting}
-                    sx={{ color: '#FFC72C', textTransform: 'none' }}
+                    sx={{ color: '#F5C400', textTransform: 'none', '&:hover': { background: '#FFE89C' } }}
                   >
                     {countdown > 0 ? `Resend OTP in ${countdown}s` : 'Resend OTP'}
                   </Button>

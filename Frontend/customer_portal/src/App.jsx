@@ -14,6 +14,7 @@ import Footer from './components/Footer';
 import LoadingSpinner from './components/LoadingSpinner';
 import AnimatedBackground from './components/AnimatedBackground';
 import theme from './theme';
+import './styles/design-system.css';
 
 // Enhanced GGNetworks theme is now imported from theme/index.js
 
@@ -30,6 +31,11 @@ const queryClient = new QueryClient({
 // Main App Content Component
 const AppContent = () => {
   const [currentView, setCurrentView] = useState('landing');
+  
+  // Debug: Log initial state
+  useEffect(() => {
+    console.log('🔍 AppContent mounted, currentView:', currentView);
+  }, [currentView]);
   const [currentLanguage, setCurrentLanguage] = useState('en');
   const [customerSession, setCustomerSession] = useState(() => {
     const stored = localStorage.getItem('customerSession');
@@ -87,10 +93,11 @@ const AppContent = () => {
         display: 'flex', 
         flexDirection: 'column',
         position: 'relative',
+        background: '#FFFFFF',  // Soft White - Premium design (removes dark background)
       }}
     >
-      {/* Animated Background */}
-      <AnimatedBackground variant="default" />
+      {/* Animated Background - Light variant for premium design */}
+      <AnimatedBackground variant="light" />
       
       {/* Fixed Navigation Bar */}
       <NavigationBar 
@@ -101,8 +108,8 @@ const AppContent = () => {
         onNavigateToCustomer={handleNavigateToCustomer}
       />
       
-      {/* Main Content with top padding to account for fixed header */}
-      <Box sx={{ pt: { xs: '56px', md: '64px' }, flex: 1, position: 'relative', zIndex: 0 }}>
+      {/* Main Content with minimal top padding to account for fixed header */}
+      <Box sx={{ pt: { xs: '56px', md: '64px' }, flex: 1, position: 'relative', zIndex: 0, marginTop: 0 }}>
         <AnimatePresence mode="wait">
           {currentView === 'landing' && (
             <motion.div

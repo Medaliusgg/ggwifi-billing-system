@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Grid,
@@ -9,6 +9,9 @@ import {
   Chip,
   useTheme,
   useMediaQuery,
+  CircularProgress,
+  Alert,
+  IconButton,
 } from '@mui/material';
 import {
   TrendingUp as TrendingUpIcon,
@@ -21,8 +24,10 @@ import {
   Timeline as TimelineIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
+import { useQuery } from '@tanstack/react-query';
 import useAuthStore from '/src/store/authStore.js';
 import ggwifiTheme from '/src/theme/ggwifiTheme.js';
+import { dashboardAPI } from '/src/services/api.js';
 
 // GG Wi-Fi Branded KPI Card Component
 const KPICard = ({ 
@@ -48,29 +53,29 @@ const KPICard = ({
       <Card
         sx={{
           height: '100%',
-          background: ggwifiTheme.gradients.card,
-          borderRadius: ggwifiTheme.borderRadius.lg,
-          boxShadow: ggwifiTheme.shadows.lg,
-          border: `1px solid rgba(245, 183, 0, 0.1)`,
-          transition: ggwifiTheme.transitions.normal,
+          background: '#FFFFFF',  // White background - ZenoPay Style
+          borderRadius: 4,  // 16px
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',  // Soft shadow
+          border: `1px solid #FFE89C`,  // Pale yellow border
+          transition: 'all 0.2s ease',
           position: 'relative',
           overflow: 'hidden',
           '&:hover': {
-            boxShadow: ggwifiTheme.shadows.golden,
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.12)',
             transform: 'translateY(-4px)',
-            borderColor: `rgba(245, 183, 0, 0.3)`,
+            borderColor: `#F5C400`,  // Yellow border on hover
           },
         }}
       >
-        {/* Golden Accent Border */}
+        {/* Yellow Accent Border */}
         <Box
           sx={{
             position: 'absolute',
             top: 0,
             left: 0,
             right: 0,
-            height: 4,
-            background: ggwifiTheme.gradients.primary,
+            height: 3,
+            background: '#F5C400',  // Yellow accent
           }}
         />
         
@@ -81,9 +86,10 @@ const KPICard = ({
                 sx={{
                   width: 48,
                   height: 48,
-                  background: ggwifiTheme.gradients.primary,
-                  color: ggwifiTheme.colors.secondary,
-                  boxShadow: ggwifiTheme.shadows.golden,
+                  background: '#F5F5F5',  // Neutral grey background
+                  color: '#1A1A1A',  // Charcoal icon
+                  border: '1px solid #E0E0E0',  // Light grey border
+                  boxShadow: 'none',  // No shadow - clean look
                 }}
               >
                 {icon}
@@ -92,7 +98,7 @@ const KPICard = ({
                 <Typography
                   variant="body2"
                   sx={{
-                    color: ggwifiTheme.colors.neutral,
+                    color: '#1A1A1A',  // Charcoal Black text
                     fontFamily: ggwifiTheme.typography.fontFamily.primary,
                     fontWeight: ggwifiTheme.typography.fontWeight.medium,
                     fontSize: ggwifiTheme.typography.fontSize.sm,
@@ -109,17 +115,14 @@ const KPICard = ({
                 label={`${trendValue}%`}
                 size="small"
                 sx={{
-                  backgroundColor: trend === 'up' 
-                    ? 'rgba(76, 175, 80, 0.1)' 
-                    : 'rgba(244, 67, 54, 0.1)',
-                  color: trend === 'up' 
-                    ? ggwifiTheme.colors.success 
-                    : ggwifiTheme.colors.error,
-                  border: `1px solid ${trend === 'up' 
-                    ? ggwifiTheme.colors.success 
-                    : ggwifiTheme.colors.error}`,
+                  backgroundColor: '#F5F5F5',  // Neutral grey background
+                  color: '#1A1A1A',  // Charcoal text
+                  border: '1px solid #E0E0E0',  // Light grey border
                   fontFamily: ggwifiTheme.typography.fontFamily.primary,
                   fontWeight: ggwifiTheme.typography.fontWeight.semibold,
+                  '& .MuiChip-icon': {
+                    color: '#505050',  // Grey icon
+                  },
                 }}
               />
             )}
@@ -130,12 +133,8 @@ const KPICard = ({
             sx={{
               fontFamily: ggwifiTheme.typography.fontFamily.primary,
               fontWeight: ggwifiTheme.typography.fontWeight.bold,
-              color: ggwifiTheme.colors.secondary,
+              color: '#1A1A1A',  // Charcoal Black text
               mb: 1,
-              background: ggwifiTheme.gradients.primary,
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
             }}
           >
             {value}
@@ -145,7 +144,7 @@ const KPICard = ({
             <Typography
               variant="body2"
               sx={{
-                color: ggwifiTheme.colors.neutral,
+                color: '#505050',  // Label grey
                 fontFamily: ggwifiTheme.typography.fontFamily.primary,
                 fontSize: ggwifiTheme.typography.fontSize.sm,
               }}
@@ -173,23 +172,23 @@ const ActivityFeed = ({ activities = [] }) => {
       <Card
         sx={{
           height: '100%',
-          background: ggwifiTheme.gradients.card,
-          borderRadius: ggwifiTheme.borderRadius.lg,
-          boxShadow: ggwifiTheme.shadows.lg,
-          border: `1px solid rgba(245, 183, 0, 0.1)`,
+          background: '#FFFFFF',  // White background - ZenoPay Style
+          borderRadius: 4,  // 16px
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',  // Soft shadow
+          border: `1px solid #FFE89C`,  // Pale yellow border
           position: 'relative',
           overflow: 'hidden',
         }}
       >
-        {/* Golden Accent Border */}
+        {/* Yellow Accent Border */}
         <Box
           sx={{
             position: 'absolute',
             top: 0,
             left: 0,
             right: 0,
-            height: 4,
-            background: ggwifiTheme.gradients.primary,
+            height: 3,
+            background: '#F5C400',  // Yellow accent
           }}
         />
         
@@ -200,22 +199,22 @@ const ActivityFeed = ({ activities = [] }) => {
               sx={{
                 fontFamily: ggwifiTheme.typography.fontFamily.primary,
                 fontWeight: ggwifiTheme.typography.fontWeight.semibold,
-                color: ggwifiTheme.colors.secondary,
+                color: '#1A1A1A',  // Charcoal Black text
               }}
             >
               Recent Activity
             </Typography>
-            <RefreshIcon sx={{ color: ggwifiTheme.colors.primary }} />
+            <RefreshIcon sx={{ color: '#505050' }} />  {/* Grey icon - neutral */}
           </Box>
 
           <Box sx={{ maxHeight: 400, overflowY: 'auto' }}>
             {activities.length === 0 ? (
               <Box sx={{ textAlign: 'center', py: 4 }}>
-                <TimelineIcon sx={{ fontSize: 48, color: ggwifiTheme.colors.neutral, mb: 2 }} />
+                <TimelineIcon sx={{ fontSize: 48, color: '#E0E0E0', mb: 2 }} />  {/* Light grey icon - neutral */}
                 <Typography
                   variant="body2"
                   sx={{
-                    color: ggwifiTheme.colors.neutral,
+                    color: '#505050',  // Label grey
                     fontFamily: ggwifiTheme.typography.fontFamily.primary,
                   }}
                 >
@@ -237,13 +236,13 @@ const ActivityFeed = ({ activities = [] }) => {
                       gap: 2,
                       p: 2,
                       mb: 1,
-                      borderRadius: ggwifiTheme.borderRadius.md,
-                      backgroundColor: 'rgba(245, 183, 0, 0.05)',
-                      border: '1px solid rgba(245, 183, 0, 0.1)',
-                      transition: ggwifiTheme.transitions.normal,
+                      borderRadius: 2,
+                      backgroundColor: '#FFFFFF',  // White background
+                      border: '1px solid #FFE89C',  // Pale yellow border
+                      transition: 'all 0.2s ease',
                       '&:hover': {
-                        backgroundColor: 'rgba(245, 183, 0, 0.1)',
-                        borderColor: `rgba(245, 183, 0, 0.2)`,
+                        backgroundColor: '#FFE89C',  // Pale yellow on hover
+                        borderColor: `#F5C400`,  // Yellow border
                       },
                     }}
                   >
@@ -251,9 +250,10 @@ const ActivityFeed = ({ activities = [] }) => {
                       sx={{
                         width: 32,
                         height: 32,
-                        background: ggwifiTheme.gradients.primary,
-                        color: ggwifiTheme.colors.secondary,
+                        background: '#F5F5F5',  // Neutral grey background
+                        color: '#1A1A1A',  // Charcoal icon
                         fontSize: '0.75rem',
+                        border: '1px solid #E0E0E0',  // Light grey border
                       }}
                     >
                       {activity.icon}
@@ -264,7 +264,7 @@ const ActivityFeed = ({ activities = [] }) => {
                         sx={{
                           fontFamily: ggwifiTheme.typography.fontFamily.primary,
                           fontWeight: ggwifiTheme.typography.fontWeight.medium,
-                          color: ggwifiTheme.colors.secondary,
+                          color: '#1A1A1A',  // Charcoal Black text
                           mb: 0.5,
                         }}
                       >
@@ -273,7 +273,7 @@ const ActivityFeed = ({ activities = [] }) => {
                       <Typography
                         variant="caption"
                         sx={{
-                          color: ggwifiTheme.colors.neutral,
+                          color: '#505050',  // Label grey
                           fontFamily: ggwifiTheme.typography.fontFamily.primary,
                         }}
                       >
@@ -284,15 +284,9 @@ const ActivityFeed = ({ activities = [] }) => {
                       label={activity.status}
                       size="small"
                       sx={{
-                        backgroundColor: activity.status === 'Success' 
-                          ? 'rgba(76, 175, 80, 0.1)' 
-                          : 'rgba(33, 150, 243, 0.1)',
-                        color: activity.status === 'Success' 
-                          ? ggwifiTheme.colors.success 
-                          : ggwifiTheme.colors.info,
-                        border: `1px solid ${activity.status === 'Success' 
-                          ? ggwifiTheme.colors.success 
-                          : ggwifiTheme.colors.info}`,
+                        backgroundColor: '#F5F5F5',  // Neutral grey background
+                        color: '#1A1A1A',  // Charcoal text
+                        border: '1px solid #E0E0E0',  // Light grey border
                         fontFamily: ggwifiTheme.typography.fontFamily.primary,
                         fontWeight: ggwifiTheme.typography.fontWeight.medium,
                       }}
@@ -315,8 +309,19 @@ const SimpleAdminDashboard = () => {
 
   console.log('🔍 SimpleAdminDashboard rendered:', { user });
 
-  // Static dashboard data
-  const dashboardData = {
+  // Fetch dashboard data from backend
+  const { data: dashboardResponse, isLoading, error, refetch } = useQuery({
+    queryKey: ['admin-dashboard-stats'],
+    queryFn: async () => {
+      const response = await dashboardAPI.getDashboardStats();
+      return response.data || response;
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: 2 * 60 * 1000, // Refetch every 2 minutes
+  });
+
+  // Fallback mock data
+  const mockData = {
     kpis: [
       {
         title: 'Total Users',
@@ -379,38 +384,104 @@ const SimpleAdminDashboard = () => {
     ],
   };
 
+  // Process dashboard data from backend or use mock
+  const processDashboardData = (data) => {
+    if (!data || !data.kpis) {
+      return mockData;
+    }
+
+    // Map backend KPIs to frontend format
+    const kpis = Object.entries(data.kpis || {}).map(([key, kpi]) => ({
+      title: kpi.title || key,
+      value: kpi.value || '0',
+      subtitle: kpi.subtitle || '',
+      icon: getIconForKPI(key),
+      trend: kpi.trend || 'stable',
+      trendValue: kpi.trendValue || 0,
+    }));
+
+    return {
+      kpis: kpis.length > 0 ? kpis : mockData.kpis,
+      activities: data.activities || mockData.activities,
+    };
+  };
+
+  const getIconForKPI = (key) => {
+    const iconMap = {
+      totalCustomers: <PeopleIcon />,
+      activeCustomers: <WifiIcon />,
+      totalRevenue: <MoneyIcon />,
+      monthlyRevenue: <MoneyIcon />,
+      systemUptime: <SecurityIcon />,
+      totalPackages: <WifiIcon />,
+      activeSessions: <WifiIcon />,
+    };
+    return iconMap[key] || <PeopleIcon />;
+  };
+
+  const dashboardData = processDashboardData(dashboardResponse);
+
+  if (isLoading) {
+    return (
+      <Box sx={{ p: 3, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          Failed to load dashboard data. Using mock data.
+        </Alert>
+      </Box>
+    );
+  }
+
   return (
-    <Box sx={{ p: 3, minHeight: '100vh', backgroundColor: '#000000' }}>
+    <Box sx={{ p: 3, minHeight: '100vh', backgroundColor: '#FFFFFF' }}>  {/* Soft White background */}
       {/* GG Wi-Fi Dashboard Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <Box sx={{ mb: 4 }}>
-          <Typography
-            variant="h4"
+        <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+          <Box>
+            <Typography
+              variant="h4"
+              sx={{
+                fontFamily: ggwifiTheme.typography.fontFamily.primary,
+                fontWeight: ggwifiTheme.typography.fontWeight.bold,
+                color: '#1A1A1A',  // Charcoal Black text
+                mb: 1,
+              }}
+            >
+              Admin Dashboard
+            </Typography>
+            <Typography
+              variant="body1"
+              sx={{
+                color: '#505050',  // Label grey
+                fontFamily: ggwifiTheme.typography.fontFamily.primary,
+              }}
+            >
+              Welcome back, {user?.username || 'Admin'}! Here's your system overview.
+            </Typography>
+          </Box>
+          <IconButton
+            onClick={() => refetch()}
             sx={{
-              fontFamily: ggwifiTheme.typography.fontFamily.primary,
-              fontWeight: ggwifiTheme.typography.fontWeight.bold,
-              background: ggwifiTheme.gradients.primary,
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-              mb: 1,
+              color: '#505050',
+              '&:hover': {
+                color: '#F5C400',
+                backgroundColor: 'rgba(245, 196, 0, 0.1)',
+              },
             }}
           >
-            Admin Dashboard
-          </Typography>
-          <Typography
-            variant="body1"
-            sx={{
-              color: ggwifiTheme.colors.neutral,
-              fontFamily: ggwifiTheme.typography.fontFamily.primary,
-            }}
-          >
-            Welcome back, {user?.username || 'Admin'}! Here's your system overview.
-          </Typography>
+            <RefreshIcon />
+          </IconButton>
         </Box>
       </motion.div>
 
@@ -443,10 +514,10 @@ const SimpleAdminDashboard = () => {
             <Card
               sx={{
                 height: '100%',
-                background: ggwifiTheme.gradients.card,
-                borderRadius: ggwifiTheme.borderRadius.lg,
-                boxShadow: ggwifiTheme.shadows.lg,
-                border: `1px solid rgba(245, 183, 0, 0.1)`,
+                background: '#FFFFFF',  // White background
+                borderRadius: 4,  // 16px
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',  // Soft shadow
+                border: `1px solid #FFE89C`,  // Pale yellow border
                 position: 'relative',
                 overflow: 'hidden',
               }}
@@ -458,8 +529,8 @@ const SimpleAdminDashboard = () => {
                   top: 0,
                   left: 0,
                   right: 0,
-                  height: 4,
-                  background: ggwifiTheme.gradients.primary,
+                  height: 3,
+                  background: '#F5C400',  // Primary Golden Yellow
                 }}
               />
               
@@ -469,7 +540,7 @@ const SimpleAdminDashboard = () => {
                   sx={{
                     fontFamily: ggwifiTheme.typography.fontFamily.primary,
                     fontWeight: ggwifiTheme.typography.fontWeight.semibold,
-                    color: ggwifiTheme.colors.secondary,
+                    color: '#1A1A1A',  // Charcoal Black text
                     mb: 3,
                   }}
                 >
@@ -497,14 +568,14 @@ const SimpleAdminDashboard = () => {
                           alignItems: 'center',
                           gap: 2,
                           p: 2,
-                          borderRadius: ggwifiTheme.borderRadius.md,
-                          backgroundColor: 'rgba(245, 183, 0, 0.05)',
-                          border: '1px solid rgba(245, 183, 0, 0.1)',
+                          borderRadius: 2,  // 8px
+                          backgroundColor: '#FFFFFF',  // White background
+                          border: '1px solid #FFE89C',  // Pale yellow border
                           cursor: 'pointer',
-                          transition: ggwifiTheme.transitions.normal,
+                          transition: 'all 0.2s ease',
                           '&:hover': {
-                            backgroundColor: 'rgba(245, 183, 0, 0.1)',
-                            borderColor: `rgba(245, 183, 0, 0.3)`,
+                            backgroundColor: 'rgba(245, 196, 0, 0.1)',  // Pale yellow on hover
+                            borderColor: '#F5C400',  // Yellow border
                             transform: 'translateX(4px)',
                           },
                         }}
@@ -513,8 +584,9 @@ const SimpleAdminDashboard = () => {
                           sx={{
                             width: 40,
                             height: 40,
-                            background: ggwifiTheme.gradients.primary,
-                            color: ggwifiTheme.colors.secondary,
+                            background: '#F5F5F5',  // Light grey background
+                            color: '#1A1A1A',  // Charcoal icon
+                            border: '1px solid #E0E0E0',  // Light grey border
                           }}
                         >
                           {action.icon}
@@ -524,7 +596,7 @@ const SimpleAdminDashboard = () => {
                           sx={{
                             fontFamily: ggwifiTheme.typography.fontFamily.primary,
                             fontWeight: ggwifiTheme.typography.fontWeight.medium,
-                            color: ggwifiTheme.colors.secondary,
+                            color: '#1A1A1A',  // Charcoal Black text
                           }}
                         >
                           {action.title}
@@ -549,9 +621,9 @@ const SimpleAdminDashboard = () => {
           <Typography
             variant="caption"
             sx={{
-              color: ggwifiTheme.colors.neutral,
+              color: '#505050',  // Label grey
               fontFamily: ggwifiTheme.typography.fontFamily.primary,
-              fontSize: ggwifiTheme.typography.fontSize.xs,
+              fontSize: 12,
             }}
           >
             Last updated: {new Date().toLocaleTimeString()} | 

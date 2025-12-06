@@ -8,34 +8,87 @@ class ApiService {
     this.baseURL = API_BASE_URL;
   }
 
-  // Generic API call method
+  // Generic API call method with professional error handling
   async makeRequest(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`;
     const defaultOptions = {
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
       },
+      mode: 'cors', // Explicitly enable CORS
+      credentials: 'include', // Include credentials for CORS
     };
 
     const config = { ...defaultOptions, ...options };
 
     try {
-      console.log('🔍 API Request:', url, config);
+      console.log('🔍 API Request:', {
+        url,
+        method: config.method || 'GET',
+        headers: config.headers
+      });
+      
       const response = await fetch(url, config);
       
-      console.log('🔍 API Response Status:', response.status);
-      console.log('🔍 API Response OK:', response.ok);
+      console.log('🔍 API Response:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+        headers: Object.fromEntries(response.headers.entries())
+      });
+      
+      // Check for CORS errors
+      if (response.status === 0 || response.type === 'opaque') {
+        throw new Error('CORS error: Request blocked. Please check backend CORS configuration.');
+      }
       
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        // Try to get error message from response
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorData.error || errorMessage;
+        } catch (e) {
+          // Response is not JSON, use status text
+          errorMessage = response.statusText || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
-      console.log('🔍 API Response Data:', data);
+      console.log('✅ API Response Data:', data);
       return data;
     } catch (error) {
-      console.error('API request failed:', error);
-      throw error;
+      // Professional error handling
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        console.error('❌ Network Error:', {
+          message: error.message,
+          url,
+          possibleCauses: [
+            'Backend server is not running',
+            'CORS configuration issue',
+            'Network connectivity problem',
+            'Backend URL is incorrect'
+          ]
+        });
+        throw new Error('Network error: Unable to connect to server. Please check your connection and ensure the backend is running.');
+      } else if (error.message.includes('CORS')) {
+        console.error('❌ CORS Error:', {
+          message: error.message,
+          url,
+          origin: window.location.origin,
+          suggestion: 'Backend CORS configuration needs to allow this origin'
+        });
+        throw new Error('CORS error: Request blocked. Please contact support or check backend configuration.');
+      } else {
+        console.error('❌ API Request Failed:', {
+          message: error.message,
+          url,
+          endpoint
+        });
+        throw error;
+      }
     }
   }
 
@@ -69,17 +122,19 @@ class ApiService {
   }
 
   // Payment Status Check API
-  // NOTE: This endpoint doesn't exist in backend - payment status comes from webhook
-  // For now, we'll remove this or implement polling differently
+  // Check payment status from database (updated by webhook)
   async checkPaymentStatus(orderId) {
-    // This endpoint doesn't exist in backend - webhook handles payment status
-    // Return a mock response or handle differently
-    console.warn('⚠️ Payment status endpoint not available - webhook handles status updates');
-    return {
-      status: 'info',
-      message: 'Payment status is updated via webhook. Please wait for confirmation.',
-      order_id: orderId
-    };
+    try {
+      console.log(`🔍 Checking payment status for order: ${orderId}`);
+      const response = await this.makeRequest(`/customer-portal/payment/status/${orderId}`, {
+        method: 'GET',
+      });
+      console.log(`✅ Payment status response:`, response);
+      return response;
+    } catch (error) {
+      console.error(`❌ Error checking payment status: ${error.message}`);
+      throw error;
+    }
   }
 
   // Get Available Packages API

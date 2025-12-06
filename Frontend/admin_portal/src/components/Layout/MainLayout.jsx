@@ -56,13 +56,15 @@ import { motion, AnimatePresence } from 'framer-motion';
 import useAuthStore from '/src/store/authStore.js';
 import ggwifiTheme from '/src/theme/ggwifiTheme.js';
 
+// Premium Design System Colors
 const palette = {
-  gold: 'var(--gg-gold)',
-  goldStrong: 'var(--gg-gold-strong)',
-  black: 'var(--gg-black)',
-  white: 'var(--gg-white)',
-  neutral100: 'var(--gg-neutral-100)',
-  neutral300: 'var(--gg-neutral-300)',
+  gold: '#F5C400',           // Gold Prime
+  goldStrong: '#D4A100',     // Gold Deep
+  black: '#0B0B0B',          // Carbon Black
+  white: '#FFFFFF',          // Soft White
+  neutral100: '#F6F6F6',     // Frost Grey (light)
+  neutral300: '#EDEDED',     // Frost Grey
+  slateGrey: '#8D8D8D',      // Slate Grey
 };
 
 const drawerWidth = 280;
@@ -225,9 +227,9 @@ const MainLayout = () => {
         <Box
           sx={{
             height: '100%',
-            background: palette.white,
-            color: palette.black,
-            borderRight: `1px solid ${palette.neutral300}`,
+            background: '#FFFFFF',  // White sidebar - ZenoPay Style
+            color: '#1A1A1A',       // Charcoal Black text/icons
+            borderRight: `1px solid #EFEFEF`,  // Very light grey divider
           }}
         >
       {/* GG Wi-Fi Logo and Branding */}
@@ -235,7 +237,7 @@ const MainLayout = () => {
         sx={{
           p: 3,
           textAlign: 'center',
-          borderBottom: `1px solid ${palette.neutral300}`,
+          borderBottom: `1px solid #EFEFEF`,  // Very light grey divider
         }}
       >
         <motion.div
@@ -264,10 +266,7 @@ const MainLayout = () => {
             sx={{
               fontFamily: ggwifiTheme.typography.fontFamily.primary,
               fontWeight: ggwifiTheme.typography.fontWeight.bold,
-              background: ggwifiTheme.gradients.primary,
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
+              color: '#1A1A1A',  // Charcoal Black text
               mb: 0.5,
               display: { xs: 'inline', md: desktopCollapsed ? 'none' : 'inline' },
             }}
@@ -278,7 +277,7 @@ const MainLayout = () => {
           <Typography
             variant="caption"
             sx={{
-              color: palette.black,
+              color: '#505050',  // Label grey
               fontStyle: 'italic',
               fontSize: ggwifiTheme.typography.fontSize.xs,
               display: { xs: 'inline', md: desktopCollapsed ? 'none' : 'inline' },
@@ -307,30 +306,29 @@ const MainLayout = () => {
                   mb: 0.5,
                   px: desktopCollapsed ? 1 : 2,
                   backgroundColor: location.pathname === item.path 
-                    ? palette.gold 
+                    ? '#FFE89C'  // Pale yellow highlight for active
                     : 'transparent',
-                  color: location.pathname === item.path ? palette.black : palette.black,
-                  transition: ggwifiTheme.transitions.normal,
+                  color: location.pathname === item.path ? '#1A1A1A' : '#1A1A1A',  // Black text always
+                  transition: 'all 0.2s ease',
                   justifyContent: { md: desktopCollapsed ? 'center' : 'flex-start' },
                   '&::before': {
                     content: '""',
                     position: 'absolute',
-                    left: desktopCollapsed ? '50%' : 0,
-                    top: 10,
-                    bottom: 10,
-                    width: 3,
-                    borderRadius: 999,
-                    backgroundColor: location.pathname === item.path ? palette.black : 'transparent',
-                    transform: desktopCollapsed ? 'translateX(-50%)' : 'none',
+                    left: 0,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    width: '4px',  // Yellow vertical bar (4px)
+                    height: '80%',
+                    borderRadius: '0 2px 2px 0',
+                    backgroundColor: location.pathname === item.path ? '#F5C400' : 'transparent',  // Yellow active indicator
                   },
                   '&:hover': {
-                    backgroundColor: location.pathname === item.path ? palette.gold : 'rgba(242,201,76,0.2)',
-                    transform: desktopCollapsed ? 'none' : 'translateX(2px)',
+                    backgroundColor: '#FFE89C',  // Pale yellow highlight on hover
                     '& .MuiListItemIcon-root': {
-                      color: palette.goldStrong,
+                      color: '#F5C400',  // Yellow icon on hover
                     },
                     '& .MuiListItemText-primary': {
-                      color: palette.goldStrong,
+                      color: '#1A1A1A',  // Black text
                     },
                   },
                 }}
@@ -338,8 +336,8 @@ const MainLayout = () => {
                 <ListItemIcon
                   sx={{
                     color: location.pathname === item.path 
-                      ? palette.black
-                      : palette.black,
+                      ? '#F5C400'  // Yellow icon when active
+                      : '#1A1A1A', // Charcoal icon when inactive
                     minWidth: { xs: 40, md: desktopCollapsed ? 'auto' : 40 },
                     justifyContent: 'center',
                   }}
@@ -353,10 +351,8 @@ const MainLayout = () => {
                       fontFamily: ggwifiTheme.typography.fontFamily.primary,
                       fontWeight: location.pathname === item.path 
                         ? ggwifiTheme.typography.fontWeight.semibold 
-                        : ggwifiTheme.typography.fontWeight.normal,
-                      color: location.pathname === item.path 
-                        ? palette.black
-                        : palette.black,
+                        : ggwifiTheme.typography.fontWeight.medium,
+                      color: '#1A1A1A',  // Charcoal Black text always
                       fontSize: ggwifiTheme.typography.fontSize.sm,
                       display: { md: desktopCollapsed ? 'none' : 'inline' },
                     },
@@ -376,8 +372,8 @@ const MainLayout = () => {
           left: 0,
           right: 0,
           p: 2,
-          borderTop: `1px solid ${palette.neutral300}`,
-          background: palette.neutral100,
+          borderTop: `1px solid #EFEFEF`,  // Very light grey divider
+          background: '#FFFFFF',  // White background
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
@@ -385,7 +381,7 @@ const MainLayout = () => {
           <Typography
             variant="caption"
             sx={{
-              color: palette.black,
+              color: '#505050',  // Label grey
               fontSize: ggwifiTheme.typography.fontSize.xs,
             }}
           >
@@ -395,7 +391,7 @@ const MainLayout = () => {
         <Typography
           variant="caption"
           sx={{
-            color: palette.black,
+            color: '#505050',  // Label grey
             fontSize: ggwifiTheme.typography.fontSize.xs,
           }}
         >
@@ -413,10 +409,11 @@ const MainLayout = () => {
         sx={{
           width: { md: `calc(100% - ${(desktopCollapsed ? collapsedWidth : drawerWidth)}px)` },
           ml: { md: `${desktopCollapsed ? collapsedWidth : drawerWidth}px` },
-          background: palette.white,
-          color: palette.black,
-          boxShadow: '0 4px 12px rgba(10,10,10,0.08)',
-          borderBottom: `1px solid ${palette.neutral300}`,
+          background: '#1A1A1A',  // Charcoal Black - ZenoPay Style
+          color: '#FFFFFF',  // White text
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+          borderBottom: '2px solid #F5C400',  // Thin yellow bottom border
+          height: '64px',
         }}
       >
         <Toolbar>
@@ -427,10 +424,10 @@ const MainLayout = () => {
             onClick={handleDrawerToggle}
             sx={{ 
               mr: 2,
-              color: palette.black,
+              color: '#FFFFFF',  // White icon on black navbar
               '&:hover': {
-                color: palette.goldStrong,
-                backgroundColor: 'rgba(242, 201, 76, 0.15)',
+                color: '#F5C400',  // Yellow on hover
+                backgroundColor: 'rgba(245, 196, 0, 0.15)',
               }
             }}
           >
@@ -445,7 +442,7 @@ const MainLayout = () => {
               flexGrow: 1,
               fontFamily: ggwifiTheme.typography.fontFamily.primary,
               fontWeight: ggwifiTheme.typography.fontWeight.semibold,
-              color: palette.black,
+              color: '#FFFFFF',  // White text on black navbar
             }}
           >
             {navigationItems.find(item => item.path === location.pathname)?.text || 'Dashboard'}
@@ -456,11 +453,11 @@ const MainLayout = () => {
             size="large"
             aria-label="show notifications"
             sx={{ 
-              color: palette.black,
+              color: '#FFFFFF',  // White icon on black navbar
               mr: 1,
               '&:hover': {
-                color: palette.goldStrong,
-                backgroundColor: 'rgba(242, 201, 76, 0.15)',
+                color: '#F5C400',  // Yellow on hover
+                backgroundColor: 'rgba(245, 196, 0, 0.15)',
               }
             }}
           >
@@ -476,9 +473,9 @@ const MainLayout = () => {
               label={user?.role || 'User'}
               size="small"
               sx={{
-                backgroundColor: 'rgba(242, 201, 76, 0.18)',
-                color: palette.black,
-                border: `1px solid ${palette.gold}`,
+                backgroundColor: 'rgba(245, 196, 0, 0.15)',  // Pale yellow background
+                color: '#1A1A1A',  // Charcoal text
+                border: `1px solid #F5C400`,  // Yellow border
                 fontFamily: ggwifiTheme.typography.fontFamily.primary,
                 fontWeight: ggwifiTheme.typography.fontWeight.medium,
               }}
@@ -490,21 +487,23 @@ const MainLayout = () => {
               aria-haspopup="true"
               onClick={handleProfileMenuOpen}
               sx={{ 
-                color: palette.black,
+                color: '#FFFFFF',  // White icon on black navbar
                 '&:hover': {
-                  color: palette.goldStrong,
-                  backgroundColor: 'rgba(242, 201, 76, 0.15)',
+                  color: '#F5C400',  // Yellow on hover
+                  backgroundColor: 'rgba(245, 196, 0, 0.15)',
                 }
               }}
             >
               <Avatar
                 sx={{
-                  width: 32,
-                  height: 32,
-                  background: ggwifiTheme.gradients.primary,
-                  color: palette.black,
+                  width: 40,
+                  height: 40,
+                  background: '#F5F5F5',  // Neutral grey background
+                  color: '#1A1A1A',  // Charcoal text
                   fontSize: '0.875rem',
                   fontWeight: 'bold',
+                  border: '2px solid #F5C400',  // Thin yellow border (2px)
+                  boxShadow: 'none',  // No shadow - clean enterprise look
                 }}
               >
                 {user?.username?.charAt(0).toUpperCase() || 'U'}
@@ -567,8 +566,8 @@ const MainLayout = () => {
                   '& .MuiDrawer-paper': {
                     boxSizing: 'border-box',
                     width: drawerWidth,
-                    background: palette.white,
-                    borderRight: `1px solid ${palette.neutral300}`,
+                    background: '#FFFFFF',  // White sidebar
+                    borderRight: `1px solid #EFEFEF`,  // Very light grey divider
                   },
                 }}
         >
@@ -599,7 +598,7 @@ const MainLayout = () => {
           p: 3,
           width: { md: `calc(100% - ${(desktopCollapsed ? collapsedWidth : drawerWidth)}px)` },
           mt: 8, // Account for AppBar height
-          background: palette.neutral100,
+          background: '#FFFFFF',  // White background - ZenoPay Style
           minHeight: 'calc(100vh - 64px)',
         }}
       >

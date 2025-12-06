@@ -23,19 +23,11 @@ const Footer = () => {
       component="footer"
       sx={{
         position: 'relative',
-        borderTop: '1px solid rgba(255, 199, 44, 0.3)',
+        borderTop: '3px solid #F5C400',  // Gold Prime accent bar
+        background: '#FFFFFF',  // Soft White - Premium design
         py: 3,
         mt: 'auto',
-        '&::before': {
-          content: '""',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.95) 0%, rgba(26, 26, 26, 0.95) 100%)',
-          zIndex: 0,
-        },
+        boxShadow: '0 -2px 16px rgba(0, 0, 0, 0.14)',  // Premium shadow
       }}
     >
       <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
@@ -49,7 +41,7 @@ const Footer = () => {
           <Typography
             variant="body2"
             sx={{
-              color: 'rgba(255, 255, 255, 0.7)',
+              color: '#8D8D8D',  // Slate Grey - Premium design
               textAlign: { xs: 'center', sm: 'left' },
             }}
           >
@@ -61,10 +53,10 @@ const Footer = () => {
             <IconButton
               onClick={() => window.open('tel:+255742844024', '_self')}
               sx={{
-                color: '#FFFFFF',
+                color: '#0B0B0B',  // Carbon Black
                 '&:hover': {
-                  color: '#FFC72C',
-                  backgroundColor: 'rgba(255, 199, 44, 0.1)',
+                  color: '#F5C400',  // Gold Prime
+                  backgroundColor: 'rgba(245, 196, 0, 0.1)',  // Gold glass
                 },
               }}
             >

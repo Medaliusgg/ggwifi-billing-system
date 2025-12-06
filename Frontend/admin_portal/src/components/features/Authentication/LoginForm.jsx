@@ -15,9 +15,6 @@ import {
   Divider,
   Link,
   Avatar,
-  ToggleButton,
-  ToggleButtonGroup,
-  Chip,
 } from '@mui/material';
 import {
   Visibility,
@@ -27,8 +24,6 @@ import {
   Login as LoginIcon,
   Security as SecurityIcon,
   Wifi as WifiIcon,
-  AdminPanelSettings,
-  Badge,
   Phone,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
@@ -45,11 +40,9 @@ const LoginForm = () => {
   const { enqueueSnackbar } = useSnackbar();
   const { login, isLoading, error, clearError } = useAuthStore();
 
-  const [loginType, setLoginType] = useState('admin'); // 'admin' or 'staff'
   const [formData, setFormData] = useState({
     username: '',
     phoneNumber: '',
-    staffId: '',
     password: '',
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -105,38 +98,18 @@ const LoginForm = () => {
     }));
   };
 
-  const handleLoginTypeChange = (event, newLoginType) => {
-    if (newLoginType !== null) {
-      setLoginType(newLoginType);
-      // Clear form data when switching login types
-      setFormData({
-        username: '',
-        phoneNumber: '',
-        staffId: '',
-        password: '',
-      });
-    }
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Validate based on login type
-    if (loginType === 'admin') {
-      if (!formData.username || !formData.phoneNumber || !formData.password) {
-        enqueueSnackbar('Please fill in all admin fields', { variant: 'error' });
-        return;
-      }
-    } else {
-      if (!formData.username || !formData.staffId || !formData.password) {
-        enqueueSnackbar('Please fill in all staff fields', { variant: 'error' });
-        return;
-      }
+    // Validate admin login fields
+    if (!formData.username || !formData.phoneNumber || !formData.password) {
+      enqueueSnackbar('Please fill in all fields', { variant: 'error' });
+      return;
     }
 
     try {
-      console.log('🔍 Debug: Attempting login with credentials:', { 
-        loginType, 
+      console.log('🔍 Debug: Attempting admin login with credentials:', { 
         username: formData.username, 
         rememberMe 
       });
@@ -144,16 +117,10 @@ const LoginForm = () => {
       const credentials = {
         username: formData.username,
         password: formData.password,
+        phoneNumber: formData.phoneNumber,
         rememberMe: rememberMe,
-        loginType: loginType
+        loginType: 'admin'
       };
-
-      // Add type-specific fields based on login type
-      if (loginType === 'admin') {
-        credentials.phoneNumber = formData.phoneNumber;
-      } else {
-        credentials.staffId = formData.staffId;
-      }
       
       const result = await login(credentials);
       console.log('🔍 Debug: Login result:', result);
@@ -175,7 +142,7 @@ const LoginForm = () => {
           navigate(from, { replace: true });
         }, 100);
         
-        enqueueSnackbar(`Welcome back, ${loginType === 'admin' ? 'Admin' : 'Staff'}!`, { variant: 'success' });
+        enqueueSnackbar('Welcome back, Admin!', { variant: 'success' });
       } else {
         console.log('🔍 Debug: Login failed:', result.error);
         enqueueSnackbar(result.error || 'Login failed', { variant: 'error' });
@@ -242,61 +209,6 @@ const LoginForm = () => {
         </Typography>
       </motion.div>
 
-      {/* Login Type Selector */}
-      <motion.div variants={itemVariants} style={{ marginBottom: 24 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
-          <ToggleButtonGroup
-            value={loginType}
-            exclusive
-            onChange={handleLoginTypeChange}
-            sx={{
-              background: 'rgba(245, 183, 0, 0.1)',
-              borderRadius: ggwifiTheme.borderRadius.md,
-              border: `1px solid rgba(245, 183, 0, 0.2)`,
-              '& .MuiToggleButton-root': {
-                borderRadius: ggwifiTheme.borderRadius.sm,
-                border: 'none',
-                color: ggwifiTheme.colors.neutral,
-                fontFamily: ggwifiTheme.typography.fontFamily.primary,
-                fontWeight: ggwifiTheme.typography.fontWeight.medium,
-                '&.Mui-selected': {
-                  background: ggwifiTheme.gradients.primary,
-                  color: ggwifiTheme.colors.secondary,
-                  '&:hover': {
-                    background: ggwifiTheme.gradients.primaryHover,
-                  },
-                },
-                '&:hover': {
-                  background: 'rgba(245, 183, 0, 0.1)',
-                },
-              },
-            }}
-          >
-            <ToggleButton value="admin">
-              <AdminPanelSettings sx={{ mr: 1 }} />
-              Admin Login
-            </ToggleButton>
-            <ToggleButton value="staff">
-              <Badge sx={{ mr: 1 }} />
-              Staff Login
-            </ToggleButton>
-          </ToggleButtonGroup>
-        </Box>
-        
-        <Box sx={{ textAlign: 'center' }}>
-          <Chip
-            icon={loginType === 'admin' ? <AdminPanelSettings /> : <Badge />}
-            label={loginType === 'admin' ? 'Administrator Access' : 'Staff Access'}
-            sx={{
-              backgroundColor: `rgba(245, 183, 0, 0.1)`,
-              color: ggwifiTheme.colors.primary,
-              border: `1px solid ${ggwifiTheme.colors.primary}`,
-              fontFamily: ggwifiTheme.typography.fontFamily.primary,
-              fontWeight: ggwifiTheme.typography.fontWeight.medium,
-            }}
-          />
-        </Box>
-      </motion.div>
 
       {/* Login Card */}
       <motion.div variants={cardVariants}>
@@ -331,7 +243,7 @@ const LoginForm = () => {
                   mb: 3,
                 }}
               >
-                {loginType === 'admin' ? 'Admin Portal Login' : 'Staff Portal Login'}
+                Admin Portal Login
               </Typography>
             </motion.div>
 
@@ -399,97 +311,49 @@ const LoginForm = () => {
                 />
               </motion.div>
 
-              {/* Phone Number Field (Admin only) */}
-              {loginType === 'admin' && (
-                <motion.div variants={itemVariants}>
-                  <TextField
-                    fullWidth
-                    name="phoneNumber"
-                    label="Phone Number"
-                    value={formData.phoneNumber}
-                    onChange={handleInputChange}
-                    disabled={isLoading}
-                    placeholder="e.g., 0742844024"
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <Phone sx={{ color: ggwifiTheme.colors.primary }} />
-                        </InputAdornment>
-                      ),
-                    }}
-                    sx={{
-                      mb: 2,
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: ggwifiTheme.borderRadius.md,
-                        backgroundColor: ggwifiTheme.colors.contrast,
-                        '& fieldset': {
-                          borderColor: ggwifiTheme.colors.neutral,
-                          borderWidth: 2,
-                        },
-                        '&:hover fieldset': {
-                          borderColor: ggwifiTheme.colors.primary,
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: ggwifiTheme.colors.primary,
-                          boxShadow: `0 0 0 3px rgba(245, 183, 0, 0.1)`,
-                        },
+              {/* Phone Number Field */}
+              <motion.div variants={itemVariants}>
+                <TextField
+                  fullWidth
+                  name="phoneNumber"
+                  label="Phone Number"
+                  value={formData.phoneNumber}
+                  onChange={handleInputChange}
+                  disabled={isLoading}
+                  placeholder="e.g., 0742844024"
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Phone sx={{ color: ggwifiTheme.colors.primary }} />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={{
+                    mb: 2,
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: ggwifiTheme.borderRadius.md,
+                      backgroundColor: ggwifiTheme.colors.contrast,
+                      '& fieldset': {
+                        borderColor: ggwifiTheme.colors.neutral,
+                        borderWidth: 2,
                       },
-                      '& .MuiInputLabel-root': {
-                        color: ggwifiTheme.colors.neutral,
-                        '&.Mui-focused': {
-                          color: ggwifiTheme.colors.primary,
-                        },
+                      '&:hover fieldset': {
+                        borderColor: ggwifiTheme.colors.primary,
                       },
-                    }}
-                  />
-                </motion.div>
-              )}
-
-              {/* Staff ID Field (Staff only) */}
-              {loginType === 'staff' && (
-                <motion.div variants={itemVariants}>
-                  <TextField
-                    fullWidth
-                    name="staffId"
-                    label="Staff ID"
-                    value={formData.staffId}
-                    onChange={handleInputChange}
-                    disabled={isLoading}
-                    placeholder="e.g., STF001"
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <Badge sx={{ color: ggwifiTheme.colors.primary }} />
-                        </InputAdornment>
-                      ),
-                    }}
-                    sx={{
-                      mb: 2,
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: ggwifiTheme.borderRadius.md,
-                        backgroundColor: ggwifiTheme.colors.contrast,
-                        '& fieldset': {
-                          borderColor: ggwifiTheme.colors.neutral,
-                          borderWidth: 2,
-                        },
-                        '&:hover fieldset': {
-                          borderColor: ggwifiTheme.colors.primary,
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: ggwifiTheme.colors.primary,
-                          boxShadow: `0 0 0 3px rgba(245, 183, 0, 0.1)`,
-                        },
+                      '&.Mui-focused fieldset': {
+                        borderColor: ggwifiTheme.colors.primary,
+                        boxShadow: `0 0 0 3px rgba(245, 183, 0, 0.1)`,
                       },
-                      '& .MuiInputLabel-root': {
-                        color: ggwifiTheme.colors.neutral,
-                        '&.Mui-focused': {
-                          color: ggwifiTheme.colors.primary,
-                        },
+                    },
+                    '& .MuiInputLabel-root': {
+                      color: ggwifiTheme.colors.neutral,
+                      '&.Mui-focused': {
+                        color: ggwifiTheme.colors.primary,
                       },
-                    }}
-                  />
-                </motion.div>
-              )}
+                    },
+                  }}
+                />
+              </motion.div>
 
               {/* Password Field */}
               <motion.div variants={itemVariants}>
@@ -577,7 +441,7 @@ const LoginForm = () => {
                     },
                   }}
                 >
-                  {isLoading ? 'Signing In...' : `Sign In as ${loginType === 'admin' ? 'Admin' : 'Staff'}`}
+                  {isLoading ? 'Signing In...' : 'Sign In as Admin'}
                 </Button>
               </motion.div>
             </form>

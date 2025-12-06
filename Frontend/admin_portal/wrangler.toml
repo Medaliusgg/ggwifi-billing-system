@@ -14,6 +14,3 @@ VITE_API_BASE_URL = "https://api.ggwifi.co.tz/api/v1"
 VITE_APP_DOMAIN = "admin.ggwifi.co.tz"
 VITE_APP_NAME = "GGWIFI Admin Portal"
 VITE_ENVIRONMENT = "production"
-
-# Pages build output directory
-pages_build_output_dir = "dist"

@@ -46,6 +46,7 @@ import {
   LocalOffer as LocalOfferIcon,
   AllInclusive as AllInclusiveIcon,
   Schedule as ScheduleIcon,
+  Error as ErrorIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -56,6 +57,8 @@ import { customerPortalAPI } from '../services/customerPortalApi';
 const BuyPackage = ({ onBack, currentLanguage }) => {
   const theme = useTheme();
   const [packages, setPackages] = useState([]);
+  const [universalPackages, setUniversalPackages] = useState([]);
+  const [offerPackages, setOfferPackages] = useState([]);
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingPackages, setIsLoadingPackages] = useState(true);
@@ -74,6 +77,9 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
   const [isUserActive, setIsUserActive] = useState(true);
   const [lastActivity, setLastActivity] = useState(Date.now());
   const [currentPollingStop, setCurrentPollingStop] = useState(null); // pending, processing, success, failed
+  const packagesLoadedRef = React.useRef(false); // Track if packages have been loaded
+  const [paymentElapsedTime, setPaymentElapsedTime] = useState(0); // Track elapsed time in seconds
+  const [paymentPollingAttempts, setPaymentPollingAttempts] = useState(0); // Track polling attempts
 
   // Cleanup polling on unmount and when dialog closes
   useEffect(() => {
@@ -94,8 +100,14 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
     }
   }, [showCustomerForm, currentPollingStop]);
 
-  // Fetch packages from backend API
+  // Fetch packages from backend API - Only once when component mounts
   useEffect(() => {
+    // Prevent multiple loads - only load if not already loaded
+    if (packagesLoadedRef.current) {
+      console.log('📦 Packages already loaded, skipping fetch');
+      return;
+    }
+
     const fetchPackages = async () => {
       try {
         setIsLoadingPackages(true);
@@ -104,9 +116,24 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
         // Axios returns response.data, extract the actual response
         const response = apiResponse.data || apiResponse;
         
+        console.log('📦 Packages API Response:', response);
+        
+        // Handle different response structures
+        let packagesList = null;
         if (response.status === 'success' && response.packages) {
+          packagesList = response.packages;
+        } else if (response.status === 'success' && response.data) {
+          packagesList = response.data;
+        } else if (Array.isArray(response)) {
+          packagesList = response;
+        } else if (response.data && Array.isArray(response.data)) {
+          packagesList = response.data;
+        }
+        
+        if (packagesList && packagesList.length > 0) {
+          console.log('✅ Found packages:', packagesList.length);
           // Transform backend packages to frontend format with time-based offers
-          const transformedPackages = response.packages.map((pkg, index) => ({
+          const transformedPackages = packagesList.map((pkg, index) => ({
             id: pkg.id,
             name: pkg.name,
             duration: pkg.duration || `${pkg.durationDays} Days`,
@@ -134,9 +161,19 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
             icon: index === 0 ? <FlashOnIcon /> : 
                   index === 1 ? <StarIcon /> : 
                   index === 2 ? <PublicIcon /> : <TrendingUpIcon />,
-            color: index === 0 ? '#FFC72C' : 
-                   index === 1 ? '#0072CE' : 
-                   index === 2 ? '#1ABC9C' : '#FFC72C',
+            // Assign unique colors per package type (ZenoPay-style colorful cards)
+            color: (() => {
+              const name = (pkg.name || '').toLowerCase();
+              if (name.includes('daily') || name.includes('day')) return '#007BFF';  // Blue - Daily
+              if (name.includes('weekly') || name.includes('week')) return '#28A745';  // Green - Weekly
+              if (name.includes('monthly') || name.includes('month')) return '#6F42C1';  // Purple - Monthly
+              if (name.includes('semester') || name.includes('long') || name.includes('year')) return '#FF8C00';  // Orange - Long-term
+              // Default colors by index
+              return index === 0 ? '#007BFF' :  // Blue
+                     index === 1 ? '#28A745' :  // Green
+                     index === 2 ? '#6F42C1' :  // Purple
+                     '#FF8C00';  // Orange
+            })(),
           }));
           
           // Categorize packages: Universal vs Offer
@@ -146,6 +183,8 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
           setPackages(transformedPackages);
           setUniversalPackages(universal);
           setOfferPackages(offers);
+          packagesLoadedRef.current = true; // Mark as loaded
+          console.log('✅ Packages loaded and cached');
           toast.success('Packages loaded successfully!');
         } else {
           toast.error('Failed to load packages from server');
@@ -160,7 +199,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
               popular: false,
               features: ['High Speed', 'Secure Connection', 'Easy Setup'],
               icon: <FlashOnIcon />,
-              color: '#FFC72C',
+              color: '#F5C400',  // Gold Prime
             },
             { 
               id: 2, 
@@ -193,12 +232,13 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
               popular: true,
               features: ['Maximum Speed', 'Priority Support', 'Best Deal'],
               icon: <TrendingUpIcon />,
-              color: '#FFC72C',
+              color: '#F5C400',  // Gold Prime
             },
           ]);
         }
       } catch (error) {
         console.error('Error fetching packages:', error);
+        packagesLoadedRef.current = true; // Mark as loaded even on error to prevent retries
         toast.error('Failed to load packages. Using default packages.');
         // Fallback to hardcoded packages
         setPackages([
@@ -211,7 +251,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
             popular: false,
             features: ['High Speed', 'Secure Connection', 'Easy Setup'],
             icon: <FlashOnIcon />,
-            color: '#FFC72C',
+            color: '#F5C400',  // Gold Prime
           },
           { 
             id: 2, 
@@ -244,7 +284,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
             popular: true,
             features: ['Maximum Speed', 'Priority Support', 'Best Deal'],
             icon: <TrendingUpIcon />,
-            color: '#FFC72C',
+            color: '#F5C400',  // Gold Prime
           },
         ]);
       } finally {
@@ -339,13 +379,14 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
       }
 
       // Prepare payment data with formatted phone
+      // Ensure all numeric values are converted to strings for backend compatibility
       const paymentData = {
         customerName: customerDetails.fullName.trim(),
         phoneNumber: formattedPhone,
         location: customerDetails.location.trim(),
-        packageId: selectedPackage.id,
+        packageId: String(selectedPackage.id),  // Convert to string
         packageName: selectedPackage.name,
-        amount: selectedPackage.price,
+        amount: String(selectedPackage.price),  // Convert to string
         currency: 'TZS',
         paymentMethod: 'ZENOPAY',
       };
@@ -357,17 +398,19 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
       const responseData = paymentResponse.data || paymentResponse;
       
       // Transform response to match expected format
+      // Ensure status is always a string to avoid backend type casting errors
       const result = {
-        status: responseData.status || (paymentResponse.status === 200 ? 'success' : 'error'),
-        order_id: responseData.order_id,
-        voucher_code: responseData.voucher_code,
+        status: String(responseData.status || (paymentResponse.status === 200 ? 'success' : 'error')),  // Ensure string
+        order_id: responseData.order_id ? String(responseData.order_id) : null,  // Convert to string if exists
+        voucher_code: responseData.voucher_code || null,
         message: responseData.message || 'Payment initiated successfully',
-        zenopay_response: responseData.zenopay_response
+        zenopay_response: responseData.zenopay_response || null
       };
 
       console.log('🔍 Payment Result:', result);
       console.log('🔍 Result Status:', result.status);
       console.log('🔍 Result Type:', typeof result.status);
+      console.log('🔍 Full Response Data:', responseData);
 
       if (result.status === 'success') {
         toast.success('Payment initiated successfully! Check your phone for payment instructions.');
@@ -383,148 +426,80 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
         setPaymentMessage('Payment initiated. Please complete the payment on your mobile device.');
         setOrderId(result.order_id);
         setPaymentStep(2);
+        setPaymentElapsedTime(0);
+        setPaymentPollingAttempts(0);
         
-        // Start enhanced payment status polling
+        // Start enhanced payment status polling with optimized settings
         const stopPolling = await paymentService.pollPaymentStatus(
           result.order_id,
           (statusData) => {
             console.log('📊 Payment status update received:', statusData);
             
-            setPaymentStatus(statusData.status.toLowerCase());
+            // Update elapsed time and attempts
+            if (statusData.elapsedSeconds !== undefined) {
+              setPaymentElapsedTime(statusData.elapsedSeconds);
+            }
+            if (statusData.attempt !== undefined) {
+              setPaymentPollingAttempts(statusData.attempt);
+            }
+            
+            // Normalize status to uppercase for consistent comparison
+            const normalizedStatus = (statusData.status || '').toUpperCase();
+            
+            // Map status to UI state (keep original status for display)
+            let uiStatus = 'processing';
+            if (normalizedStatus === 'COMPLETED' || normalizedStatus === 'SUCCESS') {
+              uiStatus = 'success';
+            } else if (['FAILED', 'CANCELLED', 'INSUFFICIENT_BALANCE', 'INVALID_PIN', 
+                        'USER_CANCELLED', 'EXPIRED', 'TIMEOUT', 'NETWORK_ERROR', 'ERROR'].includes(normalizedStatus)) {
+              uiStatus = 'failed';
+            }
+            
+            setPaymentStatus(uiStatus);
             setPaymentMessage(statusData.message);
             
-            // Handle different payment statuses
-            switch (statusData.status) {
-              case 'PENDING':
-                setPaymentStatus('processing');
-                setPaymentMessage('Payment is pending. Please complete the payment on your mobile device.');
-                break;
-              case 'VERIFICATION':
-              case 'PROCESSING':
-                setPaymentStatus('processing');
-                setPaymentMessage('Payment is being processed. Please wait...');
-                break;
-              case 'COMPLETED':
-              case 'SUCCESS':
-                setPaymentStatus('success');
-                setPaymentMessage('Payment completed successfully! Your voucher code has been generated.');
-                if (statusData.voucherCode) {
-                  setVoucherCode(statusData.voucherCode);
-                  toast.success(`Payment successful! Voucher code: ${statusData.voucherCode}`);
-                }
-                // Stop polling on success
-                if (currentPollingStop) {
-                  console.log('🛑 Stopping polling - payment successful');
-                  currentPollingStop();
-                  setCurrentPollingStop(null);
-                }
-                break;
-              case 'FAILED':
-                setPaymentStatus('failed');
-                setPaymentMessage('Payment failed. Please check your mobile money balance and try again.');
-                toast.error('Payment failed. Please try again.');
-                // Stop polling on failure
-                if (currentPollingStop) {
-                  console.log('🛑 Stopping polling - payment failed');
-                  currentPollingStop();
-                  setCurrentPollingStop(null);
-                }
-                break;
-              case 'INSUFFICIENT_BALANCE':
-                setPaymentStatus('failed');
-                setPaymentMessage('Insufficient balance in your mobile money account. Please top up and try again.');
-                toast.error('Insufficient balance! Please top up your mobile money account.');
-                // Stop polling on insufficient balance
-                if (currentPollingStop) {
-                  console.log('🛑 Stopping polling - insufficient balance');
-                  currentPollingStop();
-                  setCurrentPollingStop(null);
-                }
-                break;
-              case 'INVALID_PIN':
-                setPaymentStatus('failed');
-                setPaymentMessage('Invalid PIN entered. Please try again with the correct PIN.');
-                toast.error('Invalid PIN! Please try again with the correct PIN.');
-                // Stop polling on invalid PIN
-                if (currentPollingStop) {
-                  console.log('🛑 Stopping polling - invalid PIN');
-                  currentPollingStop();
-                  setCurrentPollingStop(null);
-                }
-                break;
-              case 'USER_CANCELLED':
-                setPaymentStatus('failed');
-                setPaymentMessage('Payment was cancelled by user. Please try again.');
-                toast.error('Payment cancelled. Please try again.');
-                // Stop polling on user cancellation
-                if (currentPollingStop) {
-                  console.log('🛑 Stopping polling - user cancelled');
-                  currentPollingStop();
-                  setCurrentPollingStop(null);
-                }
-                break;
-              case 'CANCELLED':
-                setPaymentStatus('failed');
-                setPaymentMessage('Payment was cancelled. Please try again.');
-                toast.error('Payment cancelled. Please try again.');
-                // Stop polling on cancellation
-                if (currentPollingStop) {
-                  console.log('🛑 Stopping polling - payment cancelled');
-                  currentPollingStop();
-                  setCurrentPollingStop(null);
-                }
-                break;
-              case 'EXPIRED':
-                setPaymentStatus('failed');
-                setPaymentMessage('Payment has expired. Please initiate a new payment.');
-                toast.error('Payment expired. Please try again.');
-                // Stop polling on expiry
-                if (currentPollingStop) {
-                  console.log('🛑 Stopping polling - payment expired');
-                  currentPollingStop();
-                  setCurrentPollingStop(null);
-                }
-                break;
-              case 'TIMEOUT':
-                setPaymentStatus('failed');
-                setPaymentMessage('Payment timed out. Please try again.');
-                toast.error('Payment timed out. Please try again.');
-                // Stop polling on timeout
-                if (currentPollingStop) {
-                  console.log('🛑 Stopping polling - payment timeout');
-                  currentPollingStop();
-                  setCurrentPollingStop(null);
-                }
-                break;
-              case 'NETWORK_ERROR':
-                setPaymentStatus('failed');
-                setPaymentMessage('Network error occurred. Please try again.');
-                toast.error('Network error. Please try again.');
-                // Stop polling on network error
-                if (currentPollingStop) {
-                  console.log('🛑 Stopping polling - network error');
-                  currentPollingStop();
-                  setCurrentPollingStop(null);
-                }
-                break;
-              case 'ERROR':
-                setPaymentStatus('failed');
-                setPaymentMessage(statusData.message);
-                toast.error(statusData.message);
-                // Stop polling on error
-                if (currentPollingStop) {
-                  console.log('🛑 Stopping polling - payment error');
-                  currentPollingStop();
-                  setCurrentPollingStop(null);
-                }
-                break;
-              default:
-                setPaymentStatus('processing');
-                setPaymentMessage(`Payment status: ${statusData.status}`);
+            // Handle success
+            if (normalizedStatus === 'COMPLETED' || normalizedStatus === 'SUCCESS') {
+              if (statusData.voucherCode) {
+                setVoucherCode(statusData.voucherCode);
+                toast.success(`✅ Payment successful! Voucher code: ${statusData.voucherCode}`);
+              }
+              // Stop polling on success
+              if (currentPollingStop) {
+                console.log(`🛑 Stopping polling - payment successful after ${statusData.elapsedSeconds}s`);
+                currentPollingStop();
+                setCurrentPollingStop(null);
+              }
+            } else if (['FAILED', 'CANCELLED', 'INSUFFICIENT_BALANCE', 'INVALID_PIN', 
+                        'USER_CANCELLED', 'EXPIRED', 'TIMEOUT', 'NETWORK_ERROR', 'ERROR'].includes(normalizedStatus)) {
+              // All failure states
+              // Show appropriate toast based on failure type
+              if (normalizedStatus === 'INSUFFICIENT_BALANCE') {
+                toast.error('💳 Insufficient balance! Please top up your mobile money account.');
+              } else if (normalizedStatus === 'INVALID_PIN') {
+                toast.error('🔐 Invalid PIN! Please try again with the correct PIN.');
+              } else if (normalizedStatus === 'USER_CANCELLED' || normalizedStatus === 'CANCELLED') {
+                toast.error('❌ Payment cancelled. Please try again.');
+              } else if (normalizedStatus === 'EXPIRED') {
+                toast.error('⏰ Payment expired. Please initiate a new payment.');
+              } else if (normalizedStatus === 'TIMEOUT') {
+                toast.error('⏱️ Payment timed out. Please try again.');
+              } else if (normalizedStatus === 'NETWORK_ERROR') {
+                toast.error('🌐 Network error. Please check your connection and try again.');
+              } else {
+                toast.error('❌ Payment failed. Please try again.');
+              }
+              
+              // Stop polling on failure
+              if (currentPollingStop) {
+                console.log(`🛑 Stopping polling - payment ${normalizedStatus} after ${statusData.elapsedSeconds}s`);
+                currentPollingStop();
+                setCurrentPollingStop(null);
+              }
             }
           },
-          60, // Max attempts (3 minutes)
-          3000 // Interval (3 seconds)
+          90, // Max attempts (3 minutes with 2s interval)
+          2000 // Interval (2 seconds - more responsive)
         );
         
         setCurrentPollingStop(stopPolling);
@@ -593,6 +568,8 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
     setPaymentMessage('');
     setVoucherCode('');
     setOrderId('');
+    setPaymentElapsedTime(0);
+    setPaymentPollingAttempts(0);
     setCustomerDetails({ fullName: '', phoneNumber: '', location: '' });
   };
 
@@ -678,7 +655,8 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
         minHeight: '100vh',
         position: 'relative',
         overflow: 'hidden',
-        py: 4,
+        py: 1,
+        pt: 0,
         '&::before': {
           content: '""',
           position: 'absolute',
@@ -686,12 +664,12 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
           left: 0,
           right: 0,
           bottom: 0,
-          background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(26, 26, 26, 0.3) 100%)',
+          background: 'transparent',
           zIndex: 0,
         },
       }}
     >
-      <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3, md: 4 }, position: 'relative', zIndex: 1, minHeight: 'calc(100vh - 64px)' }}>
+      <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3, md: 4 }, position: 'relative', zIndex: 1, minHeight: 'calc(100vh - 64px)', pt: 0 }}>
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -702,16 +680,17 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
             <IconButton
               onClick={onBack}
               sx={{
-                mb: { xs: 2, md: 3 },
-                background: 'rgba(0, 0, 0, 0.6)',
-                backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255, 199, 44, 0.3)',
-                color: '#FFFFFF',
+                mb: { xs: 1.5, md: 2 },
+                background: '#FFFFFF',  // White background
+                border: '1px solid #EDEDED',  // Subtle border
+                color: '#1A1A1A',  // Charcoal text
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',  // Subtle shadow
                 '&:hover': {
-                  background: 'rgba(255, 199, 44, 0.1)',
+                  background: 'rgba(245, 196, 0, 0.1)',  // Gold glass on hover
+                  borderColor: '#F5C400',  // Yellow border
                   transform: 'translateX(-4px)',
                 },
-                transition: 'all 0.3s ease',
+                transition: 'all 0.2s ease',
               }}
             >
               <ArrowBackIcon />
@@ -734,9 +713,9 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                     width: { xs: 80, sm: 100 },
                     height: { xs: 80, sm: 100 },
                     mx: 'auto',
-                    border: '4px solid #FFC72C',
-                    boxShadow: '0 8px 30px rgba(255, 199, 44, 0.6), 0 0 40px rgba(255, 199, 44, 0.3)',
-                    background: 'linear-gradient(135deg, rgba(255, 199, 44, 0.3) 0%, rgba(0, 114, 206, 0.2) 100%)',
+                    border: '4px solid #F5C400',  // Gold Prime
+                    boxShadow: '0 0 32px rgba(245, 196, 0, 0.6), 0 8px 30px rgba(245, 196, 0, 0.4)',  // Premium gold glow
+                    background: 'linear-gradient(135deg, rgba(245, 196, 0, 0.2) 0%, rgba(245, 196, 0, 0.1) 100%)',  // Premium gold
                     filter: 'brightness(1.1)',
                     '& img': {
                       objectFit: 'contain',
@@ -751,18 +730,14 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                 variant="h3"
                 sx={{
                   fontWeight: 800,
-                  color: 'text.primary',
+                  color: '#1A1A1A',  // Charcoal Black text
                   mb: 2,
-                  background: 'linear-gradient(135deg, #0072CE 0%, #FFC72C 100%)',
-                  backgroundClip: 'text',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
                 }}
               >
                 Choose Your Package
               </Typography>
 
-              <Typography variant="h6" sx={{ color: 'text.secondary', mb: 4, maxWidth: 600, mx: 'auto' }}>
+              <Typography variant="h6" sx={{ color: '#505050', mb: 4, maxWidth: 600, mx: 'auto' }}>  {/* Label grey */}
                 Select the perfect internet package for your needs. All packages include high-speed, 
                 secure, and reliable internet access.
               </Typography>
@@ -770,7 +745,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
               {/* Features */}
               <Stack direction="row" spacing={2} justifyContent="center" sx={{ mb: 6 }}>
                 {[
-                  { icon: <SpeedIcon />, text: 'Lightning Fast', color: '#FFC72C' },
+                  { icon: <SpeedIcon />, text: 'Lightning Fast', color: '#F5C400' },  // Gold Prime
                   { icon: <SecurityIcon />, text: 'Secure & Reliable', color: '#1ABC9C' },
                   { icon: <PublicIcon />, text: 'Wide Coverage', color: '#0072CE' },
                 ].map((feature, index) => (
@@ -779,13 +754,16 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                     icon={feature.icon}
                     label={feature.text}
                     sx={{
-                      background: `rgba(0, 0, 0, 0.6)`,
-                      color: feature.color,
-                      border: `1px solid ${feature.color}60`,
-                      backdropFilter: 'blur(10px)',
+                      background: '#FFFFFF',  // White background
+                      color: feature.color,  // Feature color text
+                      border: `1px solid ${feature.color}`,  // Feature color border
                       fontWeight: 600,
                       '& .MuiChip-icon': {
                         color: feature.color,
+                      },
+                      '&:hover': {
+                        background: '#FFE89C',  // Pale yellow on hover
+                        borderColor: '#F5C400',  // Yellow border
                       },
                     }}
                   />
@@ -826,23 +804,21 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                       sx={{
                         height: '100%',
                         cursor: 'pointer',
-                        background: 'rgba(0, 0, 0, 0.75)',
-                        backdropFilter: 'blur(20px)',
-                        borderRadius: { xs: 3, md: 4 },
-                        border: `3px solid ${
-                          selectedPackage?.id === pkg.id 
-                            ? pkg.color 
-                            : 'rgba(255, 199, 44, 0.3)'
-                        }`,
+                        background: '#FFFFFF',  // White background - ZenoPay Style
+                        borderRadius: 4,  // 16px rounded corners
+                        border: selectedPackage?.id === pkg.id 
+                          ? `3px solid ${pkg.color}`  // Package color border when selected
+                          : `1px solid #FFE89C`,  // Pale yellow border
                         boxShadow: selectedPackage?.id === pkg.id 
-                          ? `0 20px 60px ${pkg.color}40`
-                          : '0 8px 32px rgba(0, 0, 0, 0.1)',
-                        transition: 'all 0.3s ease-in-out',
+                          ? `0 8px 24px ${pkg.color}40`  // Colored shadow when selected
+                          : '0 2px 8px rgba(0, 0, 0, 0.08)',  // Soft shadow
+                        transition: 'all 0.2s ease-in-out',
                         position: 'relative',
                         overflow: 'hidden',
                         '&:hover': {
-                          transform: { xs: 'translateY(-4px)', md: 'translateY(-8px)' },
-                          boxShadow: `0 24px 80px ${pkg.color}30`,
+                          transform: { xs: 'translateY(-4px)', md: 'translateY(-6px)' },
+                          boxShadow: `0 8px 24px ${pkg.color}30`,  // Colored shadow on hover
+                          borderColor: pkg.color,  // Package color border on hover
                         },
                       }}
                     >
@@ -860,7 +836,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                             icon={<StarIcon />}
                             label="Most Popular"
                             sx={{
-                              background: 'linear-gradient(135deg, #FFC72C 0%, #FFB300 100%)',
+                              background: 'linear-gradient(135deg, #F5C400 0%, #D4A100 100%)',  // Premium gold gradient
                               color: '#000000',
                               fontWeight: 700,
                               fontSize: '0.8rem',
@@ -911,10 +887,15 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                           <Chip
                             label={`Save ${pkg.discountPercentage || Math.round(((pkg.originalPrice - pkg.price) / pkg.originalPrice) * 100)}%`}
                             sx={{
-                              background: 'linear-gradient(135deg, #1ABC9C 0%, #16A085 100%)',
-                              color: '#FFFFFF',
+                              background: '#FFFFFF',  // White background
+                              color: '#1ABC9C',  // Green text
                               fontWeight: 700,
                               fontSize: '0.75rem',
+                              border: '2px solid #1ABC9C',  // Green border
+                              '&:hover': {
+                                background: '#1ABC9C',  // Green background on hover
+                                color: '#FFFFFF',  // White text
+                              },
                             }}
                           />
                         </Box>
@@ -946,24 +927,30 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                         {/* Package Icon */}
                         <Avatar
                           sx={{
-                            background: pkg.color,
-                            width: 60,
-                            height: 60,
+                            background: `${pkg.color}15`,  // Light tint of package color
+                            width: 80,  // Big icon
+                            height: 80,
                             mx: 'auto',
                             mb: 3,
-                            boxShadow: `0 8px 24px ${pkg.color}40`,
+                            boxShadow: `0 4px 12px ${pkg.color}20`,
+                            border: `2px solid ${pkg.color}40`,
+                            '& .MuiSvgIcon-root': {
+                              fontSize: 40,
+                              color: pkg.color,  // Package color icon
+                            },
                           }}
                         >
                           {pkg.icon}
                         </Avatar>
 
-                        {/* Package Name */}
+                        {/* Package Name - Colored by Package Type */}
                         <Typography
                           variant="h5"
                           sx={{
                             fontWeight: 800,
-                            color: '#FFFFFF',
+                            color: pkg.color,  // Package color for name (Blue/Green/Purple/Orange)
                             mb: 1,
+                            fontSize: { xs: '1.25rem', md: '1.5rem' },
                           }}
                         >
                           {pkg.name}
@@ -973,7 +960,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                         <Typography
                           variant="body1"
                           sx={{
-                            color: pkg.color,
+                            color: '#505050',  // Label grey for duration
                             fontWeight: 600,
                             mb: 2,
                           }}
@@ -989,8 +976,8 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                                 variant="h6"
                                 sx={{
                                   textDecoration: 'line-through',
-                                  color: 'text.secondary',
-                                  opacity: 0.6,
+                                  color: '#8D8D8D',  // Slate grey on white background
+                                  opacity: 0.8,
                                   mb: 0.5,
                                 }}
                               >
@@ -1000,10 +987,8 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                                 variant="h3"
                                 sx={{
                                   fontWeight: 900,
-                                  background: `linear-gradient(135deg, ${pkg.color} 0%, ${pkg.color}CC 100%)`,
-                                  backgroundClip: 'text',
-                                  WebkitBackgroundClip: 'text',
-                                  WebkitTextFillColor: 'transparent',
+                                  color: pkg.color,  // Package color for discounted price
+                                  fontSize: { xs: '2rem', md: '2.5rem' },
                                 }}
                               >
                                 TZS {pkg.price.toLocaleString()}
@@ -1027,10 +1012,8 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                               variant="h3"
                               sx={{
                                 fontWeight: 900,
-                                background: `linear-gradient(135deg, ${pkg.color} 0%, ${pkg.color}CC 100%)`,
-                                backgroundClip: 'text',
-                                WebkitBackgroundClip: 'text',
-                                WebkitTextFillColor: 'transparent',
+                                color: '#1A1A1A',  // Charcoal Black on white background
+                                fontSize: { xs: '2rem', md: '2.5rem' },
                               }}
                             >
                               TZS {pkg.price.toLocaleString()}
@@ -1045,10 +1028,13 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                             sx={{
                               mb: 2,
                               borderRadius: 2,
-                              background: 'rgba(255, 199, 44, 0.1)',
-                              border: '1px solid rgba(255, 199, 44, 0.3)',
+                              background: '#FFFFFF',  // White background
+                              border: '2px solid #F5C400',  // Yellow border
                               '& .MuiAlert-icon': {
-                                color: '#FFC72C',
+                                color: '#F5C400',  // Yellow icon
+                              },
+                              '& .MuiAlert-message': {
+                                color: '#1A1A1A',  // Charcoal text
                               },
                             }}
                           >
@@ -1070,10 +1056,11 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                         <Typography
                           variant="body2"
                           sx={{
-                            color: 'text.secondary',
+                            color: '#1A1A1A',  // Charcoal Black for description (different from name)
                             mb: 3,
                             minHeight: 40,
                             lineHeight: 1.5,
+                            fontWeight: 400,
                           }}
                         >
                           {pkg.description}
@@ -1100,7 +1087,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                               <Typography
                                 variant="body2"
                                 sx={{
-                                  color: 'rgba(255, 255, 255, 0.9)',
+                                  color: '#1A1A1A',  // Charcoal Black text
                                   fontWeight: 500,
                                 }}
                               >
@@ -1120,18 +1107,26 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                             fontWeight: 700,
                             textTransform: 'none',
                             ...(selectedPackage?.id === pkg.id ? {
-                              background: pkg.color,
-                              color: '#FFFFFF',
+                              background: pkg.color,  // Package color background when selected
+                              color: '#FFFFFF',  // White text
+                              border: `2px solid ${pkg.color}`,
+                              boxShadow: `0 4px 12px ${pkg.color}40`,
                               '&:hover': {
                                 background: pkg.color,
                                 opacity: 0.9,
+                                transform: 'translateY(-2px)',
+                                boxShadow: `0 6px 16px ${pkg.color}50`,
                               },
                             } : {
-                              borderColor: pkg.color,
-                              color: pkg.color,
+                              background: '#FFFFFF',  // White button
+                              color: pkg.color,  // Package color text
+                              border: `2px solid ${pkg.color}`,  // Package color border
                               '&:hover': {
-                                background: `${pkg.color}10`,
-                                borderColor: pkg.color,
+                                background: `${pkg.color}10`,  // Light package color tint
+                                color: pkg.color,  // Package color text
+                                border: `2px solid ${pkg.color}`,
+                                transform: 'translateY(-2px)',
+                                boxShadow: `0 4px 12px ${pkg.color}30`,
                               },
                             }),
                           }}
@@ -1158,11 +1153,10 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
             >
               <Card
                 sx={{
-                  background: 'rgba(0, 0, 0, 0.8)',
-                  backdropFilter: 'blur(20px)',
-                  borderRadius: 4,
-                  border: `2px solid ${selectedPackage.color}60`,
-                  boxShadow: `0 16px 48px ${selectedPackage.color}40`,
+                  background: '#FFFFFF',
+                  borderRadius: 2,
+                  border: `2px solid ${selectedPackage.color}`,
+                  boxShadow: `0 4px 12px ${selectedPackage.color}30`,
                 }}
               >
                 <CardContent sx={{ p: 4 }}>
@@ -1171,18 +1165,18 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                       variant="h5"
                       sx={{
                         fontWeight: 700,
-                        color: '#FFFFFF',
+                        color: '#0B0B0B',
                         mb: 2,
                       }}
                     >
                       Ready to Purchase
                     </Typography>
-                    <Typography variant="body1" sx={{ color: 'rgba(255, 255, 255, 0.8)' }}>
-                      You've selected the {selectedPackage.name} package
+                    <Typography variant="body1" sx={{ color: '#8D8D8D' }}>
+                      You've selected the <strong>{selectedPackage.name}</strong> package
                     </Typography>
                   </Box>
 
-                  <Divider sx={{ mb: 4 }} />
+                  <Divider sx={{ mb: 4, borderColor: '#EDEDED' }} />
 
                   <Grid container spacing={4} alignItems="center">
                     <Grid item xs={12} md={6}>
@@ -1197,10 +1191,10 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                           {selectedPackage.icon}
                         </Avatar>
                         <Box>
-                          <Typography variant="h6" sx={{ fontWeight: 700, color: '#FFFFFF' }}>
+                          <Typography variant="h6" sx={{ fontWeight: 700, color: '#0B0B0B' }}>
                             {selectedPackage.name}
                           </Typography>
-                          <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                          <Typography variant="body2" sx={{ color: '#8D8D8D' }}>
                             {selectedPackage.duration} • {selectedPackage.description}
                           </Typography>
                         </Box>
@@ -1219,7 +1213,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                         >
                           TZS {selectedPackage.price.toLocaleString()}
                         </Typography>
-                        <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                        <Typography variant="body2" sx={{ color: '#8D8D8D' }}>
                           One-time payment
                         </Typography>
                       </Box>
@@ -1294,16 +1288,16 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
             fullWidth
             PaperProps={{
               sx: {
-                borderRadius: 4,
-                background: 'rgba(0, 0, 0, 0.85)',
-                backdropFilter: 'blur(20px)',
-                border: '1px solid rgba(255, 199, 44, 0.3)',
+                borderRadius: 2,
+                background: '#FFFFFF',
+                border: '1px solid #EDEDED',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
               }
             }}
           >
-            <DialogTitle sx={{ textAlign: 'center', pb: 2, fontWeight: 700, color: '#FFFFFF' }}>
+            <DialogTitle sx={{ textAlign: 'center', pb: 2, fontWeight: 700, color: '#0B0B0B', borderBottom: '1px solid #EDEDED' }}>
               Complete Your Purchase
-              <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)', mt: 1, fontWeight: 400 }}>
+              <Typography variant="body2" sx={{ color: '#8D8D8D', mt: 1, fontWeight: 400 }}>
                 Fill in your details to proceed with payment
               </Typography>
             </DialogTitle>
@@ -1311,17 +1305,28 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
             <DialogContent sx={{ px: 4, py: 2 }}>
               {/* Package Summary */}
               {selectedPackage && (
-                <Card sx={{ mb: 4, background: 'rgba(255, 199, 44, 0.1)', border: '1px solid rgba(255, 199, 44, 0.2)' }}>
+                <Card sx={{ mb: 4, background: '#FFFFFF', border: '1px solid #EDEDED', boxShadow: '0 2px 16px rgba(0, 0, 0, 0.14)', position: 'relative',
+                  '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: '3px',
+                    background: 'linear-gradient(90deg, #F5C400 0%, #D4A100 100%)',
+                    borderRadius: '4px 4px 0 0',
+                  },
+                }}>
                   <CardContent sx={{ p: 3 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                       <Avatar sx={{ background: selectedPackage.color }}>
                         {selectedPackage.icon}
                       </Avatar>
                       <Box sx={{ flex: 1 }}>
-                        <Typography variant="h6" sx={{ fontWeight: 700, color: '#FFFFFF' }}>
+                        <Typography variant="h6" sx={{ fontWeight: 700, color: '#0B0B0B' }}>
                           {selectedPackage.name}
                         </Typography>
-                        <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                        <Typography variant="body2" sx={{ color: '#8D8D8D' }}>
                           {selectedPackage.duration}
                         </Typography>
                       </Box>
@@ -1336,15 +1341,70 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
               {/* Payment Steps */}
               <Stepper activeStep={paymentStep} sx={{ mb: 4 }}>
                 <Step>
-                  <StepLabel>Package Selected</StepLabel>
+                  <StepLabel 
+                    StepIconProps={{
+                      sx: {
+                        '&.Mui-active': { color: '#F5C400' },
+                        '&.Mui-completed': { color: '#1ABC9C' },
+                      }
+                    }}
+                  >
+                    <Typography variant="body2" fontWeight={600}>Package Selected</Typography>
+                  </StepLabel>
                 </Step>
                 <Step>
-                  <StepLabel>Customer Details</StepLabel>
+                  <StepLabel
+                    StepIconProps={{
+                      sx: {
+                        '&.Mui-active': { color: '#F5C400' },
+                        '&.Mui-completed': { color: '#1ABC9C' },
+                      }
+                    }}
+                  >
+                    <Typography variant="body2" fontWeight={600}>Customer Details</Typography>
+                  </StepLabel>
                 </Step>
                 <Step>
-                  <StepLabel>Payment</StepLabel>
+                  <StepLabel
+                    StepIconProps={{
+                      sx: {
+                        '&.Mui-active': { color: '#F5C400' },
+                        '&.Mui-completed': { color: '#1ABC9C' },
+                      }
+                    }}
+                  >
+                    <Typography variant="body2" fontWeight={600}>Payment</Typography>
+                  </StepLabel>
                 </Step>
               </Stepper>
+              
+              {/* Step Indicator Message */}
+              {paymentStep === 1 && (
+                <Alert severity="info" sx={{ mb: 3, borderRadius: 2, background: '#F0F7FF', border: '1px solid #0072CE' }}>
+                  <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
+                    Step 2 of 3: Enter Your Details
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: '#505050' }}>
+                    Please provide your information to complete the purchase. All fields are required.
+                  </Typography>
+                </Alert>
+              )}
+              
+              {paymentStep === 2 && (
+                <Alert 
+                  severity={paymentStatus === 'processing' ? 'info' : paymentStatus === 'success' ? 'success' : 'error'} 
+                  sx={{ mb: 3, borderRadius: 2 }}
+                >
+                  <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
+                    Step 3 of 3: {paymentStatus === 'processing' ? 'Processing Payment' : paymentStatus === 'success' ? 'Payment Complete' : 'Payment Issue'}
+                  </Typography>
+                  <Typography variant="caption">
+                    {paymentStatus === 'processing' && 'Please wait while we process your payment...'}
+                    {paymentStatus === 'success' && 'Your payment was successful!'}
+                    {paymentStatus === 'failed' && 'There was an issue with your payment. Please try again.'}
+                  </Typography>
+                </Alert>
+              )}
 
               {/* Customer Details Form */}
               {paymentStep === 1 && (
@@ -1356,33 +1416,33 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                     onChange={(e) => handleCustomerDetailsChange('fullName', e.target.value)}
                     placeholder="Enter your full name"
                     required
-                    error={customerDetails.fullName && customerDetails.fullName.trim().length < 3}
+                    error={!!(customerDetails.fullName && customerDetails.fullName.trim().length < 3)}
                     helperText={customerDetails.fullName && customerDetails.fullName.trim().length < 3 
                       ? 'Name must be at least 3 characters' 
                       : 'Enter your full name as it appears on your ID'}
                     sx={{
                       '& .MuiOutlinedInput-root': {
-                        borderRadius: 3,
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        color: '#FFFFFF',
+                        borderRadius: 2,
+                        background: '#FFFFFF',
+                        border: '1px solid #EDEDED',
                         '&:hover': {
-                          background: 'rgba(255, 255, 255, 0.15)',
+                          borderColor: '#F5C400',
                         },
                         '&.Mui-focused': {
-                          background: 'rgba(255, 255, 255, 0.15)',
+                          borderColor: '#F5C400',
                         },
                         '& .MuiOutlinedInput-notchedOutline': {
-                          borderColor: 'rgba(255, 255, 255, 0.3)',
+                          borderColor: '#EDEDED',
                         },
                       },
                       '& .MuiInputLabel-root': {
-                        color: 'rgba(255, 255, 255, 0.7)',
+                        color: '#8D8D8D',
                         '&.Mui-focused': {
-                          color: '#FFC72C',
+                          color: '#F5C400',
                         },
                       },
                       '& .MuiInputBase-input': {
-                        color: '#FFFFFF',
+                        color: '#0B0B0B',
                       },
                     }}
                   />
@@ -1398,73 +1458,83 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                     }}
                     placeholder="0773404760 or +255773404760"
                     required
-                    error={customerDetails.phoneNumber && customerDetails.phoneNumber.replace(/[^0-9]/g, '').length < 9}
+                    error={!!(customerDetails.phoneNumber && customerDetails.phoneNumber.replace(/[^0-9]/g, '').length < 9)}
                     helperText={customerDetails.phoneNumber && customerDetails.phoneNumber.replace(/[^0-9]/g, '').length < 9
                       ? 'Please enter a valid Tanzanian phone number (9-10 digits)'
                       : 'Enter your phone number for payment and SMS notifications'}
                     sx={{
                       '& .MuiOutlinedInput-root': {
-                        borderRadius: 3,
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        color: '#FFFFFF',
+                        borderRadius: 2,
+                        background: '#FFFFFF',
+                        border: '1px solid #EDEDED',
                         '&:hover': {
-                          background: 'rgba(255, 255, 255, 0.15)',
+                          borderColor: '#F5C400',
                         },
                         '&.Mui-focused': {
-                          background: 'rgba(255, 255, 255, 0.15)',
+                          borderColor: '#F5C400',
                         },
                         '& .MuiOutlinedInput-notchedOutline': {
-                          borderColor: 'rgba(255, 255, 255, 0.3)',
+                          borderColor: '#EDEDED',
                         },
                       },
                       '& .MuiInputLabel-root': {
-                        color: 'rgba(255, 255, 255, 0.7)',
+                        color: '#8D8D8D',
                         '&.Mui-focused': {
-                          color: '#FFC72C',
+                          color: '#F5C400',
                         },
                       },
                       '& .MuiInputBase-input': {
-                        color: '#FFFFFF',
+                        color: '#0B0B0B',
                       },
                     }}
                   />
 
                   <FormControl fullWidth required>
-                    <InputLabel sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>Location</InputLabel>
+                    <InputLabel sx={{ color: '#8D8D8D' }}>Location</InputLabel>
                     <Select
                       value={customerDetails.location}
-                      onChange={(e) => handleCustomerDetailsChange('location', e.target.value)}
+                      onChange={(e) => {
+                        handleCustomerDetailsChange('location', e.target.value);
+                        toast.success(`Location set to ${e.target.value}`);
+                      }}
                       label="Location"
                       sx={{
-                        borderRadius: 3,
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        color: '#FFFFFF',
+                        borderRadius: 2,
+                        background: '#FFFFFF',
+                        border: '1px solid #EDEDED',
                         '&:hover': {
-                          background: 'rgba(255, 255, 255, 0.15)',
+                          borderColor: '#F5C400',
                         },
                         '& .MuiOutlinedInput-notchedOutline': {
-                          borderColor: 'rgba(255, 255, 255, 0.3)',
+                          borderColor: '#EDEDED',
                         },
                         '&.Mui-focused': {
-                          background: 'rgba(255, 255, 255, 0.15)',
+                          borderColor: '#F5C400',
                           '& .MuiOutlinedInput-notchedOutline': {
-                            borderColor: '#FFC72C',
+                            borderColor: '#F5C400',
                           },
                         },
                         '& .MuiSvgIcon-root': {
-                          color: 'rgba(255, 255, 255, 0.7)',
+                          color: '#8D8D8D',
                         },
                       }}
                       MenuProps={{
                         PaperProps: {
                           sx: {
-                            background: 'rgba(0, 0, 0, 0.9)',
-                            backdropFilter: 'blur(20px)',
-                            border: '1px solid rgba(255, 199, 44, 0.3)',
+                            background: '#FFFFFF',
+                            border: '1px solid #EDEDED',
+                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
                             '& .MuiMenuItem-root': {
-                              color: '#FFFFFF',
+                              color: '#0B0B0B',
                               '&:hover': {
-                                background: 'rgba(255, 199, 44, 0.2)',
+                                background: '#FFE89C',
+                              },
+                              '&.Mui-selected': {
+                                background: '#F5C400',
+                                color: '#0B0B0B',
+                                '&:hover': {
+                                  background: '#D4A100',
+                                },
                               },
                             },
                           },
@@ -1480,11 +1550,15 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                   </FormControl>
 
                   {/* Payment Method Info */}
-                  <Alert severity="info" sx={{ borderRadius: 3 }}>
-                    <Typography variant="body2">
+                  <Alert severity="info" sx={{ borderRadius: 2, background: '#F0F7FF', border: '1px solid #0072CE' }}>
+                    <Typography variant="body2" sx={{ color: '#0B0B0B' }}>
                       <strong>Payment Method:</strong> ZenoPay Mobile Money
                       <br />
                       <strong>Supported:</strong> M-Pesa, Tigo Pesa, Airtel Money, Halopesa
+                      <br />
+                      <Typography variant="caption" sx={{ color: '#505050', display: 'block', mt: 0.5 }}>
+                        💡 You'll receive a payment prompt on your phone after clicking "Proceed to Payment"
+                      </Typography>
                     </Typography>
                   </Alert>
                 </Stack>
@@ -1495,21 +1569,57 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                 <Box sx={{ textAlign: 'center', py: 4 }}>
                   {paymentStatus === 'processing' && (
                     <>
-                      <CircularProgress size={60} sx={{ color: '#0072CE', mb: 3 }} />
-                      <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+                      <CircularProgress size={60} sx={{ color: '#F5C400', mb: 3 }} />
+                      <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: '#0B0B0B' }}>
                         Processing Payment...
                       </Typography>
-                      <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
-                        {paymentMessage || 'Please check your phone for payment instructions.'}
-                      </Typography>
-                      {orderId && (
-                        <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
-                          Order ID: {orderId}
+                      
+                      {/* Progress Indicator */}
+                      <Box sx={{ mb: 3 }}>
+                        <Typography variant="body2" sx={{ color: '#8D8D8D', mb: 1 }}>
+                          {paymentElapsedTime > 0 ? `⏱️ Waiting for payment confirmation... (${paymentElapsedTime}s)` : '⏱️ Waiting for payment confirmation...'}
                         </Typography>
+                        {paymentPollingAttempts > 0 && (
+                          <Typography variant="caption" sx={{ color: '#8D8D8D' }}>
+                            Checking status... (Attempt {paymentPollingAttempts})
+                          </Typography>
+                        )}
+                      </Box>
+                      
+                      <Alert severity="info" sx={{ mb: 2, borderRadius: 2, background: '#F0F7FF' }}>
+                        <Typography variant="body2" sx={{ color: '#0B0B0B', fontWeight: 600, mb: 0.5 }}>
+                          📱 Check Your Phone
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: '#505050' }}>
+                          {paymentMessage || 'Please check your phone for payment instructions. Complete the payment on your mobile device.'}
+                        </Typography>
+                        {paymentElapsedTime > 30 && (
+                          <Typography variant="caption" sx={{ color: '#505050', display: 'block', mt: 1, fontStyle: 'italic' }}>
+                            💡 If you've already entered your PIN, the payment is being processed. Please wait...
+                          </Typography>
+                        )}
+                      </Alert>
+                      {orderId && (
+                        <Box sx={{ 
+                          background: '#F6F6F6', 
+                          borderRadius: 2, 
+                          p: 1.5, 
+                          mb: 2,
+                          border: '1px solid #EDEDED'
+                        }}>
+                          <Typography variant="caption" sx={{ color: '#8D8D8D', display: 'block', mb: 0.5 }}>
+                            Order ID:
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: '#0B0B0B', fontWeight: 600, fontFamily: 'monospace' }}>
+                            {orderId}
+                          </Typography>
+                        </Box>
                       )}
-                      <Typography variant="body2" sx={{ color: 'text.secondary', mt: 2 }}>
-                        Do not close this window until payment is complete.
-                      </Typography>
+                      <Alert severity="warning" sx={{ borderRadius: 2, background: '#FFF9E6', border: '1px solid #F5C400' }}>
+                        <Typography variant="body2" sx={{ color: '#0B0B0B' }}>
+                          ⚠️ Do not close this window until payment is complete.
+                        </Typography>
+                      </Alert>
                       {currentPollingStop && (
                         <Button
                           variant="outlined"
@@ -1533,11 +1643,13 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                     <>
                       <CheckCircleIcon sx={{ fontSize: 60, color: '#1ABC9C', mb: 3 }} />
                       <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: '#1ABC9C' }}>
-                        Payment Successful!
+                        ✅ Payment Successful!
                       </Typography>
-                      <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
-                        {paymentMessage || 'Payment completed successfully! Your voucher code has been generated.'}
-                      </Typography>
+                      <Alert severity="success" sx={{ mb: 2, borderRadius: 2, background: '#E8F8F5', border: '1px solid #1ABC9C' }}>
+                        <Typography variant="body2" sx={{ color: '#0B0B0B' }}>
+                          {paymentMessage || 'Payment completed successfully! Your voucher code has been generated and sent to your phone.'}
+                        </Typography>
+                      </Alert>
                       {voucherCode && (
                         <Box sx={{ 
                           background: 'rgba(26, 188, 156, 0.1)', 
@@ -1571,62 +1683,95 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                     <>
                       <ErrorIcon sx={{ fontSize: 60, color: '#E74C3C', mb: 3 }} />
                       <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: '#E74C3C' }}>
-                        Payment Failed
+                        ❌ Payment Failed
                       </Typography>
-                      <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3 }}>
-                        {paymentMessage || 'There was an issue processing your payment. Please try again.'}
-                      </Typography>
-                      {orderId && (
-                        <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 2 }}>
-                          Order ID: {orderId}
+                      <Alert severity="error" sx={{ mb: 3, borderRadius: 2, background: '#FEE', border: '1px solid #E74C3C' }}>
+                        <Typography variant="body2" sx={{ color: '#0B0B0B', mb: 1 }}>
+                          {paymentMessage || 'There was an issue processing your payment. Please try again.'}
                         </Typography>
-                      )}
+                        {orderId && (
+                          <Box sx={{ mt: 1, p: 1, background: '#FFFFFF', borderRadius: 1, border: '1px solid #EDEDED' }}>
+                            <Typography variant="caption" sx={{ color: '#8D8D8D', display: 'block', mb: 0.5 }}>
+                              Order ID:
+                            </Typography>
+                            <Typography variant="body2" sx={{ color: '#0B0B0B', fontWeight: 600, fontFamily: 'monospace' }}>
+                              {orderId}
+                            </Typography>
+                          </Box>
+                        )}
+                      </Alert>
                       
                       {/* Specific error suggestions */}
                       {paymentMessage && (
                         <Box sx={{ 
-                          background: 'rgba(231, 76, 60, 0.1)', 
-                          border: '1px solid #E74C3C', 
+                          background: '#FFF9E6', 
+                          border: '1px solid #F5C400', 
                           borderRadius: 2, 
                           p: 2, 
                           mb: 2 
                         }}>
-                          <Typography variant="body2" sx={{ fontWeight: 600, color: '#E74C3C', mb: 1 }}>
-                            💡 Suggestions:
+                          <Typography variant="body2" sx={{ fontWeight: 600, color: '#0B0B0B', mb: 1 }}>
+                            💡 What to do next:
                           </Typography>
-                          {paymentMessage.includes('Insufficient balance') && (
-                            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                          {(paymentMessage.toLowerCase().includes('insufficient') || paymentMessage.toLowerCase().includes('balance')) && (
+                            <Typography variant="body2" sx={{ color: '#0B0B0B' }}>
                               • Top up your mobile money account<br/>
                               • Check your account balance<br/>
-                              • Try a different payment method
+                              • Try a different payment method<br/>
+                              • Contact your mobile money provider for assistance
                             </Typography>
                           )}
-                          {paymentMessage.includes('Invalid PIN') && (
-                            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                          {(paymentMessage.toLowerCase().includes('invalid pin') || paymentMessage.toLowerCase().includes('pin')) && (
+                            <Typography variant="body2" sx={{ color: '#0B0B0B' }}>
                               • Double-check your PIN<br/>
                               • Make sure you're entering the correct PIN<br/>
-                              • Contact your mobile money provider if PIN is locked
+                              • Contact your mobile money provider if PIN is locked<br/>
+                              • Wait a few minutes before trying again
                             </Typography>
                           )}
-                          {paymentMessage.includes('cancelled') && (
-                            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                          {(paymentMessage.toLowerCase().includes('cancelled') || paymentMessage.toLowerCase().includes('cancel')) && (
+                            <Typography variant="body2" sx={{ color: '#0B0B0B' }}>
                               • Complete the payment process on your phone<br/>
                               • Don't cancel the USSD prompt<br/>
-                              • Try again with a stable network connection
+                              • Try again with a stable network connection<br/>
+                              • Make sure you have sufficient balance before retrying
                             </Typography>
                           )}
-                          {paymentMessage.includes('timeout') && (
-                            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                          {(paymentMessage.toLowerCase().includes('timeout') || paymentMessage.toLowerCase().includes('timed out')) && (
+                            <Typography variant="body2" sx={{ color: '#0B0B0B' }}>
                               • Check your network connection<br/>
                               • Try again during off-peak hours<br/>
+                              • Ensure your phone has good signal strength<br/>
                               • Contact support if the issue persists
                             </Typography>
                           )}
-                          {paymentMessage.includes('Network error') && (
-                            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                          {(paymentMessage.toLowerCase().includes('network error') || paymentMessage.toLowerCase().includes('network')) && (
+                            <Typography variant="body2" sx={{ color: '#0B0B0B' }}>
                               • Check your internet connection<br/>
                               • Try again in a few minutes<br/>
+                              • Switch to a different network if available<br/>
                               • Contact support if the issue persists
+                            </Typography>
+                          )}
+                          {paymentMessage.toLowerCase().includes('expired') && (
+                            <Typography variant="body2" sx={{ color: '#0B0B0B' }}>
+                              • The payment session has expired<br/>
+                              • Please initiate a new payment<br/>
+                              • Complete the payment within the time limit<br/>
+                              • Contact support if you need assistance
+                            </Typography>
+                          )}
+                          {!paymentMessage.toLowerCase().includes('insufficient') && 
+                           !paymentMessage.toLowerCase().includes('pin') &&
+                           !paymentMessage.toLowerCase().includes('cancelled') &&
+                           !paymentMessage.toLowerCase().includes('timeout') &&
+                           !paymentMessage.toLowerCase().includes('network') &&
+                           !paymentMessage.toLowerCase().includes('expired') && (
+                            <Typography variant="body2" sx={{ color: '#0B0B0B' }}>
+                              • Please try again<br/>
+                              • Check your mobile money account<br/>
+                              • Ensure you have sufficient balance<br/>
+                              • Contact support if the problem continues
                             </Typography>
                           )}
                         </Box>
@@ -1641,10 +1786,17 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                           setPaymentMessage('');
                           setVoucherCode('');
                           setOrderId('');
+                          setPaymentElapsedTime(0);
+                          setPaymentPollingAttempts(0);
                         }}
                         sx={{ 
-                          backgroundColor: '#0072CE',
-                          '&:hover': { backgroundColor: '#0056A3' }
+                          backgroundColor: '#F5C400',
+                          color: '#0B0B0B',
+                          fontWeight: 600,
+                          '&:hover': { 
+                            backgroundColor: '#D4A100',
+                            boxShadow: '0 2px 8px rgba(245, 196, 0, 0.3)'
+                          }
                         }}
                       >
                         Try Again
@@ -1659,8 +1811,12 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
               <Button
                 onClick={handleBackToPackages}
                 sx={{
-                  color: 'text.secondary',
+                  color: '#8D8D8D',
                   fontWeight: 600,
+                  '&:hover': {
+                    color: '#0B0B0B',
+                    background: '#F6F6F6',
+                  },
                 }}
               >
                 Back to Packages
@@ -1672,14 +1828,20 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                   onClick={handleProceedToPayment}
                   disabled={!customerDetails.fullName || !customerDetails.phoneNumber || !customerDetails.location}
                   sx={{
-                    background: 'linear-gradient(135deg, #0072CE 0%, #0056A3 100%)',
-                    color: '#FFFFFF',
+                    background: '#F5C400',
+                    color: '#0B0B0B',
                     px: 4,
                     py: 1.5,
-                    borderRadius: 3,
-                    fontWeight: 700,
+                    borderRadius: 2,
+                    fontWeight: 600,
+                    boxShadow: 'none',
                     '&:hover': {
-                      background: 'linear-gradient(135deg, #0056A3 0%, #004080 100%)',
+                      background: '#D4A100',
+                      boxShadow: '0 2px 8px rgba(245, 196, 0, 0.3)',
+                    },
+                    '&:disabled': {
+                      background: '#EDEDED',
+                      color: '#8D8D8D',
                     },
                   }}
                 >
@@ -1691,17 +1853,19 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                 <Button
                   variant="contained"
                   onClick={handleProceedToPayment}
-                  sx={{
-                    background: 'linear-gradient(135deg, #E74C3C 0%, #C0392B 100%)',
-                    color: '#FFFFFF',
-                    px: 4,
-                    py: 1.5,
-                    borderRadius: 3,
-                    fontWeight: 700,
-                    '&:hover': {
-                      background: 'linear-gradient(135deg, #C0392B 0%, #A93226 100%)',
-                    },
-                  }}
+                    sx={{
+                      background: '#F5C400',
+                      color: '#0B0B0B',
+                      px: 4,
+                      py: 1.5,
+                      borderRadius: 2,
+                      fontWeight: 600,
+                      boxShadow: 'none',
+                      '&:hover': {
+                        background: '#D4A100',
+                        boxShadow: '0 2px 8px rgba(245, 196, 0, 0.3)',
+                      },
+                    }}
                 >
                   Try Again
                 </Button>

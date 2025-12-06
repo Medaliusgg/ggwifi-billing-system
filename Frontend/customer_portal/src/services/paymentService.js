@@ -110,10 +110,33 @@ class PaymentService {
   }
 
   /**
+   * Get user-friendly message for payment status
+   */
+  getStatusMessage(status) {
+    const statusMessages = {
+      'PENDING': 'Payment is still being processed. Please complete the payment on your phone.',
+      'PROCESSING': 'Payment is being processed. Please wait...',
+      'COMPLETED': 'Payment completed successfully! Your voucher code has been generated.',
+      'SUCCESS': 'Payment completed successfully! Your voucher code has been generated.',
+      'FAILED': 'Payment failed. Please check your mobile money balance and try again.',
+      'CANCELLED': 'Payment was cancelled. Please try again.',
+      'INSUFFICIENT_BALANCE': 'Insufficient balance in your mobile money account. Please top up and try again.',
+      'INVALID_PIN': 'Invalid PIN entered. Please try again with the correct PIN.',
+      'USER_CANCELLED': 'Payment was cancelled by user. Please try again.',
+      'EXPIRED': 'Payment has expired. Please initiate a new payment.',
+      'TIMEOUT': 'Payment timed out. Please try again.',
+      'NETWORK_ERROR': 'Network error occurred. Please try again.',
+      'ERROR': 'An error occurred during payment. Please try again.'
+    };
+    return statusMessages[status] || `Payment status: ${status}`;
+  }
+
+  /**
    * Poll payment status with enhanced tracking
    */
-  async pollPaymentStatus(orderId, onStatusUpdate, maxAttempts = 60, interval = 3000) {
+  async pollPaymentStatus(orderId, onStatusUpdate, maxAttempts = 90, interval = 2000) {
     console.log(`🔄 Starting payment status polling for order: ${orderId}`);
+    console.log(`   Max attempts: ${maxAttempts}, Interval: ${interval}ms`);
     
     // Prevent multiple polling instances for the same order
     if (this.activePolling && this.activePolling.has(orderId)) {
@@ -129,81 +152,138 @@ class PaymentService {
     }
     this.activePolling.add(orderId);
     
+    const startTime = Date.now();
     let attempts = 0;
-    const pollInterval = setInterval(async () => {
+    
+    // Immediate first poll (don't wait for interval)
+    const performPoll = async () => {
       attempts++;
-      console.log(`🔄 Polling attempt ${attempts}/${maxAttempts} for order: ${orderId}`);
+      const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+      console.log(`🔄 Polling attempt ${attempts}/${maxAttempts} (${elapsedSeconds}s elapsed) for order: ${orderId}`);
       
       try {
         const result = await this.checkPaymentStatus(orderId);
         
-        if (result.status === 'success') {
-          const paymentStatus = result.payment_status;
-          console.log(`📊 Payment status update: ${paymentStatus}`);
+        // Handle response - check both result.data and result directly
+        const responseData = result.data || result;
+        
+        if (responseData.status === 'success') {
+          const paymentStatus = (responseData.payment_status || '').toUpperCase();
+          console.log(`📊 Payment status update: ${paymentStatus} (attempt ${attempts}, ${elapsedSeconds}s elapsed)`);
           
-          // Call the status update callback
+          // Call the status update callback with elapsed time
           if (onStatusUpdate) {
             onStatusUpdate({
               status: paymentStatus,
-              message: result.message,
-              orderId: result.order_id,
-              voucherCode: result.voucher_code,
-              voucherGenerated: result.voucher_generated,
-              timestamp: result.timestamp,
-              zenopayResponse: result.zenopay_response
+              message: responseData.message || this.getStatusMessage(paymentStatus),
+              orderId: responseData.order_id || orderId,
+              voucherCode: responseData.voucher_code,
+              voucherGenerated: responseData.voucher_generated || false,
+              timestamp: responseData.timestamp || new Date().toISOString(),
+              zenopayResponse: responseData.zenopay_response,
+              failureReason: responseData.failure_reason,
+              elapsedSeconds: elapsedSeconds,
+              attempt: attempts
             });
           }
           
-          // Stop polling if payment is completed or failed
-          if (['COMPLETED', 'SUCCESS', 'FAILED', 'CANCELLED', 'EXPIRED', 'ERROR'].includes(paymentStatus)) {
-            console.log(`✅ Payment polling completed with status: ${paymentStatus}`);
+          // Stop polling if payment is in final state
+          const finalStatuses = ['COMPLETED', 'SUCCESS', 'FAILED', 'CANCELLED', 'EXPIRED', 
+                                 'TIMEOUT', 'INSUFFICIENT_BALANCE', 'INVALID_PIN', 
+                                 'USER_CANCELLED', 'NETWORK_ERROR', 'ERROR'];
+          if (finalStatuses.includes(paymentStatus)) {
+            console.log(`✅ Payment polling completed with status: ${paymentStatus} after ${elapsedSeconds}s`);
             clearInterval(pollInterval);
             this.activePolling.delete(orderId);
             return;
           }
         } else {
-          console.error(`❌ Payment status check failed: ${result.message}`);
+          // Handle error or pending status
+          const paymentStatus = (responseData.payment_status || 'PENDING').toUpperCase();
+          console.log(`📊 Payment status: ${paymentStatus} (attempt ${attempts}, ${elapsedSeconds}s elapsed)`);
+          
           if (onStatusUpdate) {
             onStatusUpdate({
-              status: 'ERROR',
-              message: result.message || 'Failed to check payment status',
-              orderId: orderId
+              status: paymentStatus,
+              message: responseData.message || this.getStatusMessage(paymentStatus),
+              orderId: orderId,
+              elapsedSeconds: elapsedSeconds,
+              attempt: attempts
             });
+          }
+          
+          // Stop polling if it's a final error state
+          if (['FAILED', 'CANCELLED', 'EXPIRED', 'TIMEOUT', 'ERROR'].includes(paymentStatus)) {
+            clearInterval(pollInterval);
+            this.activePolling.delete(orderId);
+            return;
           }
         }
         
         // Stop polling if max attempts reached
         if (attempts >= maxAttempts) {
-          console.log(`⏰ Payment polling timeout after ${maxAttempts} attempts`);
+          console.log(`⏰ Payment polling timeout after ${maxAttempts} attempts (${elapsedSeconds}s)`);
           clearInterval(pollInterval);
           this.activePolling.delete(orderId);
           if (onStatusUpdate) {
             onStatusUpdate({
               status: 'TIMEOUT',
               message: 'Payment status check timed out. Please check your payment manually.',
-              orderId: orderId
+              orderId: orderId,
+              elapsedSeconds: elapsedSeconds,
+              attempt: attempts
             });
           }
+          return;
         }
         
       } catch (error) {
-        console.error(`❌ Error polling payment status: ${error.message}`);
-        attempts++;
+        const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+        console.error(`❌ Error polling payment status (attempt ${attempts}/${maxAttempts}):`, {
+          error: error.message,
+          orderId,
+          elapsedSeconds,
+          errorType: error.name,
+          errorStack: error.stack
+        });
+        
+        // Provide user-friendly error messages based on error type
+        let errorMessage = 'Failed to check payment status. Please try again.';
+        if (error.message.includes('CORS') || error.message.includes('blocked')) {
+          errorMessage = 'Connection blocked. Please check your network or contact support.';
+        } else if (error.message.includes('Network') || error.message.includes('fetch')) {
+          errorMessage = 'Network error. Please check your internet connection.';
+        } else if (error.message.includes('timeout')) {
+          errorMessage = 'Request timed out. Please try again.';
+        }
         
         if (attempts >= maxAttempts) {
-          console.log(`⏰ Payment polling failed after ${maxAttempts} attempts`);
+          console.log(`⏰ Payment polling failed after ${maxAttempts} attempts (${elapsedSeconds}s)`);
           clearInterval(pollInterval);
           this.activePolling.delete(orderId);
           if (onStatusUpdate) {
             onStatusUpdate({
               status: 'ERROR',
-              message: 'Failed to check payment status. Please try again.',
-              orderId: orderId
+              message: errorMessage,
+              orderId: orderId,
+              elapsedSeconds: elapsedSeconds,
+              attempt: attempts,
+              error: error.message
             });
           }
+          return;
         }
+        
+        // Continue polling on error (will retry)
+        console.log(`🔄 Retrying payment status check (attempt ${attempts + 1}/${maxAttempts})...`);
       }
-    }, interval);
+    };
+    
+    // Perform immediate first poll
+    performPoll();
+    
+    // Then poll at regular intervals
+    const pollInterval = setInterval(performPoll, interval);
     
     // Return a function to stop polling
     return () => {

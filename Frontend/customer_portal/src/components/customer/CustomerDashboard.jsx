@@ -55,10 +55,15 @@ const InfoChip = ({ icon, label, value, color = 'primary' }) => (
 );
 
 const SectionCard = ({ title, action, children }) => (
-  <Card sx={{ borderRadius: 4, background: 'rgba(10, 12, 20, 0.85)', border: '1px solid rgba(255,255,255,0.08)' }}>
+  <Card sx={{ 
+    borderRadius: 4, 
+    background: '#FFFFFF',  // White background - ZenoPay Style
+    border: '1px solid #FFE89C',  // Pale yellow border
+    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',  // Soft shadow
+  }}>
     <CardContent sx={{ p: 3 }}>
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h6" fontWeight={600}>
+        <Typography variant="h6" fontWeight={600} color="#1A1A1A">  {/* Charcoal Black */}
           {title}
         </Typography>
         {action}
@@ -232,7 +237,7 @@ const CustomerDashboard = ({ session, onLogout, onBack }) => {
   };
 
   return (
-    <Box sx={{ p: { xs: 2, md: 3 }, minHeight: 'calc(100vh - 80px)' }}>
+    <Box sx={{ p: { xs: 1.5, md: 2 }, pt: { xs: 1, md: 1.5 }, minHeight: 'calc(100vh - 80px)' }}>
       <Stack spacing={3}>
         {/* Loyalty Notifications */}
         {loyaltyNotifications.filter(n => !dismissedNotifications.has(n.id)).length > 0 && (
@@ -258,23 +263,31 @@ const CustomerDashboard = ({ session, onLogout, onBack }) => {
           </Stack>
         )}
 
-        <Card sx={{ borderRadius: 4, background: 'linear-gradient(135deg, rgba(0,0,0,0.9), rgba(7,11,25,0.9))', border: '1px solid rgba(255,199,76,0.2)', color: '#fff' }}>
+        <Card sx={{ borderRadius: 2, background: '#FFFFFF', border: '1px solid #EDEDED', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
           <CardContent>
             <Stack spacing={3}>
               <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'center' }} spacing={2}>
                 <Stack direction="row" spacing={2} alignItems="center">
-                  <Avatar sx={{ width: 64, height: 64, bgcolor: 'warning.main', color: '#111', fontWeight: 700 }}>
+                  <Avatar sx={{ 
+                    width: { xs: 64, md: 80 }, 
+                    height: { xs: 64, md: 80 }, 
+                    bgcolor: '#FFE89C',  // Pale yellow background
+                    color: '#1A1A1A',  // Black text
+                    fontWeight: 700,
+                    border: '4px solid #F5C400',  // Yellow ring (4px)
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',  // Soft outer shadow
+                  }}>
                     {customerInfo?.firstName?.[0] || 'G'}
                   </Avatar>
                   <Box>
-                    <Typography variant="h5" fontWeight={700}>
+                    <Typography variant="h5" fontWeight={700} color="#1A1A1A">  {/* Charcoal Black */}
                       {customerInfo?.firstName || 'GG Customer'} {customerInfo?.lastName || ''}
                     </Typography>
                     <Stack direction="row" spacing={1} alignItems="center">
                       <PhoneIphoneIcon fontSize="small" />
-                      <Typography variant="body2">{phoneNumber}</Typography>
+                      <Typography variant="body2" color="#1A1A1A">{phoneNumber}</Typography>  {/* Charcoal Black */}
                     </Stack>
-                    <Typography variant="caption" color="rgba(255,255,255,0.7)">
+                    <Typography variant="caption" color="#505050">  {/* Label grey */}
                       Loyalty tier: {loyaltyInfo?.tier || 'Unassigned'}
                     </Typography>
                   </Box>
@@ -313,7 +326,7 @@ const CustomerDashboard = ({ session, onLogout, onBack }) => {
         {!analyticsQuery.isLoading && (analytics.usage || analytics.sessions) && (
           <Grid container spacing={2}>
             <Grid item xs={12} md={4}>
-              <Card sx={{ borderRadius: 3, background: 'rgba(12, 14, 24, 0.85)', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <Card sx={{ borderRadius: 3, background: '#FFFFFF', border: '1px solid #FFE89C', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)' }}>
                 <CardContent>
                   <Stack spacing={1}>
                     <Stack direction="row" spacing={1} alignItems="center">
@@ -322,10 +335,10 @@ const CustomerDashboard = ({ session, onLogout, onBack }) => {
                         Data Usage
                       </Typography>
                     </Stack>
-                    <Typography variant="h5" fontWeight={700}>
+                    <Typography variant="h5" fontWeight={700} color="#1A1A1A">  {/* Charcoal Black */}
                       {formatDataUsage(analytics.usage?.totalDataUsed || analytics.usage?.dataUsed)}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant="caption" color="#505050">  {/* Label grey */}
                       This month
                     </Typography>
                   </Stack>
@@ -333,7 +346,7 @@ const CustomerDashboard = ({ session, onLogout, onBack }) => {
               </Card>
             </Grid>
             <Grid item xs={12} md={4}>
-              <Card sx={{ borderRadius: 3, background: 'rgba(12, 14, 24, 0.85)', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <Card sx={{ borderRadius: 3, background: '#FFFFFF', border: '1px solid #FFE89C', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)' }}>
                 <CardContent>
                   <Stack spacing={1}>
                     <Stack direction="row" spacing={1} alignItems="center">
@@ -342,10 +355,10 @@ const CustomerDashboard = ({ session, onLogout, onBack }) => {
                         Router Uptime
                       </Typography>
                     </Stack>
-                    <Typography variant="h5" fontWeight={700}>
+                    <Typography variant="h5" fontWeight={700} color="#1A1A1A">  {/* Charcoal Black */}
                       {analytics.sessions?.averageUptime ? formatUptime(analytics.sessions.averageUptime) : 'N/A'}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant="caption" color="#505050">  {/* Label grey */}
                       Average session duration
                     </Typography>
                   </Stack>
@@ -353,7 +366,7 @@ const CustomerDashboard = ({ session, onLogout, onBack }) => {
               </Card>
             </Grid>
             <Grid item xs={12} md={4}>
-              <Card sx={{ borderRadius: 3, background: 'rgba(12, 14, 24, 0.85)', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <Card sx={{ borderRadius: 3, background: '#FFFFFF', border: '1px solid #FFE89C', boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)' }}>
                 <CardContent>
                   <Stack spacing={1}>
                     <Stack direction="row" spacing={1} alignItems="center">
@@ -362,10 +375,10 @@ const CustomerDashboard = ({ session, onLogout, onBack }) => {
                         Session Quality
                       </Typography>
                     </Stack>
-                    <Typography variant="h5" fontWeight={700}>
+                    <Typography variant="h5" fontWeight={700} color="#1A1A1A">  {/* Charcoal Black */}
                       {analytics.sessions?.qualityScore ? `${analytics.sessions.qualityScore}%` : 'N/A'}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant="caption" color="#505050">  {/* Label grey */}
                       Connection reliability
                     </Typography>
                   </Stack>

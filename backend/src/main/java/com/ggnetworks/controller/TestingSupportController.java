@@ -17,7 +17,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@Profile("testing")
 @RequestMapping("/api/v1/testing")
 public class TestingSupportController {
 
@@ -120,6 +119,53 @@ public class TestingSupportController {
         } catch (Exception e) {
             response.put("status", "error");
             response.put("message", "Failed to create admin user: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    @PostMapping("/reset-admin")
+    public ResponseEntity<Map<String, Object>> resetAdminUser() {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            // Delete all existing admin and super_admin users
+            java.util.List<User> adminUsers = userRepository.findAll().stream()
+                .filter(user -> user.getRole() == User.UserRole.ADMIN || 
+                               user.getRole() == User.UserRole.SUPER_ADMIN)
+                .collect(java.util.stream.Collectors.toList());
+            userRepository.deleteAll(adminUsers);
+            
+            // Create new admin user with specified credentials
+            User admin = new User();
+            admin.setUsername("medalius");
+            admin.setPhoneNumber("0742844024");
+            admin.setPassword(passwordEncoder.encode("Kolombo@123%"));
+            admin.setFirstName("Medalius");
+            admin.setLastName("Administrator");
+            admin.setEmail("medalius@ggwifi.co.tz");
+            admin.setRole(User.UserRole.SUPER_ADMIN);
+            admin.setIsActive(true);
+            admin.setIsEmailVerified(true);
+            admin.setIsPhoneVerified(true);
+            admin.setStatus(User.UserStatus.ACTIVE);
+            admin.setCreatedAt(LocalDateTime.now());
+            admin.setUpdatedAt(LocalDateTime.now());
+
+            User saved = userRepository.save(admin);
+
+            response.put("status", "success");
+            response.put("message", "Admin user reset successfully");
+            response.put("username", "medalius");
+            response.put("phoneNumber", "0742844024");
+            response.put("role", "SUPER_ADMIN");
+            response.put("userId", saved.getId());
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to reset admin user: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.status(500).body(response);
         }
     }

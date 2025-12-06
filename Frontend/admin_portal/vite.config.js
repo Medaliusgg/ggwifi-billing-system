@@ -11,9 +11,9 @@ export default defineConfig({
     },
   },
   server: {
-    port: 3000,
+    port: 5173,
     host: true,
-    strictPort: true,
+    strictPort: false, // Allow Vite to use next available port if 5173 is taken
   },
   build: {
     outDir: 'dist',

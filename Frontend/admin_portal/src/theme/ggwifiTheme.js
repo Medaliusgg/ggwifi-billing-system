@@ -1,14 +1,16 @@
 // GG Wi-Fi Brand Theme System
 // "The Signal That Cares" - Premium yet caring wireless internet provider
 
+// Updated to Premium Design System Colors
 const tokens = {
-  gold: '#F2C94C',
-  goldStrong: '#E0B335',
-  black: '#0A0A0A',
-  white: '#FFFFFF',
-  neutral100: '#F6F6F6',
-  neutral300: '#E8E8E8',
-  neutral600: '#5C5C5C',
+  gold: '#F5C400',           // Gold Prime
+  goldStrong: '#D4A100',     // Gold Deep
+  goldLight: '#FFD700',      // Gold Light
+  black: '#0B0B0B',          // Carbon Black
+  white: '#FFFFFF',          // Soft White
+  neutral100: '#F6F6F6',     // Frost Grey (light)
+  neutral300: '#EDEDED',     // Frost Grey
+  neutral600: '#8D8D8D',     // Slate Grey
 };
 
 export const ggwifiTheme = {

@@ -5,33 +5,40 @@ const AnimatedBackground = ({ children, variant = 'default' }) => {
   return (
     <Box
       sx={{
-        position: 'relative',
-        minHeight: '100vh',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: '100%',
+        height: '100%',
         overflow: 'hidden',
+        pointerEvents: 'none',
+        zIndex: -1,
         '&::before': {
           content: '""',
-          position: 'fixed',
+          position: 'absolute',
           top: 0,
           left: 0,
           right: 0,
           bottom: 0,
           background: variant === 'light' 
-            ? 'linear-gradient(135deg, #FFFFFF 0%, #F8F9FA 50%, #FFFFFF 100%)'
-            : 'linear-gradient(135deg, #000000 0%, #1a1a1a 25%, #000000 50%, #0a0a0a 75%, #000000 100%)',
+            ? 'linear-gradient(135deg, #FFFFFF 0%, #F6F6F6 50%, #FFFFFF 100%)'  // Premium soft white gradient
+            : 'linear-gradient(135deg, #FFFFFF 0%, #F6F6F6 50%, #FFFFFF 100%)',  // Always light for premium design
           backgroundSize: '400% 400%',
           animation: 'gradientShift 15s ease infinite',
           zIndex: -2,
         },
         '&::after': {
           content: '""',
-          position: 'fixed',
+          position: 'absolute',
           top: 0,
           left: 0,
           right: 0,
           bottom: 0,
           background: variant === 'light'
-            ? 'radial-gradient(circle at 20% 30%, rgba(255, 199, 44, 0.08) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(0, 114, 206, 0.08) 0%, transparent 50%)'
-            : 'radial-gradient(circle at 20% 30%, rgba(255, 199, 44, 0.15) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(0, 114, 206, 0.15) 0%, transparent 50%)',
+            ? 'radial-gradient(circle at 20% 30%, rgba(245, 196, 0, 0.06) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(245, 196, 0, 0.04) 0%, transparent 50%)'  // Premium gold accents
+            : 'radial-gradient(circle at 20% 30%, rgba(245, 196, 0, 0.08) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(245, 196, 0, 0.06) 0%, transparent 50%)',  // Premium gold accents
           animation: 'pulse 8s ease-in-out infinite',
           zIndex: -1,
         },
@@ -49,13 +56,13 @@ const AnimatedBackground = ({ children, variant = 'default' }) => {
       {/* Animated Orbs */}
       <Box
         sx={{
-          position: 'fixed',
+          position: 'absolute',
           top: '10%',
           left: '10%',
           width: '300px',
           height: '300px',
           borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(255, 199, 44, 0.2) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(245, 196, 0, 0.12) 0%, transparent 70%)',  // Premium gold
           filter: 'blur(60px)',
           animation: 'float1 20s ease-in-out infinite',
           zIndex: -1,
@@ -63,13 +70,13 @@ const AnimatedBackground = ({ children, variant = 'default' }) => {
       />
       <Box
         sx={{
-          position: 'fixed',
+          position: 'absolute',
           top: '60%',
           right: '10%',
           width: '400px',
           height: '400px',
           borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(0, 114, 206, 0.2) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(245, 196, 0, 0.1) 0%, transparent 70%)',  // Premium gold
           filter: 'blur(80px)',
           animation: 'float2 25s ease-in-out infinite',
           zIndex: -1,
@@ -77,7 +84,7 @@ const AnimatedBackground = ({ children, variant = 'default' }) => {
       />
       <Box
         sx={{
-          position: 'fixed',
+          position: 'absolute',
           bottom: '10%',
           left: '50%',
           width: '250px',

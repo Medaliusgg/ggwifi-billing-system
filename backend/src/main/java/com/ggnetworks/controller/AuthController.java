@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/v1/auth")
+@RequestMapping("/api/v1/auth")  // Using full path since context-path is removed
 @CrossOrigin(origins = "*")
 public class AuthController {
 
@@ -44,6 +44,7 @@ public class AuthController {
         try {
             String username = request.get("username");
             String password = request.get("password");
+            String phoneNumber = request.get("phoneNumber"); // Optional, for validation
 
             if (username == null || password == null) {
                 response.put("status", "error");
@@ -59,6 +60,15 @@ public class AuthController {
             }
 
             User user = userOpt.get();
+
+            // Validate phone number if provided (for admin login)
+            if (phoneNumber != null && !phoneNumber.isEmpty()) {
+                if (!phoneNumber.equals(user.getPhoneNumber())) {
+                    response.put("status", "error");
+                    response.put("message", "Phone number does not match");
+                    return ResponseEntity.status(401).body(response);
+                }
+            }
 
             // Check if user is active
             if (user.getIsActive() == null || !user.getIsActive()) {
@@ -92,6 +102,84 @@ public class AuthController {
                     "username", user.getUsername(),
                     "email", user.getEmail(),
                     "role", user.getRole().name()
+                )
+            ));
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Authentication failed: " + e.getMessage());
+            return ResponseEntity.status(401).body(response);
+        }
+    }
+
+    @PostMapping("/staff-login")
+    public ResponseEntity<Map<String, Object>> staffLogin(@RequestBody Map<String, String> request) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            String username = request.get("username");
+            String password = request.get("password");
+            String staffId = request.get("staffId"); // Optional, for validation
+
+            if (username == null || password == null) {
+                response.put("status", "error");
+                response.put("message", "Username and password are required");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            Optional<User> userOpt = userRepository.findByUsername(username);
+            if (!userOpt.isPresent()) {
+                response.put("status", "error");
+                response.put("message", "Invalid credentials");
+                return ResponseEntity.status(401).body(response);
+            }
+
+            User user = userOpt.get();
+
+            // Validate staff ID if provided
+            if (staffId != null && !staffId.isEmpty()) {
+                // Check if user has staffId field (you may need to add this to User entity)
+                // For now, we'll skip this validation if staffId field doesn't exist
+                // You can add: if (user.getStaffId() != null && !staffId.equals(user.getStaffId())) { ... }
+            }
+
+            // Check if user is active
+            if (user.getIsActive() == null || !user.getIsActive()) {
+                response.put("status", "error");
+                response.put("message", "Account is inactive");
+                return ResponseEntity.status(403).body(response);
+            }
+
+            // Allow staff roles: TECHNICIAN, FINANCE, MARKETING, SALES
+            // Exclude SUPER_ADMIN and ADMIN (they should use admin-login)
+            User.UserRole role = user.getRole();
+            if (role == User.UserRole.SUPER_ADMIN || role == User.UserRole.ADMIN) {
+                response.put("status", "error");
+                response.put("message", "Admin users must use admin login");
+                return ResponseEntity.status(403).body(response);
+            }
+
+            // Authenticate
+            Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(username, password)
+            );
+
+            // Generate token
+            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+            String token = jwtService.generateToken(userDetails);
+
+            response.put("status", "success");
+            response.put("message", "Login successful");
+            response.put("data", Map.of(
+                "token", token,
+                "user", Map.of(
+                    "id", user.getId(),
+                    "username", user.getUsername(),
+                    "email", user.getEmail(),
+                    "role", user.getRole().name(),
+                    "phoneNumber", user.getPhoneNumber() != null ? user.getPhoneNumber() : ""
                 )
             ));
 

@@ -319,6 +319,26 @@ public class CustomerPortalController {
             
             if ("success".equals(zenoPayResponse.get("status"))) {
                 System.out.println("✅ Payment initiated successfully");
+                
+                // Create PENDING payment record immediately so status endpoint can find it
+                try {
+                    com.ggnetworks.entity.Payment pendingPayment = new com.ggnetworks.entity.Payment();
+                    pendingPayment.setPaymentId(orderId);
+                    pendingPayment.setAmount(new java.math.BigDecimal(amount));
+                    pendingPayment.setCurrency("TZS");
+                    pendingPayment.setPaymentMethod(com.ggnetworks.entity.Payment.PaymentMethod.MPESA);
+                    pendingPayment.setPaymentGateway("ZENOPAY");
+                    pendingPayment.setPhoneNumber(phoneNumber);
+                    pendingPayment.setDescription("Payment initiated for package: " + packageId);
+                    pendingPayment.setStatus(com.ggnetworks.entity.Payment.PaymentStatus.PENDING);
+                    pendingPayment.setGatewayReference((String) zenoPayResponse.get("payment_reference"));
+                    pendingPayment = paymentRepository.save(pendingPayment);
+                    System.out.println("✅ PENDING payment record created with ID: " + pendingPayment.getId());
+                } catch (Exception e) {
+                    System.err.println("⚠️ Failed to create PENDING payment record (non-critical): " + e.getMessage());
+                    // Continue - payment initiation was successful
+                }
+                
                 response.put("status", "success");
                 response.put("message", "Payment initiated successfully. Please complete the payment on your phone.");
                 response.put("order_id", orderId);
@@ -340,6 +360,87 @@ public class CustomerPortalController {
     }
 
     /**
+     * Get payment status by order ID
+     */
+    @GetMapping("/payment/status/{orderId}")
+    public ResponseEntity<Map<String, Object>> getPaymentStatus(@PathVariable String orderId) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            System.out.println("🔍 Checking payment status for order: " + orderId);
+            
+            // Find payment by order ID (paymentId field)
+            Optional<com.ggnetworks.entity.Payment> paymentOpt = paymentRepository.findByPaymentId(orderId);
+            
+            if (paymentOpt.isEmpty()) {
+                // Payment not found - might still be pending
+                response.put("status", "success");
+                response.put("payment_status", "PENDING");
+                response.put("message", "Payment is still being processed. Please wait...");
+                response.put("order_id", orderId);
+                response.put("voucher_code", null);
+                response.put("voucher_generated", false);
+                return ResponseEntity.ok(response);
+            }
+            
+            com.ggnetworks.entity.Payment payment = paymentOpt.get();
+            com.ggnetworks.entity.Payment.PaymentStatus paymentStatus = payment.getStatus();
+            
+            // Map PaymentStatus enum to string
+            String statusString = paymentStatus.name();
+            
+            // Check if voucher exists for this payment (findByOrderId returns List)
+            List<com.ggnetworks.entity.Voucher> vouchers = voucherRepository.findByOrderId(orderId);
+            String voucherCode = null;
+            boolean voucherGenerated = false;
+            
+            if (vouchers != null && !vouchers.isEmpty()) {
+                // Get the first voucher (should only be one per order)
+                voucherCode = vouchers.get(0).getVoucherCode();
+                voucherGenerated = true;
+            }
+            
+            response.put("status", "success");
+            response.put("payment_status", statusString);
+            response.put("order_id", orderId);
+            response.put("voucher_code", voucherCode);
+            response.put("voucher_generated", voucherGenerated);
+            response.put("payment_id", payment.getId());
+            response.put("amount", payment.getAmount());
+            response.put("currency", payment.getCurrency());
+            response.put("created_at", payment.getCreatedAt());
+            response.put("confirmed_at", payment.getConfirmedAt());
+            response.put("processed_at", payment.getProcessedAt());
+            
+            // Add appropriate message based on status
+            switch (paymentStatus) {
+                case COMPLETED:
+                    response.put("message", "Payment completed successfully. Voucher generated.");
+                    break;
+                case FAILED:
+                    String failureReason = payment.getFailureReason();
+                    response.put("message", failureReason != null ? failureReason : "Payment failed. Please try again.");
+                    break;
+                case PENDING:
+                    response.put("message", "Payment is still being processed. Please complete the payment on your phone.");
+                    break;
+                default:
+                    response.put("message", "Payment status: " + statusString);
+            }
+            
+            System.out.println("✅ Payment status retrieved: " + statusString + " for order: " + orderId);
+            
+        } catch (Exception e) {
+            System.err.println("❌ Error checking payment status: " + e.getMessage());
+            e.printStackTrace();
+            response.put("status", "error");
+            response.put("message", "Error checking payment status: " + e.getMessage());
+        }
+        
+        return ResponseEntity.ok(response);
+    }
+
+    /**
      * Handle ZenoPay webhook notifications
      */
     @PostMapping("/webhook/zenopay")
@@ -347,7 +448,12 @@ public class CustomerPortalController {
         Map<String, Object> response = new HashMap<>();
         
         try {
-            System.out.println("🔔 Received ZenoPay webhook: " + webhookData);
+            System.out.println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+            System.out.println("🔔 ZENOPAY WEBHOOK RECEIVED");
+            System.out.println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+            System.out.println("📥 Timestamp: " + java.time.LocalDateTime.now());
+            System.out.println("📦 Webhook Data: " + webhookData);
+            System.out.println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
             
             // Validate webhook data
             Map<String, Object> validationResult = validateWebhookData(webhookData);
@@ -374,11 +480,16 @@ public class CustomerPortalController {
             String amount = (String) validationResult.get("amount");
             String phoneNumber = (String) validationResult.get("msisdn");
             
+            System.out.println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
             System.out.println("✅ Processing webhook for order: " + orderId + " with status: " + paymentStatus);
+            System.out.println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
             
             // Process based on payment status
             if ("SUCCESS".equals(paymentStatus) || "COMPLETED".equals(paymentStatus)) {
                 System.out.println("🎉 Payment successful! Processing voucher creation...");
+                System.out.println("   Order ID: " + orderId);
+                System.out.println("   Amount: " + amount);
+                System.out.println("   Phone: " + phoneNumber);
                 
             // Extract package ID from order ID (format: PKG_timestamp_phone) or webhook data
             // ZenoPay webhook may include package_id, or we extract from order_id
@@ -564,8 +675,36 @@ public class CustomerPortalController {
                 response.put("payment_recorded", payment.getId());
                 response.put("voucher_created", voucher.getVoucherCode());
                 
-            } else if ("FAILED".equals(paymentStatus) || "CANCELLED".equals(paymentStatus)) {
-                System.out.println("❌ Payment failed! Processing failure notification (NO USER CREATION)...");
+            } else if ("FAILED".equals(paymentStatus) || "CANCELLED".equals(paymentStatus) || 
+                       "INSUFFICIENT_BALANCE".equals(paymentStatus) || "INVALID_PIN".equals(paymentStatus) ||
+                       "USER_CANCELLED".equals(paymentStatus) || "EXPIRED".equals(paymentStatus) ||
+                       "TIMEOUT".equals(paymentStatus) || "NETWORK_ERROR".equals(paymentStatus) ||
+                       "ERROR".equals(paymentStatus)) {
+                System.out.println("❌ Payment failed with status: " + paymentStatus + "! Processing failure notification...");
+                
+                // Determine failure reason message
+                String failureReason = "Payment " + paymentStatus;
+                String userMessage = "Payment failed. Please try again.";
+                
+                if ("INSUFFICIENT_BALANCE".equals(paymentStatus)) {
+                    failureReason = "Insufficient balance in mobile money account";
+                    userMessage = "Insufficient balance. Please top up your mobile money account and try again.";
+                } else if ("INVALID_PIN".equals(paymentStatus)) {
+                    failureReason = "Invalid PIN entered";
+                    userMessage = "Invalid PIN. Please try again with the correct PIN.";
+                } else if ("USER_CANCELLED".equals(paymentStatus) || "CANCELLED".equals(paymentStatus)) {
+                    failureReason = "Payment cancelled by user";
+                    userMessage = "Payment was cancelled. Please try again.";
+                } else if ("EXPIRED".equals(paymentStatus)) {
+                    failureReason = "Payment expired";
+                    userMessage = "Payment has expired. Please initiate a new payment.";
+                } else if ("TIMEOUT".equals(paymentStatus)) {
+                    failureReason = "Payment timed out";
+                    userMessage = "Payment timed out. Please try again.";
+                } else if ("NETWORK_ERROR".equals(paymentStatus)) {
+                    failureReason = "Network error occurred";
+                    userMessage = "Network error. Please check your connection and try again.";
+                }
                 
                 // IMPORTANT: For failed payments, DO NOT create customer/user
                 // Only send SMS if customer already exists
@@ -591,34 +730,83 @@ public class CustomerPortalController {
                 
                 String smsStatus = (String) smsResult.getOrDefault("status", "skipped");
                 response.put("status", "failed");
-                response.put("message", "Payment failed. " + 
-                    ("skipped".equals(smsStatus) ? "No user created." : 
-                     ("success".equals(smsStatus) ? "Customer notified via SMS." : " SMS notification unavailable.")));
+                response.put("payment_status", paymentStatus);
+                response.put("message", userMessage);
+                response.put("failure_reason", failureReason);
                 response.put("sms_status", smsStatus);
                 response.put("sms_message", smsResult.getOrDefault("message", "No SMS sent"));
                 response.put("user_created", false);
                 
-                // Create payment record for failed payment
+                // Create or update payment record for failed payment
                 try {
-                    com.ggnetworks.entity.Payment failedPayment = new com.ggnetworks.entity.Payment();
-                    failedPayment.setPaymentId("PKG_$(date +%s)_FAIL");
-                    com.ggnetworks.entity.Customer failedCustomer = customerRepository.findByPhoneNumber(phoneNumber)
-                        .orElse(null);
-                    if (failedCustomer != null) {
-                        failedPayment.setCustomerId(failedCustomer.getId());
+                    Optional<com.ggnetworks.entity.Payment> existingPaymentOpt = paymentRepository.findByPaymentId(orderId);
+                    com.ggnetworks.entity.Payment failedPayment;
+                    
+                    if (existingPaymentOpt.isPresent()) {
+                        // Update existing payment record
+                        failedPayment = existingPaymentOpt.get();
+                        System.out.println("📝 Updating existing payment record for order: " + orderId);
+                    } else {
+                        // Create new payment record
+                        failedPayment = new com.ggnetworks.entity.Payment();
+                        failedPayment.setPaymentId(orderId);
+                        com.ggnetworks.entity.Customer failedCustomer = customerRepository.findByPhoneNumber(phoneNumber)
+                            .orElse(null);
+                        if (failedCustomer != null) {
+                            failedPayment.setCustomerId(failedCustomer.getId());
+                        }
                         failedPayment.setAmount(new java.math.BigDecimal(amount));
                         failedPayment.setCurrency("TZS");
                         failedPayment.setPaymentMethod(com.ggnetworks.entity.Payment.PaymentMethod.MPESA);
                         failedPayment.setPaymentGateway("ZENOPAY");
-                        failedPayment.setStatus(com.ggnetworks.entity.Payment.PaymentStatus.FAILED);
                         failedPayment.setPhoneNumber(phoneNumber);
                         failedPayment.setDescription("Failed payment: " + paymentStatus);
-                        failedPayment.setFailureReason("Payment " + paymentStatus);
-                        paymentRepository.save(failedPayment);
                     }
+                    
+                    // Update status and failure reason
+                    failedPayment.setStatus(com.ggnetworks.entity.Payment.PaymentStatus.FAILED);
+                    failedPayment.setFailureReason(failureReason);
+                    failedPayment.setGatewayTransactionId((String) webhookData.get("transid"));
+                    failedPayment.setGatewayReference((String) webhookData.get("payment_reference"));
+                    failedPayment.setProcessedAt(java.time.LocalDateTime.now());
+                    paymentRepository.save(failedPayment);
+                    System.out.println("✅ Payment record saved with status: FAILED, reason: " + failureReason);
                 } catch (Exception e) {
-                    System.out.println("⚠️ Failed to create payment record: " + e.getMessage());
+                    System.out.println("⚠️ Failed to create/update payment record: " + e.getMessage());
+                    e.printStackTrace();
                 }
+            } else if ("PENDING".equals(paymentStatus)) {
+                // Handle pending status - create payment record but don't process yet
+                System.out.println("⏳ Payment pending for order: " + orderId);
+                
+                try {
+                    Optional<com.ggnetworks.entity.Payment> existingPaymentOpt = paymentRepository.findByPaymentId(orderId);
+                    com.ggnetworks.entity.Payment pendingPayment;
+                    
+                    if (existingPaymentOpt.isPresent()) {
+                        pendingPayment = existingPaymentOpt.get();
+                    } else {
+                        pendingPayment = new com.ggnetworks.entity.Payment();
+                        pendingPayment.setPaymentId(orderId);
+                        pendingPayment.setAmount(new java.math.BigDecimal(amount));
+                        pendingPayment.setCurrency("TZS");
+                        pendingPayment.setPaymentMethod(com.ggnetworks.entity.Payment.PaymentMethod.MPESA);
+                        pendingPayment.setPaymentGateway("ZENOPAY");
+                        pendingPayment.setPhoneNumber(phoneNumber);
+                        pendingPayment.setDescription("Pending payment");
+                    }
+                    
+                    pendingPayment.setStatus(com.ggnetworks.entity.Payment.PaymentStatus.PENDING);
+                    pendingPayment.setGatewayTransactionId((String) webhookData.get("transid"));
+                    pendingPayment.setGatewayReference((String) webhookData.get("payment_reference"));
+                    paymentRepository.save(pendingPayment);
+                } catch (Exception e) {
+                    System.out.println("⚠️ Failed to create/update pending payment record: " + e.getMessage());
+                }
+                
+                response.put("status", "pending");
+                response.put("payment_status", "PENDING");
+                response.put("message", "Payment is still pending. Please complete the payment on your phone.");
             }
             
         } catch (Exception e) {
@@ -707,12 +895,18 @@ public class CustomerPortalController {
                 return result;
             }
             
-            // 3. PAYMENT STATUS VALIDATION - Only process genuine confirmations
+            // 3. PAYMENT STATUS VALIDATION - Support all payment statuses
             String upperStatus = paymentStatus.toUpperCase();
-            if (!"SUCCESS".equals(upperStatus) && !"COMPLETED".equals(upperStatus) && 
-                !"FAILED".equals(upperStatus) && !"CANCELLED".equals(upperStatus)) {
+            // Accept all valid payment statuses from ZenoPay
+            List<String> validStatuses = java.util.Arrays.asList(
+                "SUCCESS", "COMPLETED", "FAILED", "CANCELLED", "PENDING", 
+                "INSUFFICIENT_BALANCE", "INVALID_PIN", "USER_CANCELLED", 
+                "EXPIRED", "TIMEOUT", "NETWORK_ERROR", "ERROR"
+            );
+            
+            if (!validStatuses.contains(upperStatus)) {
                 result.put("status", "invalid");
-                result.put("message", "Invalid payment_status '" + paymentStatus + "' - only SUCCESS/COMPLETED/FAILED/CANCELLED allowed");
+                result.put("message", "Invalid payment_status '" + paymentStatus + "' - valid statuses: " + validStatuses);
                 result.put("error_code", "INVALID_PAYMENT_STATUS");
                 return result;
             }
@@ -789,6 +983,20 @@ public class CustomerPortalController {
         response.put("status", "success");
         response.put("message", "Customer Portal Controller is working!");
         response.put("timestamp", System.currentTimeMillis());
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Test webhook endpoint accessibility
+     */
+    @GetMapping("/webhook/zenopay/test")
+    public ResponseEntity<Map<String, Object>> testWebhookEndpoint() {
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", "success");
+        response.put("message", "Webhook endpoint is accessible");
+        response.put("endpoint", "/api/v1/customer-portal/webhook/zenopay");
+        response.put("method", "POST");
+        response.put("timestamp", java.time.LocalDateTime.now().toString());
         return ResponseEntity.ok(response);
     }
     

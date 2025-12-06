@@ -10,7 +10,10 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { SnackbarProvider } from 'notistack';
 import App from './App.jsx';
 import ggTheme from './theme/index.js';
+import muiTheme from './theme/muiTheme.js';
 import './index.css';
+import './styles/design-system.css';
+import './styles/premium-design-system.css';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -27,7 +30,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <ThemeProvider theme={ggTheme}>
+        <ThemeProvider theme={muiTheme}>
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <SnackbarProvider 
               maxSnack={3}

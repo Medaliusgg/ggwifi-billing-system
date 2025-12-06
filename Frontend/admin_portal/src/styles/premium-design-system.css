@@ -1,0 +1,417 @@
+/* ============================================
+   GGNetworks Premium Design System - Admin Portal
+   ZenoPay-Style White Theme
+   Enterprise-grade, clean, professional UI
+   ============================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  /* ZenoPay-Style White Theme Colors */
+  --gold-prime: #F5C400;        /* Primary Golden Yellow - Hover/Active/CTA */
+  --gold-deep: #D4A100;         /* Gold Deep - Hover states */
+  --gold-pale: #FFE89C;         /* Secondary Pale Golden Yellow - Passive buttons, borders */
+  --gold-pale-alt: #FFEFA3;     /* Alternative pale yellow */
+  
+  /* Text Colors */
+  --text-heading: #0A0A0A;      /* Headings Black */
+  --text-body: #1A1A1A;         /* Body Text Black */
+  --text-label: #505050;        /* Labels/Descriptions Grey */
+  --text-secondary: #8D8D8D;    /* Slate Grey - Secondary text */
+  
+  /* Background Colors */
+  --bg-white: #FFFFFF;          /* Pure White - All backgrounds */
+  --bg-neutral-100: #F8F8F8;    /* Very Light Grey - Section backgrounds */
+  --bg-neutral-300: #EFEFEF;    /* Light Grey - Dividers */
+  --bg-charcoal: #1A1A1A;       /* Charcoal Black - Top navbar */
+  
+  /* Border Colors */
+  --border-pale-yellow: #FFE89C; /* Pale Golden Yellow - Card borders */
+  --border-grey: #EDEDED;       /* Soft Grey - Dividers */
+  --border-yellow: #F5C400;     /* Primary Golden Yellow - Active states */
+  
+  /* Legacy support (mapped to premium) */
+  --gg-gold: var(--gold-prime);
+  --gg-gold-strong: var(--gold-deep);
+  --gg-black: var(--text-body);
+  --gg-white: var(--bg-white);
+  --neutral-100: var(--bg-neutral-100);
+  --neutral-300: var(--bg-neutral-300);
+  
+  /* Typography */
+  --font-primary: 'IBM Plex Sans', 'Inter', -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-h1: 28px;
+  --font-h2: 20px;
+  --font-h3: 18px;
+  --font-body: 14px;
+  --font-small: 12px;
+  
+  /* Spacing (4px grid system) */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 40px;
+  
+  /* Border Radius */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  
+  /* Shadows */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 2px 16px rgba(0, 0, 0, 0.14);
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.05);
+  
+  /* Transitions */
+  --transition-fast: 100ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================
+   ADMIN PORTAL SPECIFIC COMPONENTS
+   ZenoPay-Style White Theme
+   ============================================ */
+
+/* Global Base Styles */
+body {
+  background: var(--bg-white);
+  color: var(--text-body);
+  font-family: var(--font-primary);
+}
+
+/* Card Styles (White Theme) */
+.admin-card {
+  background: var(--bg-white);
+  border: 1px solid var(--border-pale-yellow);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: var(--space-lg);
+  transition: all var(--transition-normal);
+}
+
+.admin-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-yellow);
+  transform: translateY(-2px);
+}
+
+/* KPI Card (White Theme) */
+.kpi-card {
+  background: var(--bg-white);
+  border: 1px solid var(--border-pale-yellow);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: var(--space-lg);
+  position: relative;
+  overflow: hidden;
+}
+
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--gold-prime);
+}
+
+.kpi-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-yellow);
+}
+
+/* Primary Button (Golden Yellow) */
+.btn-primary-admin {
+  background: var(--gold-prime);
+  color: var(--text-heading);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 12px 20px;
+  font-weight: 600;
+  font-size: var(--font-body);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  font-family: var(--font-primary);
+}
+
+.btn-primary-admin:hover {
+  background: var(--gold-deep);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.btn-primary-admin:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Secondary Button (White with Gold Border) */
+.btn-secondary-admin {
+  background: var(--bg-white);
+  color: var(--text-body);
+  border: 2px solid var(--gold-prime);
+  border-radius: var(--radius-md);
+  padding: 12px 20px;
+  font-weight: 600;
+  font-size: var(--font-body);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  font-family: var(--font-primary);
+}
+
+.btn-secondary-admin:hover {
+  background: var(--gold-pale);
+  border-color: var(--gold-pale);
+  color: var(--text-body);
+}
+
+/* Tertiary Button (Text-only) */
+.btn-tertiary-admin {
+  background: transparent;
+  color: var(--gold-prime);
+  border: none;
+  padding: 8px 16px;
+  font-weight: 600;
+  font-size: var(--font-body);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  font-family: var(--font-primary);
+}
+
+.btn-tertiary-admin:hover {
+  text-decoration: underline;
+  font-weight: 700;
+}
+
+/* Input Fields (White Theme) */
+.input-admin {
+  background: var(--bg-white);
+  border: 1px solid var(--border-pale-yellow);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  font-size: var(--font-body);
+  color: var(--text-body);
+  font-family: var(--font-primary);
+  transition: all var(--transition-fast);
+}
+
+.input-admin:focus {
+  outline: none;
+  border-color: var(--gold-prime);
+  box-shadow: 0 0 0 3px rgba(245, 196, 0, 0.1);
+}
+
+.input-admin::placeholder {
+  color: var(--text-label);
+}
+
+/* Table Styles (White Theme) */
+.admin-table {
+  background: var(--bg-white);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.admin-table-header {
+  background: var(--bg-neutral-100);
+  color: var(--text-body);
+  font-weight: 600;
+  padding: var(--space-md);
+  border-bottom: 1px solid var(--border-grey);
+}
+
+.admin-table-row {
+  background: var(--bg-white);
+  border-bottom: 1px solid var(--border-grey);
+  transition: all var(--transition-fast);
+}
+
+.admin-table-row:hover {
+  background: rgba(245, 196, 0, 0.1);
+}
+
+/* Sidebar Active Item Indicator */
+.sidebar-active-indicator {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--gold-prime);
+  border-radius: 0 4px 4px 0;
+}
+
+.sidebar-active-bg {
+  background: var(--gold-pale);
+  border-radius: var(--radius-md);
+}
+
+/* Top Navbar (Charcoal Black with Yellow Border) */
+.top-navbar-admin {
+  background: var(--bg-charcoal);
+  color: var(--bg-white);
+  border-bottom: 3px solid var(--gold-prime);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Status Chips */
+.chip-success {
+  background: rgba(76, 175, 80, 0.1);
+  color: #4CAF50;
+  border: 1px solid #4CAF50;
+  border-radius: var(--radius-sm);
+  padding: 4px 12px;
+  font-size: var(--font-small);
+  font-weight: 600;
+}
+
+.chip-error {
+  background: rgba(244, 67, 54, 0.1);
+  color: #F44336;
+  border: 1px solid #F44336;
+  border-radius: var(--radius-sm);
+  padding: 4px 12px;
+  font-size: var(--font-small);
+  font-weight: 600;
+}
+
+.chip-warning {
+  background: rgba(245, 196, 0, 0.1);
+  color: var(--gold-prime);
+  border: 1px solid var(--gold-prime);
+  border-radius: var(--radius-sm);
+  padding: 4px 12px;
+  font-size: var(--font-small);
+  font-weight: 600;
+}
+
+.chip-info {
+  background: rgba(33, 150, 243, 0.1);
+  color: #2196F3;
+  border: 1px solid #2196F3;
+  border-radius: var(--radius-sm);
+  padding: 4px 12px;
+  font-size: var(--font-small);
+  font-weight: 600;
+}
+
+/* Modal/Dialog Styles */
+.admin-dialog {
+  background: var(--bg-white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.admin-dialog-title {
+  color: var(--text-heading);
+  font-weight: 600;
+  font-size: var(--font-h2);
+  padding: var(--space-lg);
+  border-bottom: 1px solid var(--border-grey);
+}
+
+.admin-dialog-content {
+  padding: var(--space-lg);
+  color: var(--text-body);
+}
+
+/* Loading States */
+.loading-skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--bg-neutral-100) 0%,
+    var(--bg-neutral-300) 50%,
+    var(--bg-neutral-100) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.2s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* Focus States (Accessibility) */
+.focus-ring:focus-visible {
+  outline: 3px solid rgba(245, 196, 0, 0.35);
+  outline-offset: 2px;
+  border-radius: var(--radius-md);
+}
+
+/* Scrollbar Styles */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-neutral-100);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(26, 26, 26, 0.25);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(26, 26, 26, 0.35);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .admin-card {
+    padding: var(--space-md);
+  }
+  
+  .kpi-card {
+    padding: var(--space-md);
+  }
+  
+  .btn-primary-admin,
+  .btn-secondary-admin {
+    padding: 10px 16px;
+    font-size: var(--font-small);
+  }
+}
+
+/* Utility Classes */
+.text-heading {
+  color: var(--text-heading);
+}
+
+.text-body {
+  color: var(--text-body);
+}
+
+.text-label {
+  color: var(--text-label);
+}
+
+.bg-white {
+  background: var(--bg-white);
+}
+
+.bg-neutral {
+  background: var(--bg-neutral-100);
+}
+
+.border-pale-yellow {
+  border-color: var(--border-pale-yellow);
+}
+
+.border-yellow {
+  border-color: var(--border-yellow);
+}

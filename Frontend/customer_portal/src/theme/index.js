@@ -1,5 +1,87 @@
 import { createTheme } from '@mui/material/styles';
-import { colors } from './colors';
+import premiumDesignSystem from './premiumDesignSystem.js';
+import designTokens from './designSystem.js';
+
+// Safety check - ensure imports are valid
+if (!premiumDesignSystem || !designTokens) {
+  console.error('Theme initialization error: premiumDesignSystem or designTokens is undefined');
+}
+
+// Map premium design tokens to MUI theme
+const colors = {
+  primary: {
+    500: premiumDesignSystem.colors.goldPrime,
+    400: premiumDesignSystem.colors.goldLight,
+    600: premiumDesignSystem.colors.goldDeep,
+  },
+  secondary: {
+    500: premiumDesignSystem.colors.carbonBlack,
+    400: premiumDesignSystem.colors.jetBlack,
+    600: premiumDesignSystem.colors.darkGrey,
+  },
+  text: {
+    primary: premiumDesignSystem.colors.carbonBlack,
+    secondary: premiumDesignSystem.colors.slateGrey,
+    tertiary: premiumDesignSystem.colors.frostGrey,
+    dark: premiumDesignSystem.colors.carbonBlack,
+    inverse: premiumDesignSystem.colors.softWhite,
+  },
+  background: {
+    primary: premiumDesignSystem.colors.softWhite,
+    secondary: premiumDesignSystem.colors.frostGrey,
+    card: premiumDesignSystem.colors.softWhite,
+  },
+  success: {
+    500: '#4CAF50',
+    400: '#66BB6A',
+    600: '#388E3C',
+  },
+  warning: {
+    500: '#FF9800',
+    400: '#FFB74D',
+    600: '#F57C00',
+  },
+  error: {
+    500: '#F44336',
+    400: '#EF5350',
+    600: '#D32F2F',
+  },
+  gradients: {
+    primary: `linear-gradient(135deg, ${designTokens.colors.gold} 0%, ${designTokens.colors.goldStrong} 100%)`,
+    secondary: `linear-gradient(135deg, ${designTokens.colors.goldStrong} 0%, ${designTokens.colors.gold} 100%)`,
+    goldenAccent: `linear-gradient(135deg, ${designTokens.colors.gold} 0%, ${designTokens.colors.goldStrong} 100%)`,
+    blueAccent: `linear-gradient(135deg, #2196F3 0%, #1976D2 100%)`,
+    success: `linear-gradient(135deg, #4CAF50 0%, #388E3C 100%)`,
+    warning: `linear-gradient(135deg, #FF9800 0%, #F57C00 100%)`,
+    error: `linear-gradient(135deg, #F44336 0%, #D32F2F 100%)`,
+    cardBackground: designTokens.colors.white,
+    backgroundPrimary: designTokens.colors.white,
+    backgroundSecondary: designTokens.colors.neutral100,
+    modalBackground: designTokens.colors.white,
+  },
+  effects: {
+    glass: {
+      primary: 'rgba(255, 255, 255, 0.9)',
+      secondary: 'rgba(242, 201, 76, 0.1)',
+      modal: 'rgba(255, 255, 255, 0.95)',
+    },
+    shadow: {
+      medium: designTokens.shadows.card,
+      heavy: designTokens.shadows.lg,
+      colored: '0 8px 24px rgba(242, 201, 76, 0.3)',
+    },
+    glow: {
+      primary: '0 0 20px rgba(242, 201, 76, 0.4)',
+      secondary: '0 0 20px rgba(10, 10, 10, 0.2)',
+    },
+  },
+  status: {
+    success: '#4CAF50',
+    warning: '#FF9800',
+    error: '#F44336',
+    info: '#2196F3',
+  },
+};
 
 const theme = createTheme({
   breakpoints: {
@@ -59,60 +141,45 @@ const theme = createTheme({
     },
   },
   typography: {
-    fontFamily: '"Montserrat", "Poppins", "Roboto", "Helvetica", "Arial", sans-serif',
+    fontFamily: premiumDesignSystem.typography.fontFamily.primary,
     h1: {
-      fontWeight: 800,
-      fontSize: '3rem',
-      background: colors.gradients.goldenAccent,
-      backgroundClip: 'text',
-      WebkitBackgroundClip: 'text',
-      WebkitTextFillColor: 'transparent',
+      fontSize: premiumDesignSystem.typography.fontSize.h1,
+      lineHeight: premiumDesignSystem.typography.lineHeight.h1,
+      fontWeight: premiumDesignSystem.typography.fontWeight.bold,
+      color: premiumDesignSystem.colors.carbonBlack,
     },
     h2: {
-      fontWeight: 700,
-      fontSize: '2.5rem',
-      background: colors.gradients.blueAccent,
-      backgroundClip: 'text',
-      WebkitBackgroundClip: 'text',
-      WebkitTextFillColor: 'transparent',
+      fontSize: premiumDesignSystem.typography.fontSize.h2,
+      lineHeight: premiumDesignSystem.typography.lineHeight.h2,
+      fontWeight: premiumDesignSystem.typography.fontWeight.semibold,
+      color: premiumDesignSystem.colors.carbonBlack,
     },
     h3: {
-      fontWeight: 700,
-      fontSize: '2rem',
-      color: colors.text.primary,
-    },
-    h4: {
-      fontWeight: 600,
-      fontSize: '1.75rem',
-      color: colors.text.primary,
-    },
-    h5: {
-      fontWeight: 600,
-      fontSize: '1.5rem',
-      color: colors.text.primary,
-    },
-    h6: {
-      fontWeight: 600,
-      fontSize: '1.25rem',
-      color: colors.text.primary,
+      fontSize: premiumDesignSystem.typography.fontSize.h3,
+      lineHeight: premiumDesignSystem.typography.lineHeight.h3,
+      fontWeight: premiumDesignSystem.typography.fontWeight.semibold,
+      color: premiumDesignSystem.colors.carbonBlack,
     },
     body1: {
-      fontSize: '1rem',
-      lineHeight: 1.7,
-      color: colors.text.secondary,
+      fontSize: premiumDesignSystem.typography.fontSize.body,
+      lineHeight: premiumDesignSystem.typography.lineHeight.body,
+      fontWeight: premiumDesignSystem.typography.fontWeight.regular,
+      color: premiumDesignSystem.colors.carbonBlack,
     },
     body2: {
-      fontSize: '0.875rem',
-      lineHeight: 1.6,
-      color: colors.text.tertiary,
+      fontSize: premiumDesignSystem.typography.fontSize.bodySmall,
+      lineHeight: premiumDesignSystem.typography.lineHeight.small,
+      fontWeight: premiumDesignSystem.typography.fontWeight.regular,
+      color: premiumDesignSystem.colors.slateGrey,
     },
     button: {
-      fontWeight: 600,
+      fontWeight: premiumDesignSystem.typography.fontWeight.semibold,
       textTransform: 'none',
+      fontSize: premiumDesignSystem.typography.fontSize.body,
     },
   },
   shape: {
-    borderRadius: 16,
+    borderRadius: parseInt(premiumDesignSystem.borderRadius.lg),
   },
   shadows: [
     'none',
@@ -145,10 +212,10 @@ const theme = createTheme({
     MuiCssBaseline: {
       styleOverrides: {
         body: {
-          background: colors.gradients.backgroundPrimary,
-          color: colors.text.primary,
+          background: designTokens.colors.white,
+          color: designTokens.colors.black,
           minHeight: '100vh',
-          fontFamily: '"Montserrat", "Poppins", "Roboto", "Helvetica", "Arial", sans-serif',
+          fontFamily: designTokens.typography.fontFamily.primary,
           '&::-webkit-scrollbar': {
             width: '8px',
           },
@@ -168,38 +235,42 @@ const theme = createTheme({
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: 12,
-          fontWeight: 600,
+          borderRadius: parseInt(designTokens.borderRadius.medium),
+          fontWeight: designTokens.typography.fontWeight.semibold,
           textTransform: 'none',
-          fontSize: '1rem',
-          padding: '12px 24px',
-          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          fontSize: designTokens.typography.fontSize.body,
+          padding: '12px 20px',
+          transition: 'all 0.2s ease',
+          boxShadow: 'none',
           '&:hover': {
-            transform: 'translateY(-2px)',
-            boxShadow: colors.effects.shadow.colored,
+            transform: 'translateY(-1px)',
+            boxShadow: 'none',
           },
         },
         contained: {
-          background: colors.gradients.primary,
-          color: colors.text.primary,
+          background: `linear-gradient(135deg, ${premiumDesignSystem.colors.goldPrime} 0%, ${premiumDesignSystem.colors.goldDeep} 100%)`,
+          color: premiumDesignSystem.colors.carbonBlack,
+          boxShadow: `0 2px 8px rgba(245, 196, 0, 0.3), ${premiumDesignSystem.shadows.innerGold}`,
           '&:hover': {
-            background: colors.gradients.secondary,
-            boxShadow: colors.effects.glow.primary,
+            background: `linear-gradient(135deg, ${premiumDesignSystem.colors.goldDeep} 0%, ${premiumDesignSystem.colors.goldPrime} 100%)`,
+            boxShadow: `0 4px 16px rgba(245, 196, 0, 0.4), ${premiumDesignSystem.shadows.innerGold}`,
+            transform: 'translateY(-1px)',
           },
         },
         outlined: {
-          borderColor: colors.primary[500],
-          color: colors.primary[500],
+          borderColor: premiumDesignSystem.colors.frostGrey,
+          borderWidth: '2px',
+          color: premiumDesignSystem.colors.carbonBlack,
           '&:hover': {
-            background: colors.primary[500],
-            color: colors.text.primary,
-            boxShadow: colors.effects.glow.primary,
+            borderColor: premiumDesignSystem.colors.goldPrime,
+            backgroundColor: premiumDesignSystem.colors.goldGlass,
+            boxShadow: premiumDesignSystem.shadows.goldGlow,
           },
         },
         text: {
-          color: colors.text.primary,
+          color: designTokens.colors.black,
           '&:hover': {
-            background: colors.effects.glass.primary,
+            background: 'rgba(242, 201, 76, 0.1)',
           },
         },
       },
@@ -207,16 +278,25 @@ const theme = createTheme({
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 20,
-          background: colors.gradients.cardBackground,
-          backdropFilter: 'blur(20px)',
-          border: `1px solid ${colors.effects.glass.primary}`,
-          boxShadow: colors.effects.shadow.medium,
-          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          borderRadius: parseInt(premiumDesignSystem.borderRadius['2xl']),
+          background: premiumDesignSystem.colors.softWhite,
+          border: `1px solid ${premiumDesignSystem.colors.frostGrey}`,
+          boxShadow: premiumDesignSystem.shadows.lg,
+          position: 'relative',
+          transition: premiumDesignSystem.transitions.normal,
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '3px',
+            background: `linear-gradient(90deg, ${premiumDesignSystem.colors.goldPrime} 0%, ${premiumDesignSystem.colors.goldDeep} 100%)`,
+            borderRadius: `${premiumDesignSystem.borderRadius['2xl']} ${premiumDesignSystem.borderRadius['2xl']} 0 0`,
+          },
           '&:hover': {
-            transform: 'translateY(-8px)',
-            boxShadow: colors.effects.shadow.heavy,
-            background: colors.gradients.backgroundSecondary,
+            transform: 'translateY(-2px)',
+            boxShadow: premiumDesignSystem.shadows.xl,
           },
         },
       },
@@ -234,31 +314,31 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           '& .MuiOutlinedInput-root': {
-            borderRadius: 12,
-            background: colors.effects.glass.primary,
-            backdropFilter: 'blur(10px)',
+            borderRadius: parseInt(designTokens.borderRadius.medium),
+            background: designTokens.colors.white,
             '& fieldset': {
-              borderColor: colors.primary[500],
-              borderWidth: 2,
+              borderColor: designTokens.colors.neutral300,
+              borderWidth: 1,
             },
             '&:hover fieldset': {
-              borderColor: colors.secondary[500],
-              boxShadow: colors.effects.glow.secondary,
+              borderColor: designTokens.colors.gold,
             },
             '&.Mui-focused fieldset': {
-              borderColor: colors.secondary[500],
-              borderWidth: 3,
-              boxShadow: colors.effects.glow.secondary,
+              borderColor: premiumDesignSystem.colors.goldPrime,
+              borderWidth: '1px',
+              boxShadow: `0 0 0 2px ${premiumDesignSystem.colors.goldGlow}`,
+            },
+            '& .MuiOutlinedInput-input': {
+              fontSize: designTokens.typography.fontSize.body,
+              color: designTokens.colors.black,
             },
           },
           '& .MuiInputLabel-root': {
-            color: colors.text.secondary,
+            fontSize: premiumDesignSystem.typography.fontSize.bodySmall,
+            color: premiumDesignSystem.colors.slateGrey,
             '&.Mui-focused': {
-              color: colors.secondary[500],
+              color: premiumDesignSystem.colors.goldPrime,
             },
-          },
-          '& .MuiInputBase-input': {
-            color: colors.text.primary,
           },
         },
       },

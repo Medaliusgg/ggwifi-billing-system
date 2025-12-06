@@ -455,7 +455,7 @@ const AdminDashboard = () => {
   });
 
   return (
-    <Box sx={{ p: 3, minHeight: '100vh', backgroundColor: '#000000' }}>
+    <Box sx={{ p: 3, minHeight: '100vh', backgroundColor: '#FFFFFF' }}>  {/* Soft White background */}
       {/* GG Wi-Fi Dashboard Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}

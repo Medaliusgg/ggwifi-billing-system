@@ -163,7 +163,7 @@ const VoucherLogin = ({ onBack, currentLanguage }) => {
   };
 
   const features = [
-    { icon: <SpeedIcon />, text: 'Lightning Fast', color: '#FFC72C' },
+    { icon: <SpeedIcon />, text: 'Lightning Fast', color: '#F5C400' },  // Gold Prime
     { icon: <SecurityIcon />, text: 'Secure Connection', color: '#1ABC9C' },
     { icon: <StarIcon />, text: 'Premium Quality', color: '#0072CE' },
   ];
@@ -191,17 +191,9 @@ const VoucherLogin = ({ onBack, currentLanguage }) => {
         minHeight: '100vh',
         position: 'relative',
         overflow: 'hidden',
-        py: 4,
-        '&::before': {
-          content: '""',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(26, 26, 26, 0.3) 100%)',
-          zIndex: 0,
-        },
+        py: 1,
+        background: '#FFFFFF',  // Soft White - Premium design
+        pt: 0,  // No padding-top - App.jsx already accounts for fixed navbar
       }}
     >
       <Container maxWidth="sm" sx={{ position: 'relative', zIndex: 1 }}>
@@ -215,12 +207,13 @@ const VoucherLogin = ({ onBack, currentLanguage }) => {
             <IconButton
               onClick={onBack}
               sx={{
-                mb: 3,
-                background: 'rgba(255, 255, 255, 0.8)',
-                backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(0, 0, 0, 0.1)',
+                mb: 2,
+                background: '#FFFFFF',  // Soft White
+                border: '1px solid #EDEDED',  // Frost Grey
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',  // Subtle shadow
                 '&:hover': {
-                  background: 'rgba(255, 199, 44, 0.1)',
+                  background: 'rgba(245, 196, 0, 0.1)',  // Gold glass
+                  borderColor: '#F5C400',  // Gold Prime
                   transform: 'translateX(-4px)',
                 },
                 transition: 'all 0.3s ease',
@@ -234,12 +227,22 @@ const VoucherLogin = ({ onBack, currentLanguage }) => {
           <motion.div variants={itemVariants}>
             <Card
               sx={{
-                background: 'rgba(0, 0, 0, 0.75)',
-                backdropFilter: 'blur(20px)',
+                background: '#FFFFFF',  // Soft White - Premium design
                 borderRadius: 4,
-                boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
-                border: '1px solid rgba(255, 199, 44, 0.3)',
+                boxShadow: '0 2px 16px rgba(0, 0, 0, 0.14)',  // Premium shadow
+                border: '1px solid #EDEDED',  // Frost Grey
                 overflow: 'hidden',
+                position: 'relative',
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: '3px',
+                  background: 'linear-gradient(90deg, #F5C400 0%, #D4A100 100%)',  // Gold accent bar
+                  borderRadius: '4px 4px 0 0',
+                },
               }}
             >
               <CardContent sx={{ p: 6 }}>
@@ -258,9 +261,9 @@ const VoucherLogin = ({ onBack, currentLanguage }) => {
                       sx={{
                         width: { xs: 80, sm: 100 },
                         height: { xs: 80, sm: 100 },
-                        border: '4px solid #FFC72C',
-                        boxShadow: '0 8px 30px rgba(255, 199, 44, 0.6), 0 0 40px rgba(255, 199, 44, 0.3)',
-                        background: 'linear-gradient(135deg, rgba(255, 199, 44, 0.3) 0%, rgba(0, 114, 206, 0.2) 100%)',
+                        border: '4px solid #F5C400',  // Gold Prime
+                        boxShadow: '0 0 32px rgba(245, 196, 0, 0.6), 0 8px 30px rgba(245, 196, 0, 0.4)',  // Premium gold glow
+                        background: 'linear-gradient(135deg, rgba(245, 196, 0, 0.2) 0%, rgba(245, 196, 0, 0.1) 100%)',  // Premium gold
                         filter: 'brightness(1.1)',
                         '& img': {
                           objectFit: 'contain',
@@ -277,7 +280,7 @@ const VoucherLogin = ({ onBack, currentLanguage }) => {
                       fontWeight: 800,
                       color: 'text.primary',
                       mb: 2,
-                      background: 'linear-gradient(135deg, #FFC72C 0%, #0072CE 100%)',
+                      background: 'linear-gradient(135deg, #F5C400 0%, #0B0B0B 50%, #F5C400 100%)',  // Premium gold to black gradient
                       backgroundClip: 'text',
                       WebkitBackgroundClip: 'text',
                       WebkitTextFillColor: 'transparent',
@@ -286,7 +289,7 @@ const VoucherLogin = ({ onBack, currentLanguage }) => {
                     Connect to GG Wi-Fi
                   </Typography>
 
-                  <Typography variant="body1" sx={{ color: 'text.secondary', mb: 3 }}>
+                  <Typography variant="body1" sx={{ color: '#8D8D8D', mb: 3 }}>  {/* Slate Grey */}
                     Enter your voucher code and phone number to access our high-speed internet
                   </Typography>
 

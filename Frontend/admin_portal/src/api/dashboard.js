@@ -5,7 +5,8 @@ export const dashboardAPI = {
   // Get dashboard statistics
   getStats: async () => {
     try {
-      const response = await apiClient.get('/dashboard/stats');
+      // Use admin dashboard endpoint which provides comprehensive stats
+      const response = await apiClient.get('/admin/dashboard/stats');
       return response.data;
     } catch (error) {
       console.error('Error fetching dashboard stats:', error);
