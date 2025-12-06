@@ -170,57 +170,47 @@ class PaymentService {
         // Handle response - check both result.data and result directly
         const responseData = result.data || result;
         
-        if (responseData.status === 'success') {
-          const paymentStatus = (responseData.payment_status || '').toUpperCase();
-          console.log(`📊 Payment status update: ${paymentStatus} (attempt ${attempts}, ${elapsedSeconds}s elapsed)`);
-          
-          // Call the status update callback with elapsed time
-          if (onStatusUpdate) {
-            onStatusUpdate({
-              status: paymentStatus,
-              message: responseData.message || this.getStatusMessage(paymentStatus),
-              orderId: responseData.order_id || orderId,
-              voucherCode: responseData.voucher_code,
-              voucherGenerated: responseData.voucher_generated || false,
-              timestamp: responseData.timestamp || new Date().toISOString(),
-              zenopayResponse: responseData.zenopay_response,
-              failureReason: responseData.failure_reason,
-              elapsedSeconds: elapsedSeconds,
-              attempt: attempts
-            });
-          }
-          
-          // Stop polling if payment is in final state
-          const finalStatuses = ['COMPLETED', 'SUCCESS', 'FAILED', 'CANCELLED', 'EXPIRED', 
-                                 'TIMEOUT', 'INSUFFICIENT_BALANCE', 'INVALID_PIN', 
-                                 'USER_CANCELLED', 'NETWORK_ERROR', 'ERROR'];
-          if (finalStatuses.includes(paymentStatus)) {
-            console.log(`✅ Payment polling completed with status: ${paymentStatus} after ${elapsedSeconds}s`);
-            clearInterval(pollInterval);
-            this.activePolling.delete(orderId);
-            return;
-          }
-        } else {
-          // Handle error or pending status
-          const paymentStatus = (responseData.payment_status || 'PENDING').toUpperCase();
-          console.log(`📊 Payment status: ${paymentStatus} (attempt ${attempts}, ${elapsedSeconds}s elapsed)`);
-          
-          if (onStatusUpdate) {
-            onStatusUpdate({
-              status: paymentStatus,
-              message: responseData.message || this.getStatusMessage(paymentStatus),
-              orderId: orderId,
-              elapsedSeconds: elapsedSeconds,
-              attempt: attempts
-            });
-          }
-          
-          // Stop polling if it's a final error state
-          if (['FAILED', 'CANCELLED', 'EXPIRED', 'TIMEOUT', 'ERROR'].includes(paymentStatus)) {
-            clearInterval(pollInterval);
-            this.activePolling.delete(orderId);
-            return;
-          }
+        // Handle response - check both result.data and result directly
+        const responseData = result.data || result;
+        
+        // Check if response has status field
+        const responseStatus = responseData.status || 'success';
+        const paymentStatus = (responseData.payment_status || responseData.paymentStatus || 'PENDING').toUpperCase();
+        
+        console.log(`📊 Payment status update: ${paymentStatus} (attempt ${attempts}, ${elapsedSeconds}s elapsed)`);
+        console.log(`📊 Full response data:`, responseData);
+        
+        // Call the status update callback with elapsed time
+        if (onStatusUpdate) {
+          onStatusUpdate({
+            status: paymentStatus,
+            message: responseData.message || this.getStatusMessage(paymentStatus),
+            orderId: responseData.order_id || responseData.orderId || orderId,
+            voucherCode: responseData.voucher_code || responseData.voucherCode,
+            voucherGenerated: responseData.voucher_generated || responseData.voucherGenerated || false,
+            timestamp: responseData.timestamp || new Date().toISOString(),
+            zenopayResponse: responseData.zenopay_response || responseData.zenopayResponse,
+            failureReason: responseData.failure_reason || responseData.failureReason,
+            elapsedSeconds: elapsedSeconds,
+            attempt: attempts
+          });
+        }
+        
+        // Stop polling if payment is in final state
+        const finalStatuses = ['COMPLETED', 'SUCCESS', 'SUCCESSFUL', 'FAILED', 'CANCELLED', 'EXPIRED', 
+                               'TIMEOUT', 'INSUFFICIENT_BALANCE', 'INVALID_PIN', 
+                               'USER_CANCELLED', 'NETWORK_ERROR', 'ERROR'];
+        if (finalStatuses.includes(paymentStatus)) {
+          console.log(`✅ Payment polling completed with status: ${paymentStatus} after ${elapsedSeconds}s`);
+          clearInterval(pollInterval);
+          this.activePolling.delete(orderId);
+          return;
+        }
+        
+        // Also handle case where response status is error but payment_status might be in response
+        if (responseStatus === 'error' && !paymentStatus) {
+          console.log(`⚠️ Response indicates error but no payment_status found`);
+          // Continue polling - might be temporary error
         }
         
         // Stop polling if max attempts reached

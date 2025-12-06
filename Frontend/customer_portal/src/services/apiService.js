@@ -133,9 +133,12 @@ class ApiService {
         method: 'GET',
       });
       console.log(`✅ Payment status response:`, response);
+      console.log(`✅ Payment status: ${response.payment_status || response.paymentStatus || 'N/A'}`);
+      console.log(`✅ Response status: ${response.status || 'N/A'}`);
       return response;
     } catch (error) {
       console.error(`❌ Error checking payment status: ${error.message}`);
+      console.error(`❌ Error details:`, error);
       throw error;
     }
   }

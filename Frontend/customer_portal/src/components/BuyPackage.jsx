@@ -1568,9 +1568,14 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                         <Typography variant="body2" sx={{ color: '#505050' }}>
                           {paymentMessage || 'Please check your phone for payment instructions. Complete the payment on your mobile device.'}
                         </Typography>
-                        {paymentElapsedTime > 30 && (
+                        {paymentElapsedTime > 30 && paymentElapsedTime < 60 && (
                           <Typography variant="caption" sx={{ color: '#505050', display: 'block', mt: 1, fontStyle: 'italic' }}>
                             💡 If you've already entered your PIN, the payment is being processed. Please wait...
+                          </Typography>
+                        )}
+                        {paymentElapsedTime >= 60 && (
+                          <Typography variant="caption" sx={{ color: '#FF8A3D', display: 'block', mt: 1, fontWeight: 600 }}>
+                            ⚠️ Payment is taking longer than expected. Click "Check Status" below to refresh.
                           </Typography>
                         )}
                       </Alert>
