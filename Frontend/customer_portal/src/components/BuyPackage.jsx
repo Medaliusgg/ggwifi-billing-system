@@ -599,28 +599,49 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
             } else if (['FAILED', 'CANCELLED', 'REFUNDED', 'INSUFFICIENT_BALANCE', 'INVALID_PIN', 
                         'USER_CANCELLED', 'EXPIRED', 'TIMEOUT', 'NETWORK_ERROR', 'ERROR'].includes(normalizedStatus)) {
               // All failure states
-              // Show appropriate toast based on failure type
-              if (normalizedStatus === 'INSUFFICIENT_BALANCE') {
-                toast.error('💳 Insufficient balance! Please top up your mobile money account.');
-              } else if (normalizedStatus === 'INVALID_PIN') {
-                toast.error('🔐 Invalid PIN! Please try again with the correct PIN.');
-              } else if (normalizedStatus === 'USER_CANCELLED' || normalizedStatus === 'CANCELLED') {
-                toast.error('❌ Payment cancelled. Please try again.');
-              } else if (normalizedStatus === 'EXPIRED') {
-                toast.error('⏰ Payment expired. Please initiate a new payment.');
-              } else if (normalizedStatus === 'TIMEOUT') {
-                toast.error('⏱️ Payment timed out. Please try again.');
-              } else if (normalizedStatus === 'NETWORK_ERROR') {
-                toast.error('🌐 Network error. Please check your connection and try again.');
-              } else {
-                toast.error('❌ Payment failed. Please try again.');
-              }
-              
-              // Stop polling on failure
+              // Stop polling immediately on failure to ensure UI updates quickly
               if (currentPollingStop) {
                 console.log(`🛑 Stopping polling - payment ${normalizedStatus} after ${statusData.elapsedSeconds}s`);
                 currentPollingStop();
                 setCurrentPollingStop(null);
+              }
+              
+              // Show appropriate toast based on failure type with clear messages
+              if (normalizedStatus === 'INSUFFICIENT_BALANCE') {
+                toast.error('💳 Insufficient Balance! Please top up your mobile money account and try again.', {
+                  duration: 6000,
+                  position: 'top-center'
+                });
+              } else if (normalizedStatus === 'INVALID_PIN') {
+                toast.error('🔐 Invalid PIN! Please try again with the correct PIN.', {
+                  duration: 5000,
+                  position: 'top-center'
+                });
+              } else if (normalizedStatus === 'USER_CANCELLED' || normalizedStatus === 'CANCELLED') {
+                toast.error('❌ Payment cancelled. Please try again.', {
+                  duration: 5000,
+                  position: 'top-center'
+                });
+              } else if (normalizedStatus === 'EXPIRED') {
+                toast.error('⏰ Payment expired. Please initiate a new payment.', {
+                  duration: 5000,
+                  position: 'top-center'
+                });
+              } else if (normalizedStatus === 'TIMEOUT') {
+                toast.error('⏱️ Payment timed out. Please try again.', {
+                  duration: 5000,
+                  position: 'top-center'
+                });
+              } else if (normalizedStatus === 'NETWORK_ERROR') {
+                toast.error('🌐 Network error. Please check your connection and try again.', {
+                  duration: 5000,
+                  position: 'top-center'
+                });
+              } else {
+                toast.error('❌ Payment failed. Please try again.', {
+                  duration: 5000,
+                  position: 'top-center'
+                });
               }
             }
           },
@@ -2080,10 +2101,31 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                     <>
                       <ErrorIcon sx={{ fontSize: 60, color: '#E74C3C', mb: 3 }} />
                       <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: '#E74C3C' }}>
-                        ❌ Payment Failed
+                        {paymentMessage && (paymentMessage.toLowerCase().includes('insufficient') || paymentMessage.toLowerCase().includes('balance'))
+                          ? '💳 Insufficient Balance'
+                          : '❌ Payment Failed'}
                       </Typography>
-                      <Alert severity="error" sx={{ mb: 3, borderRadius: 2, background: '#FEE', border: '1px solid #E74C3C' }}>
-                        <Typography variant="body2" sx={{ color: '#0B0B0B', mb: 1 }}>
+                      <Alert 
+                        severity="error" 
+                        sx={{ 
+                          mb: 3, 
+                          borderRadius: 2, 
+                          background: paymentMessage && (paymentMessage.toLowerCase().includes('insufficient') || paymentMessage.toLowerCase().includes('balance'))
+                            ? '#FFF3E6' 
+                            : '#FEE', 
+                          border: paymentMessage && (paymentMessage.toLowerCase().includes('insufficient') || paymentMessage.toLowerCase().includes('balance'))
+                            ? '2px solid #FF8A3D'
+                            : '1px solid #E74C3C',
+                          animation: paymentMessage && (paymentMessage.toLowerCase().includes('insufficient') || paymentMessage.toLowerCase().includes('balance'))
+                            ? 'pulse 2s infinite'
+                            : 'none',
+                          '@keyframes pulse': {
+                            '0%, 100%': { opacity: 1 },
+                            '50%': { opacity: 0.9 }
+                          }
+                        }}
+                      >
+                        <Typography variant="body2" sx={{ color: '#0B0B0B', mb: 1, fontWeight: paymentMessage && (paymentMessage.toLowerCase().includes('insufficient') || paymentMessage.toLowerCase().includes('balance')) ? 600 : 400 }}>
                           {paymentMessage || 'There was an issue processing your payment. Please try again.'}
                         </Typography>
                         {orderId && (
