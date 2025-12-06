@@ -81,6 +81,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
   const [paymentPollingAttempts, setPaymentPollingAttempts] = useState(0); // Track polling attempts
   const [cardStyle, setCardStyle] = useState('detailed'); // 'detailed' or 'colorful' - card style toggle
   const paymentStartTimeRef = React.useRef(null); // Track when payment was initiated
+  const [actualPaymentStep, setActualPaymentStep] = useState('request_sent'); // Track actual payment step: request_sent, ussd_received, pin_entered, processing, completed, failed
 
   // Cleanup polling on unmount and when dialog closes
   useEffect(() => {
