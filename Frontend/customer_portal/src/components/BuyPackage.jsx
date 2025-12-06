@@ -2002,7 +2002,25 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                                          'USER_CANCELLED', 'EXPIRED', 'TIMEOUT', 'NETWORK_ERROR', 'ERROR'].includes(paymentStatus.toUpperCase())) {
                                 setPaymentStatus('failed');
                                 setPaymentMessage(statusData.message || 'Payment failed');
-                                toast.error(statusData.message || 'Payment failed');
+                                
+                                // Show specific error message based on failure type
+                                if (paymentStatus.toUpperCase() === 'INSUFFICIENT_BALANCE') {
+                                  toast.error('💳 Insufficient Balance! Please top up your mobile money account and try again.', {
+                                    duration: 6000,
+                                    position: 'top-center'
+                                  });
+                                } else if (paymentStatus.toUpperCase() === 'INVALID_PIN') {
+                                  toast.error('🔐 Invalid PIN! Please try again with the correct PIN.', {
+                                    duration: 5000,
+                                    position: 'top-center'
+                                  });
+                                } else {
+                                  toast.error(statusData.message || 'Payment failed', {
+                                    duration: 5000,
+                                    position: 'top-center'
+                                  });
+                                }
+                                
                                 if (currentPollingStop) {
                                   currentPollingStop();
                                   setCurrentPollingStop(null);
