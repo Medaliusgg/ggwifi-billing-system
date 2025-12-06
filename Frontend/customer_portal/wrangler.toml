@@ -9,3 +9,7 @@ compatibility_date = "2024-01-01"
 # Note: This is relative to the root directory specified in Cloudflare Pages settings
 pages_build_output_dir = "dist"
 
+# IMPORTANT: Cloudflare Pages does NOT need a deploy command
+# The build output in 'dist' is automatically deployed
+# Do NOT configure 'npx wrangler deploy' in Cloudflare Pages settings
+

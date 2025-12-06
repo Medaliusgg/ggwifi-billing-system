@@ -1,9 +1,5 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "rootDirectory": "Frontend/customer_portal",
-  "installCommand": "npm install",
-  "framework": "vite",
-  "nodeVersion": "18"
+  "build_command": "npm run build",
+  "output_directory": "dist",
+  "root_directory": "Frontend/customer_portal"
 }
-
