@@ -16,7 +16,8 @@ public class CorsConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         
         // Use allowedOriginPatterns for more flexibility (supports wildcards)
-        // This allows any localhost port and specific production origins
+        // IMPORTANT: When using allowCredentials(true), we MUST use allowedOriginPatterns
+        // instead of allowedOrigins to avoid the "*" conflict
         configuration.setAllowedOriginPatterns(Arrays.asList(
             "http://localhost:*",           // All localhost ports
             "http://127.0.0.1:*",         // All 127.0.0.1 ports
@@ -29,25 +30,13 @@ public class CorsConfig {
             "https://www.ggwifi.co.tz",
             "http://admin.ggwifi.co.tz",
             "http://connect.ggwifi.co.tz",
-            "http://www.ggwifi.co.tz"
+            "http://www.ggwifi.co.tz",
+            "https://*.pages.dev",        // Cloudflare Pages
+            "https://*.cloudflarepages.app" // Cloudflare Pages alternative
         ));
         
-        // Also set specific origins as fallback
-        configuration.setAllowedOrigins(Arrays.asList(
-            "http://localhost:3000",
-            "http://localhost:3001",
-            "http://localhost:3002",
-            "http://localhost:3003",
-            "http://localhost:5173",
-            "http://localhost:5174",
-            "http://127.0.0.1:3000",
-            "http://127.0.0.1:3001",
-            "http://127.0.0.1:5173",
-            "http://127.0.0.1:5174",
-            "http://139.84.241.182:8080",
-            "http://139.84.241.182",
-            "https://139.84.241.182"
-        ));
+        // DO NOT use setAllowedOrigins when using setAllowedOriginPatterns with allowCredentials(true)
+        // This causes the "*" conflict error
         
         // Allow all HTTP methods
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"));

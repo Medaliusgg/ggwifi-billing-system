@@ -20,25 +20,21 @@ public class WebMvcCorsConfig implements WebMvcConfigurer {
                     "http://139.84.241.182:*",
                     "https://139.84.241.182:*",
                     "https://*.ggwifi.co.tz",
-                    "http://*.ggwifi.co.tz"
+                    "http://*.ggwifi.co.tz",
+                    "https://*.pages.dev",
+                    "https://*.cloudflarepages.app"
                 )
-                .allowedOrigins(
-                    "http://localhost:3000",
-                    "http://localhost:3001",
-                    "http://localhost:3002",
-                    "http://localhost:3003",
-                    "http://localhost:5173",
-                    "http://localhost:5174",
-                    "http://127.0.0.1:3000",
-                    "http://127.0.0.1:3001",
-                    "http://127.0.0.1:5173",
-                    "http://127.0.0.1:5174",
-                    "http://139.84.241.182:8080",
-                    "http://139.84.241.182",
-                    "https://139.84.241.182"
-                )
+                // DO NOT use allowedOrigins when using allowedOriginPatterns with allowCredentials(true)
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD")
-                .allowedHeaders("*")
+                .allowedHeaders(
+                    "Content-Type",
+                    "Authorization",
+                    "X-Requested-With",
+                    "Accept",
+                    "Origin",
+                    "Access-Control-Request-Method",
+                    "Access-Control-Request-Headers"
+                )
                 .exposedHeaders(
                     "Access-Control-Allow-Origin",
                     "Access-Control-Allow-Credentials",
