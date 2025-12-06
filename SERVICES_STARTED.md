@@ -176,3 +176,4 @@ tail -50 frontend-admin.log
 **Next Action:** Wait 30-60 seconds, then open http://localhost:5173 and test login!
 
 
+

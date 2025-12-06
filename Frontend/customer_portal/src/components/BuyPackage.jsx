@@ -1575,7 +1575,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                         )}
                         {paymentElapsedTime >= 60 && (
                           <Typography variant="caption" sx={{ color: '#FF8A3D', display: 'block', mt: 1, fontWeight: 600 }}>
-                            ⚠️ Payment is taking longer than expected. Click "Check Status" below to refresh.
+                            ⚠️ Payment is taking longer than expected. Click "Check Payment Status" below to refresh.
                           </Typography>
                         )}
                       </Alert>
@@ -1600,20 +1600,80 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                           ⚠️ Do not close this window until payment is complete.
                         </Typography>
                       </Alert>
+                      
+                      {/* Manual Status Check Button */}
+                      <Button
+                        variant="outlined"
+                        onClick={async () => {
+                          if (orderId) {
+                            console.log('🔄 Manual status check triggered for order:', orderId);
+                            try {
+                              const statusResponse = await customerPortalAPI.checkPaymentStatus(orderId);
+                              const statusData = statusResponse.data || statusResponse;
+                              const paymentStatus = (statusData.payment_status || statusData.paymentStatus || '').toUpperCase();
+                              
+                              console.log('📊 Manual status check result:', paymentStatus, statusData);
+                              
+                              if (paymentStatus === 'COMPLETED' || paymentStatus === 'SUCCESS' || paymentStatus === 'SUCCESSFUL') {
+                                setPaymentStatus('success');
+                                if (statusData.voucher_code || statusData.voucherCode) {
+                                  setVoucherCode(statusData.voucher_code || statusData.voucherCode);
+                                  toast.success(`✅ Payment successful! Voucher: ${statusData.voucher_code || statusData.voucherCode}`);
+                                }
+                                if (currentPollingStop) {
+                                  currentPollingStop();
+                                  setCurrentPollingStop(null);
+                                }
+                              } else if (['FAILED', 'CANCELLED', 'INSUFFICIENT_BALANCE', 'INVALID_PIN', 
+                                         'USER_CANCELLED', 'EXPIRED', 'TIMEOUT', 'NETWORK_ERROR', 'ERROR'].includes(paymentStatus)) {
+                                setPaymentStatus('failed');
+                                setPaymentMessage(statusData.message || 'Payment failed');
+                                toast.error(statusData.message || 'Payment failed');
+                                if (currentPollingStop) {
+                                  currentPollingStop();
+                                  setCurrentPollingStop(null);
+                                }
+                              } else {
+                                toast.info(`Status: ${paymentStatus || 'PENDING'}. Still processing...`);
+                              }
+                            } catch (error) {
+                              console.error('❌ Manual status check failed:', error);
+                              toast.error('Failed to check payment status. Please try again.');
+                            }
+                          }
+                        }}
+                        sx={{
+                          mt: 2,
+                          borderColor: '#F2C94C',
+                          color: '#0A0A0A',
+                          '&:hover': {
+                            borderColor: '#E0B335',
+                            backgroundColor: 'rgba(242, 201, 76, 0.1)',
+                          },
+                        }}
+                      >
+                        🔄 Check Payment Status
+                      </Button>
+                      
                       {currentPollingStop && (
                         <Button
-                          variant="outlined"
-                          size="small"
+                          variant="text"
                           onClick={() => {
-                            console.log('🛑 Manual stop polling requested by user');
-                            currentPollingStop();
-                            setCurrentPollingStop(null);
-                            setPaymentStatus('failed');
-                            setPaymentMessage('Payment monitoring stopped by user. Please check your payment manually.');
+                            if (currentPollingStop) {
+                              currentPollingStop();
+                              setCurrentPollingStop(null);
+                              toast.info('Polling stopped. Click "Check Payment Status" to manually check.');
+                            }
                           }}
-                          sx={{ mt: 2 }}
+                          sx={{
+                            mt: 1,
+                            color: '#666666',
+                            '&:hover': {
+                              backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                            },
+                          }}
                         >
-                          Stop Monitoring
+                          Stop Auto-Check
                         </Button>
                       )}
                     </>

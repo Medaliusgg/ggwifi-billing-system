@@ -214,3 +214,4 @@ FAILED/ERROR → 'failed' → Show error with suggestions
 - Better UX with clear status messages and progress indicators
 - Backend creates payment record immediately for better tracking
 
+

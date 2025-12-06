@@ -212,3 +212,4 @@ Payment system is working correctly when:
 5. ✅ Frontend shows success message with voucher code
 6. ✅ All payment statuses are handled correctly
 
+

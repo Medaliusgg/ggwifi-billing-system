@@ -170,9 +170,6 @@ class PaymentService {
         // Handle response - check both result.data and result directly
         const responseData = result.data || result;
         
-        // Handle response - check both result.data and result directly
-        const responseData = result.data || result;
-        
         // Check if response has status field
         const responseStatus = responseData.status || 'success';
         const paymentStatus = (responseData.payment_status || responseData.paymentStatus || 'PENDING').toUpperCase();
