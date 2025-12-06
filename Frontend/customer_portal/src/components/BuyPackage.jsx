@@ -101,6 +101,56 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
     }
   }, [showCustomerForm, currentPollingStop]);
 
+  // Independent timer to update elapsed time every second when payment is processing
+  // This ensures UI updates even if polling doesn't provide elapsed time
+  useEffect(() => {
+    let elapsedTimer = null;
+    
+    if (paymentStep === 2 && paymentStatus === 'processing' && paymentStartTimeRef.current) {
+      console.log('⏰ Starting independent elapsed time timer');
+      elapsedTimer = setInterval(() => {
+        const currentElapsed = Math.floor((Date.now() - paymentStartTimeRef.current) / 1000);
+        console.log(`⏱️ Timer update: ${currentElapsed}s elapsed`);
+        setPaymentElapsedTime(prev => {
+          // Only update if it's different to trigger re-render
+          if (currentElapsed !== prev) {
+            console.log(`⏱️ Updating elapsed time: ${prev}s → ${currentElapsed}s`);
+            return currentElapsed;
+          }
+          return prev;
+        });
+        
+        // Progressive warnings
+        if (currentElapsed === 10) {
+          toast.warning('📱 Check your phone for the USSD prompt!', { duration: 4000 });
+        } else if (currentElapsed === 20) {
+          toast.warning('🔐 Please enter your mobile money PIN on your phone!', { duration: 4000 });
+        } else if (currentElapsed === 30) {
+          toast.warning('⏳ Payment processing... Please wait for confirmation.', { duration: 4000 });
+        } else if (currentElapsed === 40) {
+          toast.error('⚠️ 20 seconds remaining! Please complete payment now!', { duration: 5000 });
+        } else if (currentElapsed === 50) {
+          toast.error('🚨 10 seconds left! Complete payment immediately!', { duration: 5000 });
+        } else if (currentElapsed === 55) {
+          toast.error('🚨 CRITICAL: 5 seconds remaining!', { duration: 5000 });
+        }
+        
+        // Stop timer at 60 seconds
+        if (currentElapsed >= 60) {
+          console.log('⏰ Timer reached 60s, stopping');
+          clearInterval(elapsedTimer);
+        }
+      }, 1000); // Update every second for smooth UI updates
+    }
+    
+    return () => {
+      if (elapsedTimer) {
+        console.log('🛑 Cleaning up elapsed time timer');
+        clearInterval(elapsedTimer);
+      }
+    };
+  }, [paymentStep, paymentStatus, paymentStartTimeRef.current]);
+
   // Fetch packages from backend API - Only once when component mounts
   useEffect(() => {
     // Prevent multiple loads - only load if not already loaded
