@@ -184,6 +184,7 @@ public class ZenoPayService {
     
     /**
      * Check payment status
+     * According to ZenoPay API docs: GET /api/payments/order-status?order_id=xxx
      */
     public Map<String, Object> checkOrderStatus(String orderId) {
         Map<String, Object> response = new HashMap<>();
@@ -191,21 +192,23 @@ public class ZenoPayService {
         try {
             // Prepare request headers
             HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
             headers.set("x-api-key", zenopayApiKey);
             
-            // Prepare request body
-            Map<String, Object> requestBody = new HashMap<>();
-            requestBody.put("order_id", orderId);
+            // Create HTTP entity (no body for GET request)
+            HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
             
-            // Create HTTP entity
-            HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestBody, headers);
+            // Build URL with query parameter (GET request as per ZenoPay API docs)
+            String url = zenopayBaseUrl + orderStatusEndpoint + "?order_id=" + orderId;
             
-            // Make API call to ZenoPay
+            System.out.println("🔍 Checking order status with ZenoPay:");
+            System.out.println("   URL: " + url);
+            System.out.println("   Order ID: " + orderId);
+            
+            // Make API call to ZenoPay (GET request)
             @SuppressWarnings("unchecked")
             ResponseEntity<Map<String, Object>> apiResponse = (ResponseEntity<Map<String, Object>>) (ResponseEntity<?>) restTemplate.exchange(
-                zenopayBaseUrl + orderStatusEndpoint,
-                HttpMethod.POST,
+                url,
+                HttpMethod.GET,  // Changed from POST to GET as per API docs
                 requestEntity,
                 Map.class
             );
@@ -215,11 +218,36 @@ public class ZenoPayService {
                 Map<String, Object> responseBody = apiResponse.getBody();
                 
                 if (responseBody != null) {
+                    System.out.println("📊 ZenoPay Status Response: " + responseBody);
+                    
+                    // ZenoPay API returns: {"resultcode":"000","result":"SUCCESS","data":[{...}]}
+                    // Extract payment_status from data array
+                    String paymentStatus = null;
+                    String amount = null;
+                    String reference = null;
+                    String transid = null;
+                    String msisdn = null;
+                    
+                    if (responseBody.containsKey("data") && responseBody.get("data") instanceof java.util.List) {
+                        @SuppressWarnings("unchecked")
+                        java.util.List<Map<String, Object>> dataList = (java.util.List<Map<String, Object>>) responseBody.get("data");
+                        if (!dataList.isEmpty()) {
+                            Map<String, Object> orderData = dataList.get(0);
+                            paymentStatus = (String) orderData.get("payment_status");
+                            amount = (String) orderData.get("amount");
+                            reference = (String) orderData.get("reference");
+                            transid = (String) orderData.get("transid");
+                            msisdn = (String) orderData.get("msisdn");
+                        }
+                    }
+                    
                     response.put("status", "success");
                     response.put("order_id", orderId);
-                    response.put("payment_status", responseBody.get("status"));
-                    response.put("amount", responseBody.get("amount"));
-                    response.put("currency", responseBody.get("currency"));
+                    response.put("payment_status", paymentStatus);
+                    response.put("amount", amount);
+                    response.put("reference", reference);
+                    response.put("transid", transid);
+                    response.put("msisdn", msisdn);
                     response.put("message", "Order status retrieved successfully");
                     response.put("zenopay_response", responseBody);
                 } else {
@@ -310,5 +338,12 @@ public class ZenoPayService {
         
         // Default webhook URL (must be publicly accessible)
         return "https://api.ggwifi.co.tz/api/v1/customer-portal/webhook/zenopay";
+    }
+    
+    /**
+     * Get API key for webhook authentication
+     */
+    public String getApiKey() {
+        return zenopayApiKey;
     }
 }

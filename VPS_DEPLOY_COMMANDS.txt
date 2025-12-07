@@ -1,0 +1,68 @@
+# VPS DEPLOYMENT COMMANDS
+# Run these commands on your VPS (you're already SSH'd in)
+
+# Step 1: Find backend directory
+echo "🔍 Finding backend directory..."
+find / -name 'ggnetworks-backend-1.0.0.jar' 2>/dev/null | head -1
+# OR check common locations:
+ls -la /opt/ggwifi/backend 2>/dev/null
+ls -la /home/*/backend 2>/dev/null
+ls -la /var/www/backend 2>/dev/null
+ls -la ~/backend 2>/dev/null
+ls -la /root/backend 2>/dev/null
+
+# Step 2: Navigate to backend (replace /path/to/backend with actual path found above)
+cd /path/to/backend
+
+# Step 3: Check current status
+echo "📋 Current git status..."
+git status
+git log --oneline -5
+
+# Step 4: Pull latest code
+echo "📥 Pulling latest code..."
+git pull origin main
+
+# Step 5: Stop existing backend
+echo "🛑 Stopping backend..."
+# Try systemd first
+sudo systemctl stop ggwifi-backend 2>/dev/null && echo "✅ Stopped via systemd" || \
+# Try PM2
+pm2 stop ggwifi-backend 2>/dev/null && echo "✅ Stopped via PM2" || \
+# Try finding and killing Java process
+(pkill -f 'java.*ggnetworks' && sleep 2 && echo "✅ Stopped Java process") || \
+echo "⚠️  No running backend found"
+
+# Step 6: Rebuild backend
+echo "🔨 Building backend..."
+mvn clean package -DskipTests
+
+# Step 7: Start backend
+echo "🚀 Starting backend..."
+# Try systemd first
+sudo systemctl start ggwifi-backend 2>/dev/null && sudo systemctl status ggwifi-backend --no-pager | head -5 && echo "✅ Started via systemd" || \
+# Try PM2
+(pm2 start target/ggnetworks-backend-1.0.0.jar --name ggwifi-backend && pm2 save && echo "✅ Started via PM2") || \
+# Start manually
+(mkdir -p logs && nohup java -jar target/ggnetworks-backend-1.0.0.jar > logs/backend.log 2>&1 & echo "✅ Started manually (PID: $!)")
+
+# Step 8: Wait for startup
+echo "⏳ Waiting for backend to start (30 seconds)..."
+sleep 30
+
+# Step 9: Verify deployment
+echo "✅ Verifying deployment..."
+curl -s http://localhost:8080/api/v1/customer-portal/packages > /dev/null && echo "✅ Backend is responding!" || echo "⚠️  Backend may still be starting"
+
+# Step 10: Test CORS
+echo "🔍 Testing CORS..."
+curl -s -I -X OPTIONS http://localhost:8080/api/v1/customer-portal/payment/status/test \
+  -H "Origin: https://hotspot.ggwifi.co.tz" \
+  -H "Access-Control-Request-Method: GET" \
+  -H "Access-Control-Request-Headers: Content-Type" | grep -i "access-control-allow-origin" && echo "✅ CORS configured correctly"
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "✅ DEPLOYMENT COMPLETE!"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+

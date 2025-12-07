@@ -504,6 +504,7 @@ public class CustomerPortalController {
     @PostMapping("/webhook/zenopay")
     public ResponseEntity<Map<String, Object>> handleZenoPayWebhook(
             @RequestBody Map<String, Object> webhookData,
+            @RequestHeader(value = "x-api-key", required = false) String apiKey,
             jakarta.servlet.http.HttpServletRequest request) {
         Map<String, Object> response = new HashMap<>();
         com.ggnetworks.entity.WebhookProcessing webhookRecord = null;
@@ -517,8 +518,31 @@ public class CustomerPortalController {
             System.out.println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
             System.out.println("📥 Timestamp: " + java.time.LocalDateTime.now());
             System.out.println("🌐 Client IP: " + clientIp);
+            System.out.println("🔐 API Key Present: " + (apiKey != null ? "Yes" : "No"));
             System.out.println("📦 Webhook Data: " + webhookData);
             System.out.println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+            
+            // CRITICAL: Verify webhook authentication (ZenoPay sends x-api-key header)
+            String expectedApiKey = zenoPayService.getApiKey();
+            if (apiKey == null || apiKey.isEmpty()) {
+                System.out.println("❌ Webhook authentication failed: Missing x-api-key header");
+                response.put("status", "unauthorized");
+                response.put("message", "Missing API key in webhook request");
+                response.put("error_code", "MISSING_API_KEY");
+                return ResponseEntity.status(401).body(response);
+            }
+            
+            if (!apiKey.equals(expectedApiKey)) {
+                System.out.println("❌ Webhook authentication failed: Invalid API key");
+                System.out.println("   Expected: " + (expectedApiKey != null ? expectedApiKey.substring(0, Math.min(10, expectedApiKey.length())) + "..." : "null"));
+                System.out.println("   Received: " + (apiKey != null ? apiKey.substring(0, Math.min(10, apiKey.length())) + "..." : "null"));
+                response.put("status", "unauthorized");
+                response.put("message", "Invalid API key in webhook request");
+                response.put("error_code", "INVALID_API_KEY");
+                return ResponseEntity.status(401).body(response);
+            }
+            
+            System.out.println("✅ Webhook authentication successful");
             
             // STEP 1: IDEMPOTENCY CHECK - Prevent duplicate processing
             String webhookId = generateWebhookId(webhookData);
