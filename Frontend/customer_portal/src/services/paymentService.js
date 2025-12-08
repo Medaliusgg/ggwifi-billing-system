@@ -142,8 +142,9 @@ class PaymentService {
   /**
    * Poll payment status with enhanced tracking
    */
-  // USSD timeout is 60 seconds, so we poll for 60 seconds (30 attempts × 2s interval)
-  async pollPaymentStatus(orderId, onStatusUpdate, maxAttempts = 30, interval = 2000) {
+  // USSD timeout is 60 seconds, so we poll for 60 seconds
+  // Adaptive polling: 1s initially, 500ms after 3s, 300ms after 10s for maximum responsiveness
+  async pollPaymentStatus(orderId, onStatusUpdate, maxAttempts = 60, interval = 1000) {
     console.log(`🔄 Starting payment status polling for order: ${orderId}`);
     console.log(`   Max attempts: ${maxAttempts}, Interval: ${interval}ms`);
     

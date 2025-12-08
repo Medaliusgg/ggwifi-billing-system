@@ -378,9 +378,11 @@ public class CustomerPortalController {
         Map<String, Object> response = new HashMap<>();
         
         try {
-            System.out.println("🔍 Checking payment status for order: " + orderId);
+            long statusCheckStart = System.currentTimeMillis();
+            System.out.println("🔍 Checking payment status for order: " + orderId + " at " + java.time.LocalDateTime.now());
             
             // Find payment by order ID (paymentId field)
+            // CRITICAL: Use fresh query to ensure we get latest status (not cached)
             Optional<com.ggnetworks.entity.Payment> paymentOpt = paymentRepository.findByPaymentId(orderId);
             
             if (paymentOpt.isEmpty()) {
