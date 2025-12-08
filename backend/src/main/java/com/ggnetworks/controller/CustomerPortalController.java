@@ -696,7 +696,12 @@ public class CustomerPortalController {
                 payment.setGatewayReference((String) webhookData.get("payment_reference"));
                 payment.setConfirmedAt(java.time.LocalDateTime.now());
                 payment.setProcessedAt(java.time.LocalDateTime.now());
+                
+                // CRITICAL: Save and flush immediately for real-time status updates
                 payment = paymentRepository.save(payment);
+                paymentRepository.flush(); // Force immediate database write
+                System.out.println("✅ Payment status updated to COMPLETED in database (order: " + orderId + ")");
+                System.out.println("⏱️ Database updated at: " + java.time.LocalDateTime.now());
                 
                 // Generate voucher code (6-8 alphanumeric: A-Z, a-z, 0-9)
                 String voucherCode = voucherService.generateVoucherCode(packageId);
@@ -790,6 +795,15 @@ public class CustomerPortalController {
                     // Continue - voucher is already created, SMS failure is non-critical
                 }
                 
+                // CRITICAL: Ensure all database changes are committed before responding
+                // This ensures frontend polling can immediately see the updated status
+                System.out.println("💾 Flushing all database changes to ensure real-time availability...");
+                paymentRepository.flush();
+                voucherRepository.flush();
+                customerRepository.flush();
+                invoiceRepository.flush();
+                System.out.println("✅ All database changes flushed - payment status is now immediately available");
+                
                 response.put("status", "success");
                 String smsStatus = (String) smsResult.getOrDefault("status", "error");
                 response.put("message", "Payment processed successfully. Voucher generated" + 
@@ -803,6 +817,8 @@ public class CustomerPortalController {
                 response.put("customer_created", customer.getId());
                 response.put("payment_recorded", payment.getId());
                 response.put("voucher_created", voucher.getVoucherCode());
+                response.put("payment_status", "COMPLETED"); // Explicitly set for frontend
+                response.put("order_id", orderId); // Include order_id for frontend polling
                 
             } else if ("FAILED".equals(paymentStatus) || "CANCELLED".equals(paymentStatus) || 
                        "INSUFFICIENT_BALANCE".equals(paymentStatus) || "INVALID_PIN".equals(paymentStatus) ||
@@ -858,6 +874,11 @@ public class CustomerPortalController {
                 }
                 
                 String smsStatus = (String) smsResult.getOrDefault("status", "skipped");
+                
+                // CRITICAL: Flush database changes immediately for real-time status
+                paymentRepository.flush();
+                System.out.println("✅ Payment status updated to FAILED in database - immediately available for polling");
+                
                 response.put("status", "failed");
                 response.put("payment_status", paymentStatus);
                 response.put("message", userMessage);
@@ -865,6 +886,7 @@ public class CustomerPortalController {
                 response.put("sms_status", smsStatus);
                 response.put("sms_message", smsResult.getOrDefault("message", "No SMS sent"));
                 response.put("user_created", false);
+                response.put("order_id", orderId); // Include order_id for frontend polling
                 
                 // Create or update payment record for failed payment
                 try {
@@ -898,8 +920,12 @@ public class CustomerPortalController {
                     failedPayment.setGatewayTransactionId((String) webhookData.get("transid"));
                     failedPayment.setGatewayReference((String) webhookData.get("payment_reference"));
                     failedPayment.setProcessedAt(java.time.LocalDateTime.now());
+                    
+                    // CRITICAL: Save and flush immediately for real-time status updates
                     paymentRepository.save(failedPayment);
-                    System.out.println("✅ Payment record saved with status: FAILED, reason: " + failureReason);
+                    paymentRepository.flush(); // Force immediate database write
+                    System.out.println("✅ Payment status updated to FAILED in database (order: " + orderId + ")");
+                    System.out.println("⏱️ Database updated at: " + java.time.LocalDateTime.now());
                 } catch (Exception e) {
                     System.out.println("⚠️ Failed to create/update payment record: " + e.getMessage());
                     e.printStackTrace();
