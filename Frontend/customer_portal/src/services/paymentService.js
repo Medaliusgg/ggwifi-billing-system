@@ -242,16 +242,25 @@ class PaymentService {
           return;
         }
         
-        // CRITICAL: After 5 seconds, increase polling frequency to catch webhook faster
-        // This ensures we detect payment completion as soon as webhook is processed
-        // User likely entered PIN, webhook should arrive soon - poll more aggressively
-        if (elapsedSeconds >= 5 && currentInterval === 2000) {
-          console.log(`⚡ Payment likely in progress (${elapsedSeconds}s), increasing polling frequency to 500ms for faster webhook detection`);
+        // CRITICAL: Adaptive polling for faster webhook detection
+        // After 10 seconds (webhook likely received), poll every 300ms for maximum responsiveness
+        // After 3 seconds (when user likely enters PIN), poll every 500ms
+        if (elapsedSeconds >= 10 && currentInterval > 300) {
+          console.log(`⚡ Webhook likely received (${elapsedSeconds}s), maximum polling frequency: 300ms`);
           if (pollInterval) {
             clearInterval(pollInterval);
+            pollInterval = null;
           }
-          currentInterval = 500; // Update tracked interval
-          pollInterval = setInterval(performPoll, 500); // Poll every 500ms after 5 seconds
+          currentInterval = 300; // Maximum frequency for webhook detection
+          pollInterval = setInterval(performPoll, 300);
+        } else if (elapsedSeconds >= 3 && currentInterval === 1000) {
+          console.log(`⚡ User likely entering PIN (${elapsedSeconds}s), increasing polling frequency to 500ms`);
+          if (pollInterval) {
+            clearInterval(pollInterval);
+            pollInterval = null;
+          }
+          currentInterval = 500; // Faster polling when user is active
+          pollInterval = setInterval(performPoll, 500);
         }
         
         // Also handle case where response status is error but payment_status might be in response

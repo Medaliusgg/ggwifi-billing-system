@@ -496,6 +496,12 @@ public class CustomerPortalController {
             response.put("message", "Error checking payment status: " + e.getMessage());
         }
         
+        // Log status check performance
+        long statusCheckTime = System.currentTimeMillis() - statusCheckStart;
+        if (statusCheckTime > 100) { // Log if takes more than 100ms
+            System.out.println("⚠️ Status check took " + statusCheckTime + "ms for order: " + orderId);
+        }
+        
         return ResponseEntity.ok(response);
     }
 
@@ -800,11 +806,14 @@ public class CustomerPortalController {
                 // CRITICAL: Ensure all database changes are committed before responding
                 // This ensures frontend polling can immediately see the updated status
                 System.out.println("💾 Flushing all database changes to ensure real-time availability...");
+                long flushStart = System.currentTimeMillis();
                 paymentRepository.flush();
                 voucherRepository.flush();
                 customerRepository.flush();
                 invoiceRepository.flush();
-                System.out.println("✅ All database changes flushed - payment status is now immediately available");
+                long flushTime = System.currentTimeMillis() - flushStart;
+                System.out.println("✅ All database changes flushed in " + flushTime + "ms - payment status is now immediately available");
+                System.out.println("📱 Frontend can now detect payment status within 300-500ms via polling");
                 
                 response.put("status", "success");
                 String smsStatus = (String) smsResult.getOrDefault("status", "error");
