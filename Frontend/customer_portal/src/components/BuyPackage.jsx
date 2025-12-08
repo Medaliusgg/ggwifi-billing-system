@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import LoadingSpinner from './LoadingSpinner';
+import EnhancedPackageCard from './packages/EnhancedPackageCard';
+import StickyBottomCTA from './ui/StickyBottomCTA';
 import {
   Box,
   Typography,
@@ -223,6 +225,9 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
             offerStartTime: pkg.offerStartTime || null,
             offerEndTime: pkg.offerEndTime || null,
             availableDays: pkg.availableDays || null,
+            // GG Points
+            ggPoints: pkg.ggPoints || pkg.loyaltyPointsAwarded || Math.floor((pkg.price || 0) / 200),
+            loyaltyPointsAwarded: pkg.loyaltyPointsAwarded || pkg.ggPoints || Math.floor((pkg.price || 0) / 200),
             features: [
               pkg.speed || 'High Speed',
               pkg.dataLimit || 'Unlimited Data',
@@ -414,6 +419,14 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
   };
 
   const initiateZenoPayPayment = async () => {
+    // Check authentication before proceeding
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      toast.error('Please login first to make a payment');
+      // Could trigger login modal or redirect
+      return;
+    }
+
     setIsLoading(true);
     setPaymentStatus('processing');
     toast.loading('Initializing ZenoPay payment...');
@@ -961,368 +974,19 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                   </Grid>
                 ) : (
                   packages.map((pkg, index) => {
-                    // Get color scheme for colorful style
-                    const colorScheme = packageColors[index % 4];
-                    const isColorfulStyle = cardStyle === 'colorful';
-                    
                     return (
-                    <Grid item xs={12} sm={6} lg={3} key={pkg.id}>
-                      <motion.div
-                        variants={cardVariants}
-                        whileHover="hover"
-                      >
-                        <Card
+                      <Grid item xs={12} sm={6} lg={3} key={pkg.id}>
+                        <EnhancedPackageCard
+                          pkg={{
+                            ...pkg,
+                            ggPoints: pkg.ggPoints || pkg.loyaltyPointsAwarded || Math.floor((pkg.price || 0) / 200),
+                          }}
+                          isSelected={selectedPackage?.id === pkg.id}
                           onClick={() => handleSelectPackage(pkg)}
-                          sx={{
-                            height: '100%',
-                            cursor: 'pointer',
-                            // Colorful style: secondary color background, Detailed style: white background
-                            background: isColorfulStyle ? colorScheme.bg : '#FFFFFF',
-                            borderRadius: isColorfulStyle ? '16px' : 4,
-                            border: isColorfulStyle 
-                              ? `2px solid ${colorScheme.color}`  // Colorful: 2px solid secondary color
-                              : selectedPackage?.id === pkg.id 
-                                ? `3px solid ${pkg.color}`  // Detailed: Package color border when selected
-                                : `1px solid #FFE89C`,  // Detailed: Pale yellow border
-                            boxShadow: isColorfulStyle
-                              ? '0 4px 12px rgba(0,0,0,0.06)'  // Colorful: Soft shadow
-                              : selectedPackage?.id === pkg.id 
-                                ? `0 8px 24px ${pkg.color}40`  // Detailed: Colored shadow when selected
-                                : '0 2px 8px rgba(0, 0, 0, 0.08)',  // Detailed: Soft shadow
-                            transition: 'all 0.3s ease',
-                            position: 'relative',
-                            overflow: 'hidden',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            '&:hover': {
-                              transform: 'translateY(-4px)',
-                              boxShadow: isColorfulStyle
-                                ? '0 8px 24px rgba(0,0,0,0.12)'  // Colorful: Deeper shadow
-                                : `0 8px 24px ${pkg.color}30`,  // Detailed: Colored shadow on hover
-                              borderColor: isColorfulStyle ? colorScheme.color : pkg.color,
-                            },
-                          }}
-                        >
-                      {/* Popular Badge */}
-                      {pkg.popular && (
-                        <Box
-                          sx={{
-                            position: 'absolute',
-                            top: 16,
-                            right: 16,
-                            zIndex: 1,
-                          }}
-                        >
-                          <Chip
-                            icon={<StarIcon />}
-                            label="Most Popular"
-                            sx={{
-                              background: 'linear-gradient(135deg, #F2C94C 0%, #E0B335 100%)',  // Official gold gradient
-                              color: '#000000',
-                              fontWeight: 700,
-                              fontSize: '0.8rem',
-                              '& .MuiChip-icon': {
-                                color: '#000000',
-                              },
-                            }}
-                          />
-                        </Box>
-                      )}
-
-                      {/* Time-Based Offer Badge */}
-                      {pkg.isTimeBasedOffer && (
-                        <Box
-                          sx={{
-                            position: 'absolute',
-                            top: 16,
-                            left: 16,
-                            zIndex: 1,
-                          }}
-                        >
-                          <Chip
-                            icon={<LocalOfferIcon />}
-                            label="Limited Offer"
-                            sx={{
-                              background: 'linear-gradient(135deg, #E74C3C 0%, #C0392B 100%)',
-                              color: '#FFFFFF',
-                              fontWeight: 700,
-                              fontSize: '0.75rem',
-                              '& .MuiChip-icon': {
-                                color: '#FFFFFF',
-                              },
-                            }}
-                          />
-                        </Box>
-                      )}
-
-                      {/* Discount Badge */}
-                      {pkg.originalPrice && pkg.originalPrice > pkg.price && (
-                        <Box
-                          sx={{
-                            position: 'absolute',
-                            top: pkg.isTimeBasedOffer ? 60 : 16,
-                            left: 16,
-                            zIndex: 1,
-                          }}
-                        >
-                          <Chip
-                            label={`Save ${pkg.discountPercentage || Math.round(((pkg.originalPrice - pkg.price) / pkg.originalPrice) * 100)}%`}
-                            sx={{
-                              background: '#FFFFFF',  // White background
-                              color: '#1ABC9C',  // Green text
-                              fontWeight: 700,
-                              fontSize: '0.75rem',
-                              border: '2px solid #1ABC9C',  // Green border
-                              '&:hover': {
-                                background: '#1ABC9C',  // Green background on hover
-                                color: '#FFFFFF',  // White text
-                              },
-                            }}
-                          />
-                        </Box>
-                      )}
-
-                      {/* Selected Indicator */}
-                      {selectedPackage?.id === pkg.id && (
-                        <Box
-                          sx={{
-                            position: 'absolute',
-                            top: 16,
-                            left: 16,
-                            zIndex: 1,
-                          }}
-                        >
-                          <Avatar
-                            sx={{
-                              background: pkg.color,
-                              width: 32,
-                              height: 32,
-                            }}
-                          >
-                            <CheckCircleIcon sx={{ fontSize: 20, color: '#FFFFFF' }} />
-                          </Avatar>
-                        </Box>
-                      )}
-
-                      <CardContent sx={{ flex: 1, p: isColorfulStyle ? 3 : 4, textAlign: 'center', display: 'flex', flexDirection: 'column' }}>
-                        {/* Package Icon - Only show in detailed style */}
-                        {!isColorfulStyle && (
-                          <Avatar
-                            sx={{
-                              background: `${pkg.color}15`,  // Light tint of package color
-                              width: 80,  // Big icon
-                              height: 80,
-                              mx: 'auto',
-                              mb: 3,
-                              boxShadow: `0 4px 12px ${pkg.color}20`,
-                              border: `2px solid ${pkg.color}40`,
-                              '& .MuiSvgIcon-root': {
-                                fontSize: 40,
-                                color: pkg.color,  // Package color icon
-                              },
-                            }}
-                          >
-                            {pkg.icon}
-                          </Avatar>
-                        )}
-
-                        {/* Package Name */}
-                        <Typography
-                          variant={isColorfulStyle ? "h6" : "h5"}
-                          sx={{
-                            fontWeight: 700,
-                            color: isColorfulStyle ? '#0A0A0A' : pkg.color,
-                            mb: 1,
-                            fontSize: isColorfulStyle ? { xs: '1rem', md: '1.125rem' } : { xs: '1.25rem', md: '1.5rem' },
-                          }}
-                        >
-                          {pkg.name}
-                        </Typography>
-
-                        {/* Duration */}
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            color: isColorfulStyle ? '#666666' : '#505050',
-                            mb: 2,
-                          }}
-                        >
-                          {pkg.duration || `${pkg.durationDays || 0} Days`}
-                        </Typography>
-
-                        {/* Price with Discount */}
-                        <Box sx={{ mb: 2 }}>
-                          {pkg.originalPrice && pkg.originalPrice > pkg.price ? (
-                            <>
-                              <Typography
-                                variant={isColorfulStyle ? "body2" : "h6"}
-                                sx={{
-                                  textDecoration: 'line-through',
-                                  color: '#666666',
-                                  opacity: 0.8,
-                                  mb: 0.5,
-                                }}
-                              >
-                                TZS {pkg.originalPrice.toLocaleString()}
-                              </Typography>
-                              <Typography
-                                variant={isColorfulStyle ? "h5" : "h3"}
-                                sx={{
-                                  fontWeight: 700,
-                                  color: isColorfulStyle ? colorScheme.color : pkg.color,
-                                  mb: 0.5,
-                                  fontSize: isColorfulStyle ? { xs: '1.5rem', md: '1.75rem' } : { xs: '2rem', md: '2.5rem' },
-                                }}
-                              >
-                                TZS {pkg.price.toLocaleString()}
-                              </Typography>
-                              {pkg.discountPercentage && (
-                                <Typography
-                                  variant="caption"
-                                  sx={{
-                                    color: '#1ABC9C',
-                                    fontWeight: 700,
-                                    display: 'block',
-                                    mt: 0.5,
-                                  }}
-                                >
-                                  Save {pkg.discountPercentage}%!
-                                </Typography>
-                              )}
-                            </>
-                          ) : (
-                            <Typography
-                              variant={isColorfulStyle ? "h5" : "h3"}
-                              sx={{
-                                fontWeight: 700,
-                                color: isColorfulStyle ? colorScheme.color : '#1A1A1A',
-                                fontSize: isColorfulStyle ? { xs: '1.5rem', md: '1.75rem' } : { xs: '2rem', md: '2.5rem' },
-                              }}
-                            >
-                              TZS {pkg.price.toLocaleString()}
-                            </Typography>
-                          )}
-                        </Box>
-
-                        {/* GG Points - Only in colorful style */}
-                        {isColorfulStyle && pkg.loyaltyPoints && (
-                          <Chip
-                            label={`+${pkg.loyaltyPoints} GG Points`}
-                            size="small"
-                            sx={{
-                              backgroundColor: '#F2C94C',
-                              color: '#0A0A0A',
-                              fontWeight: 600,
-                              mb: 2,
-                            }}
-                          />
-                        )}
-
-                        {/* Time-Based Offer Info - Only in detailed style */}
-                        {!isColorfulStyle && pkg.isTimeBasedOffer && pkg.offerDescription && (
-                          <Alert
-                            severity="info"
-                            sx={{
-                              mb: 2,
-                              borderRadius: 2,
-                              background: '#FFFFFF',  // White background
-                              border: '2px solid #F2C94C',  // Official Gold border
-                              '& .MuiAlert-icon': {
-                                color: '#F2C94C',  // Yellow icon
-                              },
-                              '& .MuiAlert-message': {
-                                color: '#1A1A1A',  // Charcoal text
-                              },
-                            }}
-                          >
-                            <Typography variant="caption" sx={{ fontWeight: 600, display: 'block', mb: 0.5 }}>
-                              ⚡ Limited Time Offer
-                            </Typography>
-                            <Typography variant="caption" sx={{ display: 'block' }}>
-                              {pkg.offerDescription}
-                            </Typography>
-                            {pkg.offerStartTime && pkg.offerEndTime && (
-                              <Typography variant="caption" sx={{ display: 'block', mt: 0.5, opacity: 0.8 }}>
-                                Available: {pkg.offerStartTime} - {pkg.offerEndTime}
-                              </Typography>
-                            )}
-                          </Alert>
-                        )}
-
-                        {/* Description - Only in detailed style */}
-                        {!isColorfulStyle && (
-                          <Typography
-                            variant="body2"
-                            sx={{
-                              color: '#1A1A1A',  // Charcoal Black for description
-                              mb: 3,
-                              minHeight: 40,
-                              lineHeight: 1.5,
-                              fontWeight: 400,
-                            }}
-                          >
-                            {pkg.description}
-                          </Typography>
-                        )}
-
-                        {/* Features - Only in detailed style */}
-                        {!isColorfulStyle && (
-                          <Stack spacing={1} sx={{ mb: 3 }}>
-                            {pkg.features.map((feature, index) => (
-                              <Box
-                                key={index}
-                                sx={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: 1,
-                                  justifyContent: 'center',
-                                }}
-                              >
-                                <CheckCircleIcon
-                                  sx={{
-                                    fontSize: 16,
-                                    color: pkg.color,
-                                  }}
-                                />
-                                <Typography
-                                  variant="body2"
-                                  sx={{
-                                    color: '#1A1A1A',  // Charcoal Black text
-                                    fontWeight: 500,
-                                  }}
-                                >
-                                  {feature}
-                                </Typography>
-                              </Box>
-                            ))}
-                          </Stack>
-                        )}
-
-                        {/* Select/Buy Button */}
-                        <Button
-                          variant="contained"
-                          fullWidth
-                          onClick={() => handleSelectPackage(pkg)}
-                          sx={{
-                            backgroundColor: '#F2C94C',
-                            color: '#0A0A0A',
-                            borderRadius: isColorfulStyle ? '12px' : 3,
-                            py: 1.5,
-                            fontWeight: 600,
-                            textTransform: 'none',
-                            mt: 'auto',  // Push button to bottom
-                            '&:hover': {
-                              backgroundColor: '#E0B335',
-                              boxShadow: '0 4px 12px rgba(242, 201, 76, 0.3)',
-                            },
-                          }}
-                        >
-                          {isColorfulStyle ? 'Buy Now' : (selectedPackage?.id === pkg.id ? 'Selected' : 'Select Package')}
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                </Grid>
+                          onBuyClick={() => handleSelectPackage(pkg)}
+                          style={cardStyle}
+                        />
+                      </Grid>
                     );
                   })
                 )}
@@ -2331,6 +1995,20 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
           </Dialog>
         </motion.div>
       </Container>
+
+      {/* Sticky Bottom CTA Bar */}
+      <StickyBottomCTA
+        onBuyClick={() => {
+          if (packages.length > 0 && !selectedPackage) {
+            handleSelectPackage(packages[0]);
+          } else if (selectedPackage) {
+            // Already have a package selected, scroll to purchase section
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+          }
+        }}
+        showBuy={true}
+        buyText={selectedPackage ? `Buy ${selectedPackage.name}` : 'Buy Now — Fast Connect'}
+      />
     </Box>
   );
 };

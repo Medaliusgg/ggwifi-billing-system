@@ -42,6 +42,14 @@ export const customerPortalAPI = {
   recordHeartbeat: (voucherCode, heartbeatData) => apiClient.post(`/customer-portal/voucher/${voucherCode}/session/heartbeat`, heartbeatData),
   reconnectSession: (voucherCode, reconnectData) => apiClient.post(`/customer-portal/voucher/${voucherCode}/session/reconnect`, reconnectData),
   reconnectWithToken: (reconnectData) => apiClient.post(`/customer-portal/session/reconnect-token`, reconnectData),
+  
+  // Marketing endpoints
+  getCampaigns: () => apiClient.get('/customer-portal/marketing/campaigns'),
+  trackCampaignImpression: (campaignId) => apiClient.post(`/customer-portal/marketing/campaigns/${campaignId}/impression`),
+  
+  // Referral endpoints
+  getReferralCode: () => apiClient.get('/customer-portal/referral/code'),
+  getReferralStats: () => apiClient.get('/customer-portal/referral/stats'),
 };
 
 export default customerPortalAPI;

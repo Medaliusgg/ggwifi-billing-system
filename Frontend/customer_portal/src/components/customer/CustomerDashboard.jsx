@@ -35,11 +35,16 @@ import SpeedIcon from '@mui/icons-material/Speed';
 import RouterIcon from '@mui/icons-material/Router';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import CloseIcon from '@mui/icons-material/Close';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import FlashOnIcon from '@mui/icons-material/FlashOn';
+import StarIcon from '@mui/icons-material/Star';
+import PublicIcon from '@mui/icons-material/Public';
 import IconButton from '@mui/material/IconButton';
 import { useQuery, useQueryClient } from 'react-query';
 import { customerPortalAPI } from '../../services/customerPortalApi';
 import { loyaltyAPI, analyticsAPI, sessionAPI } from '../../services/api';
 import { toast } from 'react-hot-toast';
+import ReferralCard from '../referral/ReferralCard';
 
 const InfoChip = ({ icon, label, value, color = 'primary' }) => (
   <Card sx={{ borderRadius: 3, background: 'rgba(12, 14, 24, 0.85)', border: '1px solid rgba(255,255,255,0.05)' }}>
@@ -87,7 +92,7 @@ const ensureArray = (value, limit = 5) => {
   return value.slice(0, limit);
 };
 
-const CustomerDashboard = ({ session, onLogout, onBack }) => {
+const CustomerDashboard = ({ session, onLogout, onBack, onNavigateToPackages }) => {
   const queryClient = useQueryClient();
   const phoneNumber = session?.phoneNumber || session?.account?.phoneNumber;
   const [dismissedNotifications, setDismissedNotifications] = React.useState(new Set());
@@ -134,6 +139,23 @@ const CustomerDashboard = ({ session, onLogout, onBack }) => {
       };
     },
     { enabled: !!phoneNumber, refetchInterval: 60000 }
+  );
+
+  const packagesQuery = useQuery(
+    ['available-packages'],
+    async () => {
+      const res = await customerPortalAPI.getPackages();
+      const response = res?.data || res;
+      if (response.status === 'success' && response.packages) {
+        return response.packages;
+      } else if (Array.isArray(response)) {
+        return response;
+      } else if (response.data && Array.isArray(response.data)) {
+        return response.data;
+      }
+      return [];
+    },
+    { refetchInterval: 300000 } // Refetch every 5 minutes
   );
 
   const isLoading = dashboardQuery.isLoading || profileQuery.isLoading || loyaltyQuery.isLoading;
@@ -192,13 +214,22 @@ const CustomerDashboard = ({ session, onLogout, onBack }) => {
     [loyaltyInfo, stats, activeSessions.length]
   );
 
+  // Free trial status
+  const isTrialUsed = customerInfo?.isTrialUsed ?? false;
+  const trialVoucherCode = customerInfo?.trialVoucherCode;
+  const hasActiveTrial = trialVoucherCode && !isTrialUsed;
+
   const refreshAll = () => {
     queryClient.invalidateQueries(['customer-dashboard', phoneNumber]);
     queryClient.invalidateQueries(['customer-profile', phoneNumber]);
     queryClient.invalidateQueries(['customer-loyalty', phoneNumber]);
     queryClient.invalidateQueries(['customer-analytics', phoneNumber]);
+    queryClient.invalidateQueries(['available-packages']);
     toast.success('Dashboard refreshed');
   };
+
+  const availablePackages = packagesQuery.data || [];
+  const isLoadingPackages = packagesQuery.isLoading;
 
   const handleLogout = () => {
     localStorage.removeItem('customerSession');
@@ -261,6 +292,44 @@ const CustomerDashboard = ({ session, onLogout, onBack }) => {
               </Alert>
             ))}
           </Stack>
+        )}
+
+        {/* Free Trial Status */}
+        {hasActiveTrial && (
+          <Alert 
+            severity="success" 
+            icon={<CheckCircleIcon />}
+            sx={{ 
+              borderRadius: 2,
+              background: 'linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%)',
+              border: '1px solid #4CAF50',
+            }}
+          >
+            <Stack spacing={1}>
+              <Typography variant="h6" fontWeight={600} color="#1A1A1A">
+                🎁 Free 20-Minute Trial Active!
+              </Typography>
+              <Typography variant="body2" color="#1A1A1A">
+                Your free trial voucher <strong>{trialVoucherCode}</strong> is ready to use. Connect to GG WiFi hotspot to start browsing!
+              </Typography>
+            </Stack>
+          </Alert>
+        )}
+
+        {!hasActiveTrial && isTrialUsed && (
+          <Alert 
+            severity="info" 
+            icon={<CheckCircleIcon />}
+            sx={{ 
+              borderRadius: 2,
+              background: '#E3F2FD',
+              border: '1px solid #2196F3',
+            }}
+          >
+            <Typography variant="body2" color="#1A1A1A">
+              Your free 20-minute trial has been used. Purchase a package to continue enjoying GG WiFi!
+            </Typography>
+          </Alert>
         )}
 
         <Card sx={{ borderRadius: 2, background: '#FFFFFF', border: '1px solid #EDEDED', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' }}>
@@ -389,6 +458,61 @@ const CustomerDashboard = ({ session, onLogout, onBack }) => {
         )}
 
         <Grid container spacing={3}>
+          {/* Referral Card */}
+          <Grid item xs={12}>
+            <ReferralCard />
+          </Grid>
+
+          {/* Free Trial Voucher Card */}
+          {trialVoucherCode && (
+            <Grid item xs={12}>
+              <SectionCard 
+                title="Free Trial Voucher" 
+                action={
+                  <Chip 
+                    label={isTrialUsed ? "Used" : "Available"} 
+                    color={isTrialUsed ? "default" : "success"} 
+                  />
+                }
+              >
+                <Stack spacing={2}>
+                  <Box sx={{ 
+                    p: 2, 
+                    borderRadius: 2, 
+                    background: isTrialUsed ? '#F5F5F5' : 'linear-gradient(135deg, #FFF9C4 0%, #FFE89C 100%)',
+                    border: '1px solid #FFE89C',
+                  }}>
+                    <Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between">
+                      <Box>
+                        <Typography variant="h4" fontWeight={700} color="#1A1A1A" fontFamily="monospace">
+                          {trialVoucherCode}
+                        </Typography>
+                        <Typography variant="body2" color="#505050" mt={1}>
+                          {isTrialUsed 
+                            ? "This trial voucher has been used" 
+                            : "20 minutes of free internet access"}
+                        </Typography>
+                      </Box>
+                      {!isTrialUsed && (
+                        <Chip 
+                          icon={<CheckCircleIcon />} 
+                          label="Ready to Use" 
+                          color="success" 
+                          variant="filled"
+                        />
+                      )}
+                    </Stack>
+                  </Box>
+                  {!isTrialUsed && (
+                    <Typography variant="caption" color="#505050" sx={{ fontStyle: 'italic' }}>
+                      Connect to GG WiFi hotspot and use this voucher code to activate your free trial.
+                    </Typography>
+                  )}
+                </Stack>
+              </SectionCard>
+            </Grid>
+          )}
+
           <Grid item xs={12} md={6}>
             <SectionCard title="Active Sessions" action={<Chip label={`${activeSessions.length} live`} color="info" />}>
               {dashboardQuery.isLoading ? (
@@ -528,6 +652,136 @@ const CustomerDashboard = ({ session, onLogout, onBack }) => {
                     ))}
                   </TableBody>
                 </Table>
+              )}
+            </SectionCard>
+          </Grid>
+
+          {/* Available Packages Section */}
+          <Grid item xs={12}>
+            <SectionCard
+              title="Available Packages"
+              action={
+                <Button
+                  variant="contained"
+                  color="warning"
+                  startIcon={<ShoppingCartIcon />}
+                  onClick={() => onNavigateToPackages?.()}
+                  size="small"
+                >
+                  View All
+                </Button>
+              }
+            >
+              {isLoadingPackages ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                  <CircularProgress color="warning" />
+                </Box>
+              ) : availablePackages.length === 0 ? (
+                <Box sx={{ textAlign: 'center', py: 4 }}>
+                  <ShoppingCartIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 1, opacity: 0.5 }} />
+                  <Typography variant="body2" color="text.secondary">
+                    No packages available at the moment.
+                  </Typography>
+                </Box>
+              ) : (
+                <Grid container spacing={2}>
+                  {availablePackages.slice(0, 3).map((pkg) => (
+                    <Grid item xs={12} sm={6} md={4} key={pkg.id}>
+                      <Card
+                        sx={{
+                          borderRadius: 3,
+                          background: '#FFFFFF',
+                          border: '1px solid #FFE89C',
+                          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+                          transition: 'all 0.3s ease',
+                          '&:hover': {
+                            transform: 'translateY(-4px)',
+                            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.12)',
+                          },
+                        }}
+                      >
+                        <CardContent>
+                          <Stack spacing={2}>
+                            <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                              <Box>
+                                <Typography variant="h6" fontWeight={700} color="#1A1A1A">
+                                  {pkg.name}
+                                </Typography>
+                                <Typography variant="caption" color="#505050">
+                                  {pkg.duration || `${pkg.durationDays || 0} Days`}
+                                </Typography>
+                              </Box>
+                              {pkg.isPopular && (
+                                <Chip
+                                  icon={<StarIcon />}
+                                  label="Popular"
+                                  color="warning"
+                                  size="small"
+                                  sx={{ height: 24 }}
+                                />
+                              )}
+                            </Stack>
+                            
+                            <Box>
+                              <Stack direction="row" alignItems="baseline" spacing={1}>
+                                <Typography variant="h5" fontWeight={700} color="#1A1A1A">
+                                  {formatCurrency(pkg.price)}
+                                </Typography>
+                                {pkg.originalPrice && pkg.originalPrice > pkg.price && (
+                                  <Typography
+                                    variant="body2"
+                                    sx={{
+                                      textDecoration: 'line-through',
+                                      color: '#999',
+                                    }}
+                                  >
+                                    {formatCurrency(pkg.originalPrice)}
+                                  </Typography>
+                                )}
+                              </Stack>
+                              {pkg.discountPercentage && (
+                                <Chip
+                                  label={`${pkg.discountPercentage}% OFF`}
+                                  color="success"
+                                  size="small"
+                                  sx={{ mt: 0.5 }}
+                                />
+                              )}
+                            </Box>
+
+                            <Stack spacing={0.5}>
+                              {pkg.dataLimit && (
+                                <Typography variant="caption" color="#505050">
+                                  📊 {pkg.dataLimit}
+                                </Typography>
+                              )}
+                              {pkg.speed && (
+                                <Typography variant="caption" color="#505050">
+                                  ⚡ {pkg.speed}
+                                </Typography>
+                              )}
+                            </Stack>
+
+                            <Button
+                              variant="contained"
+                              color="warning"
+                              fullWidth
+                              startIcon={<ShoppingCartIcon />}
+                              onClick={() => onNavigateToPackages?.(pkg.id)}
+                              sx={{
+                                mt: 1,
+                                fontWeight: 600,
+                                textTransform: 'none',
+                              }}
+                            >
+                              Buy Now
+                            </Button>
+                          </Stack>
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                  ))}
+                </Grid>
               )}
             </SectionCard>
           </Grid>

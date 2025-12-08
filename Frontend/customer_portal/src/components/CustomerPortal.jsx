@@ -66,8 +66,12 @@ import ResponsiveLayout from './ResponsiveLayout';
 import MobileTabContent from './MobileTabContent';
 import LandingPage from './LandingPage';
 import QuickConnect from './QuickConnect';
+import SignUp from './SignUp';
+import PinLogin from './PinLogin';
+import ForgotPin from './ForgotPin';
 import { useData } from '../context/DataContext';
 import { getTranslation } from '../translations';
+import authService from '../services/authService';
 
 const CustomerPortal = () => {
   const theme = useTheme();
@@ -76,7 +80,7 @@ const CustomerPortal = () => {
   const [showCoverageModal, setShowCoverageModal] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [currentLanguage, setCurrentLanguage] = useState('en');
-  const [currentView, setCurrentView] = useState('landing'); // 'landing', 'voucher', 'packages'
+  const [currentView, setCurrentView] = useState('landing'); // 'landing', 'voucher', 'packages', 'signup', 'login', 'forgot-pin'
 
   // Use preloaded data from context
   const { 
@@ -206,6 +210,32 @@ const CustomerPortal = () => {
   };
 
   const handleNavigateToPackages = () => {
+    // Check if user is authenticated
+    if (!authService.isAuthenticated()) {
+      setCurrentView('login');
+      return;
+    }
+    setCurrentView('packages');
+  };
+
+  const handleNavigateToSignUp = () => {
+    setCurrentView('signup');
+  };
+
+  const handleNavigateToLogin = () => {
+    setCurrentView('login');
+  };
+
+  const handleNavigateToForgotPin = () => {
+    setCurrentView('forgot-pin');
+  };
+
+  const handleLoginSuccess = (response) => {
+    setCurrentView('packages'); // Navigate to packages after login
+  };
+
+  const handleSignUpSuccess = (response) => {
+    // After signup, user gets free trial - navigate to packages
     setCurrentView('packages');
   };
 
@@ -432,6 +462,8 @@ const CustomerPortal = () => {
             <LandingPage
               onNavigateToVoucher={handleNavigateToVoucher}
               onNavigateToPackages={handleNavigateToPackages}
+              onNavigateToSignUp={handleNavigateToSignUp}
+              onNavigateToLogin={handleNavigateToLogin}
               currentLanguage={currentLanguage}
             />
           </motion.div>

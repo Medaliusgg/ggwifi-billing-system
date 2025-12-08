@@ -171,6 +171,11 @@ const AppContent = () => {
                 onLoginSuccess={handleCustomerLoginSuccess}
                 onLogout={handleCustomerLogout}
                 onBack={handleBackToLanding}
+                onNavigateToPackages={(packageId) => {
+                  handleNavigateToPackages();
+                  // If packageId is provided, we could scroll to that package
+                  // This would require BuyPackage to support packageId highlighting
+                }}
               />
             </motion.div>
           )}

@@ -28,11 +28,28 @@ import {
   Wifi as WifiIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
+import { useQuery } from 'react-query';
 import { customerPortalAPI } from '../services/customerPortalApi';
+import CampaignRail from './marketing/CampaignRail';
+import QuickActionsGrid from './marketing/QuickActionsGrid';
+import ValueStrip from './marketing/ValueStrip';
+import StickyBottomCTA from './ui/StickyBottomCTA';
 
-const LandingPage = ({ onNavigateToVoucher, onNavigateToPackages, currentLanguage }) => {
+const LandingPage = ({ onNavigateToVoucher, onNavigateToPackages, onNavigateToSignUp, onNavigateToLogin, currentLanguage }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
+  // Fetch marketing campaigns
+  const campaignsQuery = useQuery(
+    ['marketing-campaigns'],
+    async () => {
+      const res = await customerPortalAPI.getCampaigns();
+      return res?.data?.campaigns || [];
+    },
+    { refetchInterval: 300000 } // Refetch every 5 minutes
+  );
+
+  const campaigns = campaignsQuery.data || [];
 
   const testimonials = [
     {
@@ -129,7 +146,7 @@ const LandingPage = ({ onNavigateToVoucher, onNavigateToPackages, currentLanguag
                     variant="contained"
                     size="large"
                     endIcon={<ArrowForwardIcon />}
-                    onClick={onNavigateToPackages}
+                    onClick={onNavigateToSignUp}
                     sx={{
                       backgroundColor: '#F2C94C',
                       color: '#0A0A0A',
@@ -146,13 +163,13 @@ const LandingPage = ({ onNavigateToVoucher, onNavigateToPackages, currentLanguag
                       },
                     }}
                   >
-                    Buy Package Now
+                    Sign Up
                   </Button>
                   <Button
                     variant="outlined"
                     size="large"
                     endIcon={<ArrowForwardIcon />}
-                    onClick={onNavigateToVoucher}
+                    onClick={onNavigateToLogin}
                     sx={{
                       borderColor: '#F2C94C',
                       color: '#0A0A0A',
@@ -165,6 +182,42 @@ const LandingPage = ({ onNavigateToVoucher, onNavigateToPackages, currentLanguag
                       '&:hover': {
                         borderColor: '#E0B335',
                         backgroundColor: 'rgba(242, 201, 76, 0.1)',
+                      },
+                    }}
+                  >
+                    Login
+                  </Button>
+                </Stack>
+                <Stack
+                  direction={{ xs: 'column', sm: 'row' }}
+                  spacing={2}
+                  sx={{ mb: 4 }}
+                >
+                  <Button
+                    variant="text"
+                    size="medium"
+                    onClick={onNavigateToPackages}
+                    sx={{
+                      color: '#666',
+                      fontSize: '0.875rem',
+                      textTransform: 'none',
+                      '&:hover': {
+                        color: '#F2C94C',
+                      },
+                    }}
+                  >
+                    Buy Package
+                  </Button>
+                  <Button
+                    variant="text"
+                    size="medium"
+                    onClick={onNavigateToVoucher}
+                    sx={{
+                      color: '#666',
+                      fontSize: '0.875rem',
+                      textTransform: 'none',
+                      '&:hover': {
+                        color: '#F2C94C',
                       },
                     }}
                   >
@@ -252,6 +305,11 @@ const LandingPage = ({ onNavigateToVoucher, onNavigateToPackages, currentLanguag
             </Grid>
           </Grid>
         </Box>
+
+        {/* ============================================
+            VALUE STRIP (4-Item Value Propositions)
+            ============================================ */}
+        <ValueStrip />
 
         {/* ============================================
             FEATURE STRIP (Horizontal 3-Item Highlights)
@@ -535,43 +593,30 @@ const LandingPage = ({ onNavigateToVoucher, onNavigateToPackages, currentLanguag
               justifyContent="center"
             >
               <Button
-                variant="contained"
-                size="large"
-                endIcon={<ArrowForwardIcon />}
+                variant="text"
+                size="medium"
                 onClick={onNavigateToPackages}
                 sx={{
-                  backgroundColor: '#F2C94C',
-                  color: '#0A0A0A',
-                  borderRadius: '12px',
-                  px: 4,
-                  py: 1.5,
-                  fontSize: '1rem',
-                  fontWeight: 600,
+                  color: '#666',
+                  fontSize: '0.875rem',
                   textTransform: 'none',
                   '&:hover': {
-                    backgroundColor: '#E0B335',
+                    color: '#F2C94C',
                   },
                 }}
               >
-                Buy Package Now
+                Buy Package
               </Button>
               <Button
-                variant="outlined"
-                size="large"
-                endIcon={<ArrowForwardIcon />}
+                variant="text"
+                size="medium"
                 onClick={onNavigateToVoucher}
                 sx={{
-                  borderColor: '#F2C94C',
-                  color: '#0A0A0A',
-                  borderRadius: '12px',
-                  px: 4,
-                  py: 1.5,
-                  fontSize: '1rem',
-                  fontWeight: 600,
+                  color: '#666',
+                  fontSize: '0.875rem',
                   textTransform: 'none',
                   '&:hover': {
-                    borderColor: '#E0B335',
-                    backgroundColor: 'rgba(242, 201, 76, 0.1)',
+                    color: '#F2C94C',
                   },
                 }}
               >
@@ -581,6 +626,16 @@ const LandingPage = ({ onNavigateToVoucher, onNavigateToPackages, currentLanguag
           </Card>
         </Box>
       </Container>
+
+      {/* Sticky Bottom CTA Bar */}
+      <StickyBottomCTA
+        onBuyClick={onNavigateToPackages}
+        onConnectClick={onNavigateToVoucher}
+        showBuy={true}
+        showConnect={true}
+        buyText="Buy Now"
+        connectText="Fast Connect"
+      />
     </Box>
   );
 };

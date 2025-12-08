@@ -103,6 +103,17 @@ const MarketingManagement = () => {
     channel: 'SMS',
     status: 'DRAFT',
     autoRepeat: false,
+    messageTemplate: '',
+    templateId: '',
+    subject: '',
+    scheduleAt: '',
+    targetFilters: '{}',
+    segmentId: '',
+    repeatIntervalDays: null,
+    includeHotspotCustomers: true,
+    includePppoeCustomers: false,
+    loyaltyPointThreshold: null,
+    inactivityDaysThreshold: null,
   });
 
   const [segmentForm, setSegmentForm] = useState({
@@ -120,11 +131,18 @@ const MarketingManagement = () => {
 
   const [mediaForm, setMediaForm] = useState({
     title: '',
+    description: '',
     mediaType: 'VIDEO',
     fileUrl: '',
     durationSeconds: 6,
+    skipAfterSeconds: 2,
     skipAllowed: false,
     priority: 5,
+    badge: '',
+    ctaText: '',
+    ctaUrl: '',
+    targetAudience: 'ALL',
+    isActive: true,
   });
 
   const [automationForm, setAutomationForm] = useState({
@@ -155,7 +173,7 @@ const MarketingManagement = () => {
         marketingAPI.getCampaigns(),
         marketingAPI.getSegments(),
         marketingAPI.getTemplates(),
-        marketingAPI.getMediaCampaigns(),
+        marketingAPI.getAllMediaCampaigns(), // Use new endpoint
         marketingAPI.getAutomationTriggers(),
         marketingAPI.getSchedules(),
         marketingAPI.getLogs(),
@@ -164,7 +182,11 @@ const MarketingManagement = () => {
       if (campaignsRes.status === 'fulfilled') setCampaigns(campaignsRes.value.data || []);
       if (segmentsRes.status === 'fulfilled') setSegments(segmentsRes.value.data || []);
       if (templatesRes.status === 'fulfilled') setTemplates(templatesRes.value.data || []);
-      if (mediaRes.status === 'fulfilled') setMediaCampaigns(mediaRes.value.data || []);
+      if (mediaRes.status === 'fulfilled') {
+        // Handle both old format (data array) and new format (campaigns array)
+        const mediaData = mediaRes.value.data || mediaRes.value;
+        setMediaCampaigns(mediaData.campaigns || mediaData || []);
+      }
       if (automationRes.status === 'fulfilled') setAutomationTriggers(automationRes.value.data || []);
       if (schedulesRes.status === 'fulfilled') setSchedules(schedulesRes.value.data || []);
       if (logsRes.status === 'fulfilled') setLogs(logsRes.value.data || []);
@@ -182,8 +204,14 @@ const MarketingManagement = () => {
 
   const handleCreateCampaign = async () => {
     try {
+      // Validate required fields
+      if (!campaignForm.name || !campaignForm.messageTemplate) {
+        enqueueSnackbar('Campaign name and message template are required', { variant: 'error' });
+        return;
+      }
+      
       await marketingAPI.createCampaign(campaignForm);
-      enqueueSnackbar('Campaign created', { variant: 'success' });
+      enqueueSnackbar('SMS Campaign created successfully', { variant: 'success' });
       setCampaignDialogOpen(false);
       setCampaignForm({
         name: '',
@@ -192,21 +220,38 @@ const MarketingManagement = () => {
         channel: 'SMS',
         status: 'DRAFT',
         autoRepeat: false,
+        messageTemplate: '',
+        templateId: '',
+        subject: '',
+        scheduleAt: '',
+        targetFilters: '{}',
+        segmentId: '',
+        repeatIntervalDays: null,
+        includeHotspotCustomers: true,
+        includePppoeCustomers: false,
+        loyaltyPointThreshold: null,
+        inactivityDaysThreshold: null,
       });
       fetchMarketingData();
     } catch (error) {
       console.error('Failed to create campaign', error);
-      enqueueSnackbar('Failed to create campaign', { variant: 'error' });
+      enqueueSnackbar('Failed to create campaign: ' + (error.response?.data?.message || error.message), { variant: 'error' });
     }
   };
 
   const handleSendCampaign = async (campaignId) => {
     try {
-      await marketingAPI.sendCampaign(campaignId);
-      enqueueSnackbar('Campaign triggered', { variant: 'success' });
+      const response = await marketingAPI.sendCampaign(campaignId);
+      const messagesSent = response?.data?.messagesSent || 0;
+      const messagesFailed = response?.data?.messagesFailed || 0;
+      enqueueSnackbar(
+        `Campaign sent! ${messagesSent} messages sent${messagesFailed > 0 ? `, ${messagesFailed} failed` : ''}`,
+        { variant: 'success' }
+      );
+      fetchMarketingData(); // Refresh to show updated stats
     } catch (error) {
       console.error('Failed to send campaign', error);
-      enqueueSnackbar('Failed to send campaign', { variant: 'error' });
+      enqueueSnackbar('Failed to send campaign: ' + (error.response?.data?.message || error.message), { variant: 'error' });
     }
   };
 
@@ -278,23 +323,57 @@ const MarketingManagement = () => {
     }
   };
 
+  const handleDeleteMediaCampaign = async (campaignId) => {
+    try {
+      await marketingAPI.deleteMediaCampaign(campaignId);
+      enqueueSnackbar('Media campaign deleted', { variant: 'success' });
+      fetchMarketingData();
+    } catch (error) {
+      console.error('Failed to delete media campaign', error);
+      enqueueSnackbar('Failed to delete media campaign', { variant: 'error' });
+    }
+  };
+
   const handleCreateMediaCampaign = async () => {
     try {
-      await marketingAPI.saveMediaCampaign(mediaForm);
-      enqueueSnackbar('Media campaign saved', { variant: 'success' });
+      // Transform form data to match new MarketingCampaign entity
+      const campaignData = {
+        title: mediaForm.title,
+        description: mediaForm.description || '',
+        type: mediaForm.mediaType, // VIDEO or IMAGE
+        mediaUrl: mediaForm.fileUrl,
+        durationSeconds: mediaForm.durationSeconds,
+        skipAfterSeconds: mediaForm.skipAllowed ? 2 : null,
+        isActive: true,
+        priority: mediaForm.priority || 5,
+        targetAudience: mediaForm.targetAudience || 'ALL',
+        badge: mediaForm.badge || null,
+        ctaText: mediaForm.ctaText || null,
+        ctaUrl: mediaForm.ctaUrl || null,
+      };
+      
+      await marketingAPI.createMediaCampaign(campaignData);
+      enqueueSnackbar('Media campaign created successfully', { variant: 'success' });
       setMediaDialogOpen(false);
       setMediaForm({
         title: '',
+        description: '',
         mediaType: 'VIDEO',
         fileUrl: '',
         durationSeconds: 6,
+        skipAfterSeconds: 2,
         skipAllowed: false,
         priority: 5,
+        badge: '',
+        ctaText: '',
+        ctaUrl: '',
+        targetAudience: 'ALL',
+        isActive: true,
       });
       fetchMarketingData();
     } catch (error) {
-      console.error('Failed to save media campaign', error);
-      enqueueSnackbar('Failed to save media campaign', { variant: 'error' });
+      console.error('Failed to create media campaign', error);
+      enqueueSnackbar('Failed to create media campaign: ' + (error.response?.data?.message || error.message), { variant: 'error' });
     }
   };
 
@@ -615,9 +694,33 @@ const MarketingManagement = () => {
               <CardContent>
                 {renderTable(mediaCampaigns, [
                   { field: 'title', headerName: 'Title' },
-                  { field: 'mediaType', headerName: 'Type' },
+                  { field: 'type', headerName: 'Type', render: (row) => row.type || row.mediaType || '—' },
                   { field: 'durationSeconds', headerName: 'Duration (s)' },
-                  { field: 'impressionsCount', headerName: 'Impressions', render: (row) => row.impressionsCount ?? 0 },
+                  { field: 'impressionCount', headerName: 'Impressions', render: (row) => row.impressionCount || row.impressionsCount || 0 },
+                  { field: 'clickCount', headerName: 'Clicks', render: (row) => row.clickCount || 0 },
+                  { field: 'isActive', headerName: 'Status', render: (row) => (
+                    <Chip 
+                      label={row.isActive ? 'Active' : 'Inactive'} 
+                      size="small" 
+                      color={row.isActive ? 'success' : 'default'} 
+                    />
+                  )},
+                  {
+                    field: 'actions',
+                    headerName: 'Actions',
+                    render: (row) => (
+                      <Stack direction="row" spacing={1}>
+                        <Button
+                          size="small"
+                          color="error"
+                          startIcon={<DeleteIcon />}
+                          onClick={() => handleDeleteMediaCampaign(row.id)}
+                        >
+                          Delete
+                        </Button>
+                      </Stack>
+                    ),
+                  },
                 ], 'No media campaigns yet')}
               </CardContent>
             </Card>
@@ -701,16 +804,18 @@ const MarketingManagement = () => {
         </Grid>
       </TabPanel>
 
-      {/* Campaign Dialog */}
-      <Dialog open={campaignDialogOpen} onClose={() => setCampaignDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Create Campaign</DialogTitle>
+      {/* SMS Campaign Dialog */}
+      <Dialog open={campaignDialogOpen} onClose={() => setCampaignDialogOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle>Create SMS Marketing Campaign</DialogTitle>
         <DialogContent dividers>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <TextField
-              label="Name"
+              label="Campaign Name *"
               value={campaignForm.name}
               onChange={(e) => setCampaignForm((prev) => ({ ...prev, name: e.target.value }))}
               fullWidth
+              required
+              helperText="e.g., Welcome New Users, Flash Sale Alert"
             />
             <TextField
               label="Description"
@@ -720,23 +825,151 @@ const MarketingManagement = () => {
               multiline
               minRows={2}
             />
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  select
+                  label="Campaign Type *"
+                  value={campaignForm.campaignType}
+                  onChange={(e) => setCampaignForm((prev) => ({ ...prev, campaignType: e.target.value }))}
+                  fullWidth
+                  required
+                >
+                  {campaignTypeOptions.map((type) => (
+                    <MenuItem key={type} value={type}>
+                      {type.replace(/_/g, ' ')}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  select
+                  label="Status"
+                  value={campaignForm.status}
+                  onChange={(e) => setCampaignForm((prev) => ({ ...prev, status: e.target.value }))}
+                  fullWidth
+                >
+                  <MenuItem value="DRAFT">Draft</MenuItem>
+                  <MenuItem value="SCHEDULED">Scheduled</MenuItem>
+                  <MenuItem value="RUNNING">Running</MenuItem>
+                  <MenuItem value="PAUSED">Paused</MenuItem>
+                </TextField>
+              </Grid>
+            </Grid>
+            
+            <Divider sx={{ my: 1 }} />
+            <Typography variant="subtitle2" fontWeight="bold">Message Content</Typography>
+            
             <TextField
               select
-              label="Campaign Type"
-              value={campaignForm.campaignType}
-              onChange={(e) => setCampaignForm((prev) => ({ ...prev, campaignType: e.target.value }))}
+              label="Use Template"
+              value={campaignForm.templateId}
+              onChange={(e) => setCampaignForm((prev) => ({ ...prev, templateId: e.target.value }))}
+              fullWidth
+              helperText="Select a template or write custom message below"
             >
-              {campaignTypeOptions.map((type) => (
-                <MenuItem key={type} value={type}>
-                  {type.replace(/_/g, ' ')}
+              <MenuItem value="">None - Use Custom Message</MenuItem>
+              {templates.map((tpl) => (
+                <MenuItem key={tpl.templateId || tpl.id} value={tpl.templateId || tpl.id}>
+                  {tpl.title}
                 </MenuItem>
               ))}
             </TextField>
+            
             <TextField
-              label="Channel"
-              value={campaignForm.channel}
-              onChange={(e) => setCampaignForm((prev) => ({ ...prev, channel: e.target.value }))}
+              label="Message Template *"
+              value={campaignForm.messageTemplate}
+              onChange={(e) => setCampaignForm((prev) => ({ ...prev, messageTemplate: e.target.value }))}
+              fullWidth
+              multiline
+              minRows={4}
+              required
+              helperText="Use placeholders: {{name}}, {{phone}}, {{points}}, {{campaignName}}"
+              placeholder="Hi {{name}}! Welcome to GG WiFi. Enjoy fast internet with {{points}} loyalty points!"
             />
+            
+            <TextField
+              label="Subject (Optional)"
+              value={campaignForm.subject}
+              onChange={(e) => setCampaignForm((prev) => ({ ...prev, subject: e.target.value }))}
+              fullWidth
+            />
+            
+            <Divider sx={{ my: 1 }} />
+            <Typography variant="subtitle2" fontWeight="bold">Target Audience</Typography>
+            
+            <TextField
+              select
+              label="Audience Segment"
+              value={campaignForm.segmentId}
+              onChange={(e) => setCampaignForm((prev) => ({ ...prev, segmentId: e.target.value }))}
+              fullWidth
+            >
+              <MenuItem value="">All Customers</MenuItem>
+              {segments.map((seg) => (
+                <MenuItem key={seg.segmentId || seg.id} value={seg.segmentId || seg.id}>
+                  {seg.name}
+                </MenuItem>
+              ))}
+            </TextField>
+            
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={campaignForm.includeHotspotCustomers}
+                      onChange={(e) => setCampaignForm((prev) => ({ ...prev, includeHotspotCustomers: e.target.checked }))}
+                    />
+                  }
+                  label="Include Hotspot Customers"
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={campaignForm.includePppoeCustomers}
+                      onChange={(e) => setCampaignForm((prev) => ({ ...prev, includePppoeCustomers: e.target.checked }))}
+                    />
+                  }
+                  label="Include PPPoE Customers"
+                />
+              </Grid>
+            </Grid>
+            
+            <TextField
+              label="Loyalty Points Threshold"
+              type="number"
+              value={campaignForm.loyaltyPointThreshold || ''}
+              onChange={(e) => setCampaignForm((prev) => ({ ...prev, loyaltyPointThreshold: e.target.value ? Number(e.target.value) : null }))}
+              fullWidth
+              helperText="Only target customers with at least X points"
+            />
+            
+            <TextField
+              label="Inactivity Days Threshold"
+              type="number"
+              value={campaignForm.inactivityDaysThreshold || ''}
+              onChange={(e) => setCampaignForm((prev) => ({ ...prev, inactivityDaysThreshold: e.target.value ? Number(e.target.value) : null }))}
+              fullWidth
+              helperText="Target customers inactive for X days (winback)"
+            />
+            
+            <Divider sx={{ my: 1 }} />
+            <Typography variant="subtitle2" fontWeight="bold">Scheduling</Typography>
+            
+            <TextField
+              label="Schedule At (Optional)"
+              type="datetime-local"
+              value={campaignForm.scheduleAt}
+              onChange={(e) => setCampaignForm((prev) => ({ ...prev, scheduleAt: e.target.value }))}
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+              helperText="Leave empty to send immediately"
+            />
+            
             <FormControlLabel
               control={
                 <Switch
@@ -744,14 +977,25 @@ const MarketingManagement = () => {
                   onChange={(e) => setCampaignForm((prev) => ({ ...prev, autoRepeat: e.target.checked }))}
                 />
               }
-              label="Auto Repeat"
+              label="Auto Repeat Campaign"
             />
+            
+            {campaignForm.autoRepeat && (
+              <TextField
+                label="Repeat Interval (Days)"
+                type="number"
+                value={campaignForm.repeatIntervalDays || ''}
+                onChange={(e) => setCampaignForm((prev) => ({ ...prev, repeatIntervalDays: e.target.value ? Number(e.target.value) : null }))}
+                fullWidth
+                helperText="Campaign will repeat every X days"
+              />
+            )}
           </Stack>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setCampaignDialogOpen(false)}>Cancel</Button>
           <Button variant="contained" onClick={handleCreateCampaign}>
-            Save
+            Create Campaign
           </Button>
         </DialogActions>
       </Dialog>
@@ -833,46 +1077,129 @@ const MarketingManagement = () => {
       </Dialog>
 
       {/* Media Dialog */}
-      <Dialog open={mediaDialogOpen} onClose={() => setMediaDialogOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog open={mediaDialogOpen} onClose={() => setMediaDialogOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>Create Portal Media Campaign</DialogTitle>
         <DialogContent dividers>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <TextField
-              label="Title"
+              label="Title *"
               value={mediaForm.title}
               onChange={(e) => setMediaForm((prev) => ({ ...prev, title: e.target.value }))}
+              fullWidth
+              required
             />
             <TextField
-              select
-              label="Media Type"
-              value={mediaForm.mediaType}
-              onChange={(e) => setMediaForm((prev) => ({ ...prev, mediaType: e.target.value }))}
-            >
-              {mediaTypeOptions.map((type) => (
-                <MenuItem key={type} value={type}>
-                  {type}
-                </MenuItem>
-              ))}
-            </TextField>
+              label="Description"
+              value={mediaForm.description}
+              onChange={(e) => setMediaForm((prev) => ({ ...prev, description: e.target.value }))}
+              fullWidth
+              multiline
+              minRows={2}
+            />
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  select
+                  label="Media Type *"
+                  value={mediaForm.mediaType}
+                  onChange={(e) => setMediaForm((prev) => ({ ...prev, mediaType: e.target.value }))}
+                  fullWidth
+                  required
+                >
+                  {mediaTypeOptions.map((type) => (
+                    <MenuItem key={type} value={type}>
+                      {type}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  select
+                  label="Target Audience"
+                  value={mediaForm.targetAudience}
+                  onChange={(e) => setMediaForm((prev) => ({ ...prev, targetAudience: e.target.value }))}
+                  fullWidth
+                >
+                  <MenuItem value="ALL">All Users</MenuItem>
+                  <MenuItem value="NEW_USER">New Users</MenuItem>
+                  <MenuItem value="RETURNING_USER">Returning Users</MenuItem>
+                </TextField>
+              </Grid>
+            </Grid>
             <TextField
-              label="File URL (CDN)"
+              label="Media URL (CDN) *"
               value={mediaForm.fileUrl}
               onChange={(e) => setMediaForm((prev) => ({ ...prev, fileUrl: e.target.value }))}
+              fullWidth
+              required
+              helperText="Full URL to video or image file"
+            />
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Duration (seconds)"
+                  type="number"
+                  value={mediaForm.durationSeconds}
+                  onChange={(e) => setMediaForm((prev) => ({ ...prev, durationSeconds: Number(e.target.value) || 0 }))}
+                  fullWidth
+                  helperText="For video campaigns"
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Skip After (seconds)"
+                  type="number"
+                  value={mediaForm.skipAfterSeconds}
+                  onChange={(e) => setMediaForm((prev) => ({ ...prev, skipAfterSeconds: Number(e.target.value) || 2 }))}
+                  fullWidth
+                  helperText="Auto-advance after N seconds"
+                />
+              </Grid>
+            </Grid>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Badge Text"
+                  value={mediaForm.badge}
+                  onChange={(e) => setMediaForm((prev) => ({ ...prev, badge: e.target.value }))}
+                  fullWidth
+                  placeholder="e.g., New, Limited Time"
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Priority"
+                  type="number"
+                  value={mediaForm.priority}
+                  onChange={(e) => setMediaForm((prev) => ({ ...prev, priority: Number(e.target.value) || 0 }))}
+                  fullWidth
+                  helperText="Higher = shown first"
+                />
+              </Grid>
+            </Grid>
+            <TextField
+              label="CTA Text"
+              value={mediaForm.ctaText}
+              onChange={(e) => setMediaForm((prev) => ({ ...prev, ctaText: e.target.value }))}
+              fullWidth
+              placeholder="e.g., Get Started, Buy Now"
             />
             <TextField
-              label="Duration (seconds)"
-              type="number"
-              value={mediaForm.durationSeconds}
-              onChange={(e) => setMediaForm((prev) => ({ ...prev, durationSeconds: Number(e.target.value) }))}
+              label="CTA URL"
+              value={mediaForm.ctaUrl}
+              onChange={(e) => setMediaForm((prev) => ({ ...prev, ctaUrl: e.target.value }))}
+              fullWidth
+              placeholder="https://ggwifi.co.tz/packages"
             />
             <FormControlLabel
               control={
                 <Switch
-                  checked={mediaForm.skipAllowed}
-                  onChange={(e) => setMediaForm((prev) => ({ ...prev, skipAllowed: e.target.checked }))}
+                  checked={mediaForm.isActive}
+                  onChange={(e) => setMediaForm((prev) => ({ ...prev, isActive: e.target.checked }))}
                 />
               }
-              label="Allow Skip"
+              label="Active (visible on portal)"
             />
           </Stack>
         </DialogContent>

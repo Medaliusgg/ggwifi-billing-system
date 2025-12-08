@@ -28,6 +28,12 @@ class ApiService {
       defaultHeaders['Content-Type'] = 'application/json';
     }
     
+    // Add auth token if available
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      defaultHeaders['Authorization'] = `Bearer ${token}`;
+    }
+    
     const defaultOptions = {
       headers: defaultHeaders,
       mode: 'cors', // Explicitly enable CORS
@@ -58,6 +64,15 @@ class ApiService {
       }
       
       if (!response.ok) {
+        // Handle 401 Unauthorized - redirect to login
+        if (response.status === 401) {
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('customerRefreshToken');
+          localStorage.removeItem('customer');
+          // Could trigger a redirect or show login modal
+          throw new Error('Authentication required. Please login.');
+        }
+        
         // Try to get error message from response
         let errorMessage = `HTTP error! status: ${response.status}`;
         try {
