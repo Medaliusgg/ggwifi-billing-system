@@ -107,14 +107,19 @@ public class ZenoPayService {
             System.out.println("   Currency: " + currency);
             System.out.println("   Country: " + country);
             
-            // Add webhook URL for payment notifications (must be publicly accessible)
+            // CRITICAL: Always include webhook_url - ZenoPay requires this to send webhooks
+            // Without this, ZenoPay will NEVER send webhook notifications
             String webhookUrl = getWebhookUrl();
-            if (webhookUrl != null && !webhookUrl.contains("localhost")) {
-                requestBody.put("webhook_url", webhookUrl);
-                System.out.println("   Webhook URL: " + webhookUrl);
-            } else {
-                System.out.println("   ⚠️  Webhook URL not set or is localhost - using default");
+            if (webhookUrl == null || webhookUrl.isEmpty() || webhookUrl.contains("localhost")) {
+                // Use production webhook URL as fallback
+                webhookUrl = "https://api.ggwifi.co.tz/api/v1/customer-portal/webhook/zenopay";
+                System.out.println("   ⚠️  Using default production webhook URL: " + webhookUrl);
             }
+            
+            // ALWAYS include webhook_url - this is REQUIRED by ZenoPay
+            requestBody.put("webhook_url", webhookUrl);
+            System.out.println("   ✅ Webhook URL included in request: " + webhookUrl);
+            System.out.println("   📌 ZenoPay will send webhook to this URL when payment status changes");
             
             System.out.println("   📤 Full Request Body: " + requestBody);
             

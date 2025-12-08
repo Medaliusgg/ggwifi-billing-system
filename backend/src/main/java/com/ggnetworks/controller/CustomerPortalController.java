@@ -509,11 +509,23 @@ public class CustomerPortalController {
      * Handle ZenoPay webhook notifications
      * Enhanced with idempotency checks and audit logging
      */
+    /**
+     * Handle ZenoPay webhook notifications
+     * 
+     * CRITICAL: This endpoint MUST:
+     * 1. Accept x-api-key header (ZenoPay sends this)
+     * 2. Verify the API key matches our configured key
+     * 3. Process payment status update immediately
+     * 4. Return 200 OK to acknowledge receipt
+     * 
+     * ZenoPay will retry if this endpoint returns error or doesn't respond
+     */
     @PostMapping("/webhook/zenopay")
     @org.springframework.transaction.annotation.Transactional // Ensure atomic transaction
+    @org.springframework.web.bind.annotation.CrossOrigin(origins = "*", methods = {org.springframework.web.bind.annotation.RequestMethod.POST}) // Allow ZenoPay servers
     public ResponseEntity<Map<String, Object>> handleZenoPayWebhook(
+            @RequestHeader(value = "x-api-key", required = true) String apiKey, // REQUIRED - ZenoPay always sends this
             @RequestBody Map<String, Object> webhookData,
-            @RequestHeader(value = "x-api-key", required = false) String apiKey,
             jakarta.servlet.http.HttpServletRequest request) {
         Map<String, Object> response = new HashMap<>();
         com.ggnetworks.entity.WebhookProcessing webhookRecord = null;
