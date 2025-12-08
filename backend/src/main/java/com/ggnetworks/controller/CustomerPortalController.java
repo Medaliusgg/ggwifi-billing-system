@@ -982,7 +982,23 @@ public class CustomerPortalController {
             
             response.put("status", "error");
             response.put("message", "Error processing webhook: " + e.getMessage());
+            
+            // Log error processing time
+            long processingTime = System.currentTimeMillis() - webhookStartTime;
+            System.out.println("❌ WEBHOOK PROCESSING FAILED");
+            System.out.println("⏱️ Processing time: " + processingTime + "ms");
+            System.out.println("❌ Error: " + e.getMessage());
         }
+        
+        // CRITICAL: Log processing time for monitoring (success or error)
+        long processingTime = System.currentTimeMillis() - webhookStartTime;
+        String finalStatus = (String) response.getOrDefault("payment_status", 
+            (String) response.getOrDefault("status", "UNKNOWN"));
+        System.out.println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        System.out.println("✅ WEBHOOK PROCESSING COMPLETED");
+        System.out.println("⏱️ Total processing time: " + processingTime + "ms");
+        System.out.println("📊 Final status: " + finalStatus);
+        System.out.println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
         
         return ResponseEntity.ok(response);
     }
