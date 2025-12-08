@@ -318,6 +318,25 @@ public class CustomerPortalController {
             
             System.out.println("💳 Initiating ZenoPay payment...");
             
+            // CRITICAL: Find or create customer BEFORE creating payment
+            // Database requires customer_id to be NOT NULL, so we must have a customer
+            com.ggnetworks.entity.Customer customer = customerRepository.findByPhoneNumber(phoneNumber)
+                .orElseGet(() -> {
+                    System.out.println("📝 Creating new customer for phone: " + phoneNumber);
+                    com.ggnetworks.entity.Customer newCustomer = new com.ggnetworks.entity.Customer();
+                    newCustomer.setCustomerId("CUST_" + System.currentTimeMillis());
+                    newCustomer.setFirstName(customerName != null ? customerName : "Customer");
+                    newCustomer.setLastName("");
+                    newCustomer.setEmail(phoneNumber + "@ggwifi.co.tz");
+                    newCustomer.setPrimaryPhoneNumber(phoneNumber);
+                    newCustomer.setStatus(com.ggnetworks.entity.Customer.CustomerStatus.ACTIVE);
+                    newCustomer.setAccountType(com.ggnetworks.entity.Customer.AccountType.INDIVIDUAL);
+                    newCustomer.setRegistrationDate(java.time.LocalDateTime.now());
+                    return customerRepository.save(newCustomer);
+                });
+            
+            System.out.println("✅ Customer found/created: " + customer.getId() + " (" + customer.getPrimaryPhoneNumber() + ")");
+            
             // Call ZenoPay service
             Map<String, Object> zenoPayResponse = zenoPayService.initiatePayment(zenoPayRequest);
             
@@ -325,6 +344,7 @@ public class CustomerPortalController {
                 System.out.println("✅ Payment initiated successfully");
                 
                 // Create PENDING payment record immediately so status endpoint can find it
+                // CRITICAL: customer_id is required (NOT NULL in database), so we link to customer
                 try {
                     com.ggnetworks.entity.Payment pendingPayment = new com.ggnetworks.entity.Payment();
                     pendingPayment.setPaymentId(orderId);
@@ -337,13 +357,13 @@ public class CustomerPortalController {
                     pendingPayment.setStatus(com.ggnetworks.entity.Payment.PaymentStatus.PENDING);
                     pendingPayment.setGatewayReference((String) zenoPayResponse.get("payment_reference"));
                     
-                    // Set invoice and customer to null for PENDING payments (will be set when payment completes)
-                    // Note: These fields are nullable in the entity, so this is safe
-                    pendingPayment.setInvoiceId(null);
-                    pendingPayment.setCustomerId(null);
+                    // CRITICAL: Link to customer (required - database constraint)
+                    // Invoice will be created when payment completes via webhook
+                    pendingPayment.setCustomerId(customer.getId());
+                    pendingPayment.setInvoiceId(null); // Invoice created on payment completion
                     
                     pendingPayment = paymentRepository.save(pendingPayment);
-                    System.out.println("✅ PENDING payment record created with ID: " + pendingPayment.getId());
+                    System.out.println("✅ PENDING payment record created with ID: " + pendingPayment.getId() + " (customer: " + customer.getId() + ")");
                 } catch (Exception e) {
                     System.err.println("⚠️ Failed to create PENDING payment record (non-critical): " + e.getMessage());
                     e.printStackTrace();
