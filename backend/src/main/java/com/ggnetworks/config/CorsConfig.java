@@ -37,7 +37,9 @@ public class CorsConfig {
             "https://*.ggwifi.co.tz",     // All ggwifi subdomains
             "http://*.ggwifi.co.tz",      // All ggwifi subdomains HTTP
             "https://*.pages.dev",        // Cloudflare Pages
-            "https://*.cloudflarepages.app" // Cloudflare Pages alternative
+            "https://*.cloudflarepages.app", // Cloudflare Pages alternative
+            "https://zenoapi.com",        // ZenoPay API servers (for webhook)
+            "https://*.zenoapi.com"       // ZenoPay subdomains
         ));
         
         // DO NOT use setAllowedOrigins when using setAllowedOriginPatterns with allowCredentials(true)
@@ -48,6 +50,7 @@ public class CorsConfig {
         
         // Allow all headers (but not "*" when credentials are enabled)
         // Include all common headers that browsers might send
+        // CRITICAL: Include x-api-key for ZenoPay webhook authentication
         configuration.setAllowedHeaders(Arrays.asList(
             "Content-Type",
             "Authorization",
@@ -62,7 +65,8 @@ public class CorsConfig {
             "X-CSRF-TOKEN",
             "X-Auth-Token",
             "Accept-Language",
-            "Accept-Encoding"
+            "Accept-Encoding",
+            "x-api-key"                    // ZenoPay webhook authentication header
         ));
         
         // Expose headers for frontend access
