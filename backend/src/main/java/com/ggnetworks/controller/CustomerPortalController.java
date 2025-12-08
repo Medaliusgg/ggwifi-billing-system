@@ -376,9 +376,9 @@ public class CustomerPortalController {
     @GetMapping("/payment/status/{orderId}")
     public ResponseEntity<Map<String, Object>> getPaymentStatus(@PathVariable String orderId) {
         Map<String, Object> response = new HashMap<>();
+        long statusCheckStart = System.currentTimeMillis(); // Declare outside try block
         
         try {
-            long statusCheckStart = System.currentTimeMillis();
             System.out.println("🔍 Checking payment status for order: " + orderId + " at " + java.time.LocalDateTime.now());
             
             // Find payment by order ID (paymentId field)
