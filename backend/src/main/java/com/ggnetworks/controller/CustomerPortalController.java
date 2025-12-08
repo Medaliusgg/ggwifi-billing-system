@@ -519,10 +519,11 @@ public class CustomerPortalController {
      * 4. Return 200 OK to acknowledge receipt
      * 
      * ZenoPay will retry if this endpoint returns error or doesn't respond
+     * 
+     * NOTE: CORS is configured globally in CorsConfig.java to allow ZenoPay servers
      */
     @PostMapping("/webhook/zenopay")
     @org.springframework.transaction.annotation.Transactional // Ensure atomic transaction
-    @org.springframework.web.bind.annotation.CrossOrigin(origins = "*", methods = {org.springframework.web.bind.annotation.RequestMethod.POST}) // Allow ZenoPay servers
     public ResponseEntity<Map<String, Object>> handleZenoPayWebhook(
             @RequestHeader(value = "x-api-key", required = true) String apiKey, // REQUIRED - ZenoPay always sends this
             @RequestBody Map<String, Object> webhookData,
