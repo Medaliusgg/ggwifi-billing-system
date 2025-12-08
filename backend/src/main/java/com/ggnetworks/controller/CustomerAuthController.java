@@ -1,6 +1,7 @@
 package com.ggnetworks.controller;
 
 import com.ggnetworks.service.CustomerAuthService;
+import com.ggnetworks.service.PinLoginService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +20,9 @@ public class CustomerAuthController {
 
     @Autowired
     private CustomerAuthService customerAuthService;
+
+    @Autowired
+    private PinLoginService pinLoginService;
 
     /**
      * Request OTP for login
@@ -69,6 +73,29 @@ public class CustomerAuthController {
         
         Map<String, Object> response = customerAuthService.verifyOTPAndLogin(phoneNumber, otpCode, ipAddress, userAgent);
         
+        if ("success".equals(response.get("status"))) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    /**
+     * Login with PIN (for registered customers)
+     * POST /api/v1/customer-auth/login
+     */
+    @PostMapping("/login")
+    public ResponseEntity<Map<String, Object>> loginWithPin(@RequestBody Map<String, String> request) {
+        String phoneNumber = request.get("phoneNumber");
+        String pin = request.get("pin");
+
+        if (phoneNumber == null || pin == null) {
+            return ResponseEntity.badRequest()
+                .body(Map.of("status", "error", "message", "Phone number and PIN are required"));
+        }
+
+        Map<String, Object> response = pinLoginService.loginWithPin(phoneNumber, pin);
+
         if ("success".equals(response.get("status"))) {
             return ResponseEntity.ok(response);
         } else {

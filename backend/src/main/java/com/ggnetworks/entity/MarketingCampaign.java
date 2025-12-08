@@ -6,258 +6,150 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
+/**
+ * Marketing Campaign Entity
+ * Stores video/image campaigns for customer portal
+ */
 @Entity
-@Table(name = "marketing_campaigns", indexes = {
-        @Index(name = "idx_campaign_type", columnList = "campaign_type"),
-        @Index(name = "idx_campaign_status", columnList = "status")
-})
+@Table(name = "marketing_campaigns")
 public class MarketingCampaign {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "campaign_id", unique = true, nullable = false)
+    @Column(name = "campaign_id", unique = true, nullable = false, length = 50)
     private String campaignId;
 
-    @Column(name = "name", nullable = false)
-    private String name;
+    @Column(name = "title", nullable = false, length = 200)
+    private String title;
 
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
+    @Column(name = "type", nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
-    @Column(name = "campaign_type", nullable = false)
-    private CampaignType campaignType = CampaignType.BROADCAST;
+    private CampaignType type; // VIDEO, IMAGE
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
-    private CampaignStatus status = CampaignStatus.DRAFT;
+    @Column(name = "media_url", nullable = false, length = 500)
+    private String mediaUrl;
 
-    @Column(name = "channel", nullable = false)
-    private String channel = "SMS";
+    @Column(name = "badge", length = 50)
+    private String badge; // e.g., "New", "Limited Time"
 
-    @Column(name = "message_template", columnDefinition = "TEXT")
-    private String messageTemplate;
+    @Column(name = "cta_text", length = 100)
+    private String ctaText; // Call-to-action text
 
-    @Column(name = "subject")
-    private String subject;
+    @Column(name = "cta_url", length = 500)
+    private String ctaUrl; // Where to navigate on click
 
-    @Column(name = "schedule_at")
-    private LocalDateTime scheduleAt;
+    @Column(name = "duration_seconds")
+    private Integer durationSeconds; // For video campaigns
 
-    @Column(name = "last_executed_at")
-    private LocalDateTime lastExecutedAt;
+    @Column(name = "skip_after_seconds")
+    private Integer skipAfterSeconds = 2; // Auto-advance after N seconds
 
-    @Column(name = "target_filters", columnDefinition = "TEXT")
-    private String targetFilters;
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive = true;
 
-    @Column(name = "auto_repeat")
-    private Boolean autoRepeat = false;
+    @Column(name = "priority", nullable = false)
+    private Integer priority = 0; // Higher = shown first
 
-    @Column(name = "repeat_interval_days")
-    private Integer repeatIntervalDays;
+    @Column(name = "target_audience", length = 50)
+    private String targetAudience; // ALL, NEW_USER, RETURNING_USER, etc.
 
-    @Column(name = "include_hotspot_customers")
-    private Boolean includeHotspotCustomers = true;
+    @Column(name = "start_date")
+    private LocalDateTime startDate;
 
-    @Column(name = "include_pppoe_customers")
-    private Boolean includePppoeCustomers = true;
+    @Column(name = "end_date")
+    private LocalDateTime endDate;
 
-    @Column(name = "loyalty_point_threshold")
-    private Integer loyaltyPointThreshold;
+    @Column(name = "impression_count")
+    private Long impressionCount = 0L;
 
-    @Column(name = "inactivity_days_threshold")
-    private Integer inactivityDaysThreshold;
+    @Column(name = "click_count")
+    private Long clickCount = 0L;
 
     @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
-    @Column(name = "updated_at", nullable = false)
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
     public enum CampaignType {
-        BROADCAST,
-        BIRTHDAY,
-        FLASH_PROMOTION,
-        UPSELL,
-        WIN_BACK,
-        LOYALTY_REMINDER
+        VIDEO, IMAGE
     }
 
-    public enum CampaignStatus {
-        DRAFT,
-        SCHEDULED,
-        RUNNING,
-        COMPLETED,
-        CANCELLED
-    }
+    // Constructors
+    public MarketingCampaign() {}
 
-    public MarketingCampaign() {
-        this.campaignId = "MC-" + System.currentTimeMillis();
-    }
-
-    // Getters and setters
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getCampaignId() {
-        return campaignId;
-    }
-
-    public void setCampaignId(String campaignId) {
+    public MarketingCampaign(String campaignId, String title, CampaignType type, String mediaUrl) {
         this.campaignId = campaignId;
+        this.title = title;
+        this.type = type;
+        this.mediaUrl = mediaUrl;
     }
 
-    public String getName() {
-        return name;
-    }
+    // Getters and Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+    public String getCampaignId() { return campaignId; }
+    public void setCampaignId(String campaignId) { this.campaignId = campaignId; }
 
-    public String getDescription() {
-        return description;
-    }
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
-    public CampaignType getCampaignType() {
-        return campaignType;
-    }
+    public CampaignType getType() { return type; }
+    public void setType(CampaignType type) { this.type = type; }
 
-    public void setCampaignType(CampaignType campaignType) {
-        this.campaignType = campaignType;
-    }
+    public String getMediaUrl() { return mediaUrl; }
+    public void setMediaUrl(String mediaUrl) { this.mediaUrl = mediaUrl; }
 
-    public CampaignStatus getStatus() {
-        return status;
-    }
+    public String getBadge() { return badge; }
+    public void setBadge(String badge) { this.badge = badge; }
 
-    public void setStatus(CampaignStatus status) {
-        this.status = status;
-    }
+    public String getCtaText() { return ctaText; }
+    public void setCtaText(String ctaText) { this.ctaText = ctaText; }
 
-    public String getChannel() {
-        return channel;
-    }
+    public String getCtaUrl() { return ctaUrl; }
+    public void setCtaUrl(String ctaUrl) { this.ctaUrl = ctaUrl; }
 
-    public void setChannel(String channel) {
-        this.channel = channel;
-    }
+    public Integer getDurationSeconds() { return durationSeconds; }
+    public void setDurationSeconds(Integer durationSeconds) { this.durationSeconds = durationSeconds; }
 
-    public String getMessageTemplate() {
-        return messageTemplate;
-    }
+    public Integer getSkipAfterSeconds() { return skipAfterSeconds; }
+    public void setSkipAfterSeconds(Integer skipAfterSeconds) { this.skipAfterSeconds = skipAfterSeconds; }
 
-    public void setMessageTemplate(String messageTemplate) {
-        this.messageTemplate = messageTemplate;
-    }
+    public Boolean getIsActive() { return isActive; }
+    public void setIsActive(Boolean isActive) { this.isActive = isActive; }
 
-    public String getSubject() {
-        return subject;
-    }
+    public Integer getPriority() { return priority; }
+    public void setPriority(Integer priority) { this.priority = priority; }
 
-    public void setSubject(String subject) {
-        this.subject = subject;
-    }
+    public String getTargetAudience() { return targetAudience; }
+    public void setTargetAudience(String targetAudience) { this.targetAudience = targetAudience; }
 
-    public LocalDateTime getScheduleAt() {
-        return scheduleAt;
-    }
+    public LocalDateTime getStartDate() { return startDate; }
+    public void setStartDate(LocalDateTime startDate) { this.startDate = startDate; }
 
-    public void setScheduleAt(LocalDateTime scheduleAt) {
-        this.scheduleAt = scheduleAt;
-    }
+    public LocalDateTime getEndDate() { return endDate; }
+    public void setEndDate(LocalDateTime endDate) { this.endDate = endDate; }
 
-    public LocalDateTime getLastExecutedAt() {
-        return lastExecutedAt;
-    }
+    public Long getImpressionCount() { return impressionCount; }
+    public void setImpressionCount(Long impressionCount) { this.impressionCount = impressionCount; }
 
-    public void setLastExecutedAt(LocalDateTime lastExecutedAt) {
-        this.lastExecutedAt = lastExecutedAt;
-    }
+    public Long getClickCount() { return clickCount; }
+    public void setClickCount(Long clickCount) { this.clickCount = clickCount; }
 
-    public String getTargetFilters() {
-        return targetFilters;
-    }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
-    public void setTargetFilters(String targetFilters) {
-        this.targetFilters = targetFilters;
-    }
-
-    public Boolean getAutoRepeat() {
-        return autoRepeat;
-    }
-
-    public void setAutoRepeat(Boolean autoRepeat) {
-        this.autoRepeat = autoRepeat;
-    }
-
-    public Integer getRepeatIntervalDays() {
-        return repeatIntervalDays;
-    }
-
-    public void setRepeatIntervalDays(Integer repeatIntervalDays) {
-        this.repeatIntervalDays = repeatIntervalDays;
-    }
-
-    public Boolean getIncludeHotspotCustomers() {
-        return includeHotspotCustomers;
-    }
-
-    public void setIncludeHotspotCustomers(Boolean includeHotspotCustomers) {
-        this.includeHotspotCustomers = includeHotspotCustomers;
-    }
-
-    public Boolean getIncludePppoeCustomers() {
-        return includePppoeCustomers;
-    }
-
-    public void setIncludePppoeCustomers(Boolean includePppoeCustomers) {
-        this.includePppoeCustomers = includePppoeCustomers;
-    }
-
-    public Integer getLoyaltyPointThreshold() {
-        return loyaltyPointThreshold;
-    }
-
-    public void setLoyaltyPointThreshold(Integer loyaltyPointThreshold) {
-        this.loyaltyPointThreshold = loyaltyPointThreshold;
-    }
-
-    public Integer getInactivityDaysThreshold() {
-        return inactivityDaysThreshold;
-    }
-
-    public void setInactivityDaysThreshold(Integer inactivityDaysThreshold) {
-        this.inactivityDaysThreshold = inactivityDaysThreshold;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }
-

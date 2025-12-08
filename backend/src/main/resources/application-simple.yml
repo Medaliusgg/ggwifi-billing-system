@@ -50,20 +50,26 @@ management:
       show-details: always
 
 # CORS Configuration
-cors:
-  allowed-origins:
-    - http://localhost:3000
-    - http://localhost:3001
-    - https://admin.ggwifi.co.tz
-    - https://connect.ggwifi.co.tz
-    - https://hotspot.ggwifi.co.tz
-    - https://www.ggwifi.co.tz
-  allowed-methods:
-    - GET
-    - POST
-    - PUT
-    - DELETE
-    - OPTIONS
-  allowed-headers:
-    - "*"
-  allow-credentials: true
+# NOTE: CORS is configured via Java configuration in CorsConfig.java
+# This YAML config is commented out to avoid conflicts with Java-based CORS config
+# which properly uses allowedOriginPatterns instead of allowedOrigins
+# cors:
+#   allowed-origin-patterns:
+#     - http://localhost:*
+#     - https://admin.ggwifi.co.tz
+#     - https://connect.ggwifi.co.tz
+#     - https://hotspot.ggwifi.co.tz
+#     - https://www.ggwifi.co.tz
+#   allowed-methods:
+#     - GET
+#     - POST
+#     - PUT
+#     - DELETE
+#     - OPTIONS
+#   allowed-headers:
+#     - Content-Type
+#     - Authorization
+#     - X-Requested-With
+#     - Accept
+#     - Origin
+#   allow-credentials: true

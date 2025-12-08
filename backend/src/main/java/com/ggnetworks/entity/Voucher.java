@@ -92,6 +92,13 @@ public class Voucher {
     @Column(name = "customer_phone_number")
     private String customerPhoneNumber;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "voucher_type")
+    private VoucherType voucherType = VoucherType.PAID;
+
+    @Column(name = "is_free_trial", nullable = false)
+    private Boolean isFreeTrial = false;
+
     // Enterprise enhancements
     @Column(name = "device_mac_history", columnDefinition = "TEXT")
     private String deviceMacHistory; // JSON array of all MACs that used this voucher
@@ -120,6 +127,10 @@ public class Voucher {
 
     public enum UsageStatus {
         UNUSED, USED, EXPIRED
+    }
+
+    public enum VoucherType {
+        TRIAL, PAID
     }
 
     // Constructors
@@ -363,6 +374,12 @@ public class Voucher {
     public void setCustomerPhoneNumber(String customerPhoneNumber) {
         this.customerPhoneNumber = customerPhoneNumber;
     }
+
+    public VoucherType getVoucherType() { return voucherType; }
+    public void setVoucherType(VoucherType voucherType) { this.voucherType = voucherType; }
+
+    public Boolean getIsFreeTrial() { return isFreeTrial; }
+    public void setIsFreeTrial(Boolean isFreeTrial) { this.isFreeTrial = isFreeTrial; }
 
     public LocalDateTime getCreatedAt() {
         return createdAt;

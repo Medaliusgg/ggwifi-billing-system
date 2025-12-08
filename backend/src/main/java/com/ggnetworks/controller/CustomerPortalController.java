@@ -81,6 +81,12 @@ public class CustomerPortalController {
     
     @Autowired
     private com.ggnetworks.repository.WebhookProcessingRepository webhookProcessingRepository;
+    
+    @Autowired
+    private com.ggnetworks.repository.CustomerAccountRepository customerAccountRepository;
+    
+    @Autowired
+    private com.ggnetworks.service.ReferralService referralService;
 
     /**
      * Resolve the currently authenticated customer's phone number from the security context.
@@ -260,6 +266,7 @@ public class CustomerPortalController {
 
     /**
      * Process customer payment with ZenoPay Mobile Money Tanzania
+     * REQUIRES AUTHENTICATION - Customer must be logged in
      */
     @PostMapping("/payment")
     public ResponseEntity<Map<String, Object>> processCustomerPayment(@RequestBody Map<String, Object> paymentData) {
@@ -268,26 +275,59 @@ public class CustomerPortalController {
         try {
             System.out.println("🚀 Processing customer payment...");
             
+            // CRITICAL: Require authentication - get authenticated customer
+            String authenticatedPhoneNumber;
+            try {
+                authenticatedPhoneNumber = getAuthenticatedPhoneNumber();
+                System.out.println("✅ Authenticated customer: " + authenticatedPhoneNumber);
+            } catch (IllegalStateException e) {
+                System.out.println("❌ Payment requires authentication: " + e.getMessage());
+                response.put("status", "error");
+                response.put("message", "Authentication required. Please login first.");
+                response.put("error_code", "UNAUTHORIZED");
+                response.put("redirect_to", "login");
+                return ResponseEntity.status(401).body(response);
+            }
+            
             // Extract payment data
             String customerName = (String) paymentData.get("customerName");
             String phoneNumber = (String) paymentData.get("phoneNumber");
             String packageId = (String) paymentData.get("packageId");
             String amount = (String) paymentData.get("amount");
             
+            // SECURITY: Use authenticated phone number, ignore phoneNumber from request body
+            // This prevents users from making payments on behalf of others
+            final String finalPhoneNumber = authenticatedPhoneNumber;
+            System.out.println("🔐 Using authenticated phone number: " + finalPhoneNumber);
+            
+            // Get customer account to retrieve full name if not provided
+            String finalCustomerName;
+            if (customerName == null || customerName.trim().isEmpty()) {
+                Optional<com.ggnetworks.entity.CustomerAccount> accountOpt = customerAccountRepository.findByPhoneNumber(finalPhoneNumber);
+                if (accountOpt.isPresent()) {
+                    finalCustomerName = accountOpt.get().getFullName();
+                    System.out.println("📝 Using customer name from account: " + finalCustomerName);
+                } else {
+                    finalCustomerName = null;
+                }
+            } else {
+                finalCustomerName = customerName;
+            }
+            
             System.out.println("📋 Payment Details:");
-            System.out.println("   Customer: " + customerName);
-            System.out.println("   Phone: " + phoneNumber);
+            System.out.println("   Customer: " + finalCustomerName);
+            System.out.println("   Phone: " + finalPhoneNumber);
             System.out.println("   Package ID: " + packageId);
             System.out.println("   Amount: " + amount);
             
             // Validate required fields
-            if (customerName == null || customerName.trim().isEmpty()) {
+            if (finalCustomerName == null || finalCustomerName.trim().isEmpty()) {
                 response.put("status", "error");
                 response.put("message", "Customer name is required");
                 return ResponseEntity.badRequest().body(response);
             }
             
-            if (phoneNumber == null || phoneNumber.trim().isEmpty()) {
+            if (finalPhoneNumber == null || finalPhoneNumber.trim().isEmpty()) {
                 response.put("status", "error");
                 response.put("message", "Phone number is required");
                 return ResponseEntity.badRequest().body(response);
@@ -306,29 +346,29 @@ public class CustomerPortalController {
             }
             
             // Generate order ID with package_id included: PKG_timestamp_phone_packageId
-            String orderId = "PKG_" + System.currentTimeMillis() + "_" + phoneNumber.substring(phoneNumber.length() - 4) + "_" + packageId;
+            String orderId = "PKG_" + System.currentTimeMillis() + "_" + finalPhoneNumber.substring(finalPhoneNumber.length() - 4) + "_" + packageId;
             
             // Create payment request for ZenoPay
             Map<String, Object> zenoPayRequest = new HashMap<>();
             zenoPayRequest.put("order_id", orderId);
             zenoPayRequest.put("amount", amount);
-            zenoPayRequest.put("msisdn", phoneNumber);
-            zenoPayRequest.put("customer_name", customerName);
+            zenoPayRequest.put("msisdn", finalPhoneNumber);
+            zenoPayRequest.put("customer_name", finalCustomerName);
             zenoPayRequest.put("package_id", packageId);
             
             System.out.println("💳 Initiating ZenoPay payment...");
             
             // CRITICAL: Find or create customer BEFORE creating payment
             // Database requires customer_id to be NOT NULL, so we must have a customer
-            com.ggnetworks.entity.Customer customer = customerRepository.findByPhoneNumber(phoneNumber)
+            com.ggnetworks.entity.Customer customer = customerRepository.findByPhoneNumber(finalPhoneNumber)
                 .orElseGet(() -> {
-                    System.out.println("📝 Creating new customer for phone: " + phoneNumber);
+                    System.out.println("📝 Creating new customer for phone: " + finalPhoneNumber);
                     com.ggnetworks.entity.Customer newCustomer = new com.ggnetworks.entity.Customer();
                     newCustomer.setCustomerId("CUST_" + System.currentTimeMillis());
-                    newCustomer.setFirstName(customerName != null ? customerName : "Customer");
+                    newCustomer.setFirstName(finalCustomerName != null ? finalCustomerName : "Customer");
                     newCustomer.setLastName("");
-                    newCustomer.setEmail(phoneNumber + "@ggwifi.co.tz");
-                    newCustomer.setPrimaryPhoneNumber(phoneNumber);
+                    newCustomer.setEmail(finalPhoneNumber + "@ggwifi.co.tz");
+                    newCustomer.setPrimaryPhoneNumber(finalPhoneNumber);
                     newCustomer.setStatus(com.ggnetworks.entity.Customer.CustomerStatus.ACTIVE);
                     newCustomer.setAccountType(com.ggnetworks.entity.Customer.AccountType.INDIVIDUAL);
                     newCustomer.setRegistrationDate(java.time.LocalDateTime.now());
@@ -352,7 +392,7 @@ public class CustomerPortalController {
                     pendingPayment.setCurrency("TZS");
                     pendingPayment.setPaymentMethod(com.ggnetworks.entity.Payment.PaymentMethod.MPESA);
                     pendingPayment.setPaymentGateway("ZENOPAY");
-                    pendingPayment.setPhoneNumber(phoneNumber);
+                    pendingPayment.setPhoneNumber(finalPhoneNumber);
                     pendingPayment.setDescription("Payment initiated for package: " + packageId);
                     pendingPayment.setStatus(com.ggnetworks.entity.Payment.PaymentStatus.PENDING);
                     pendingPayment.setGatewayReference((String) zenoPayResponse.get("payment_reference"));
@@ -810,6 +850,19 @@ public class CustomerPortalController {
                     response.put("loyalty_tier", loyaltyResult.get("loyaltyTier"));
                 } catch (Exception e) {
                     System.out.println("⚠️ Loyalty points awarding failed (non-critical): " + e.getMessage());
+                    // Continue - payment and voucher are already created
+                }
+                
+                // Process referral rewards (if this is referred user's first purchase)
+                System.out.println("🎁 Processing referral rewards...");
+                try {
+                    Map<String, Object> referralResult = referralService.processReferralReward(phoneNumber, payment.getId());
+                    if (referralResult.get("success") != null && (Boolean) referralResult.get("success")) {
+                        System.out.println("✅ Referral rewards processed: " + referralResult);
+                        response.put("referral_rewards", referralResult);
+                    }
+                } catch (Exception e) {
+                    System.out.println("⚠️ Referral reward processing failed (non-critical): " + e.getMessage());
                     // Continue - payment and voucher are already created
                 }
                 

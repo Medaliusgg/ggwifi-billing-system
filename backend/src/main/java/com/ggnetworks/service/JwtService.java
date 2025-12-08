@@ -155,4 +155,66 @@ public class JwtService {
     public boolean isRefreshToken(String token) {
         return "refresh".equals(getTokenType(token));
     }
+
+    /**
+     * Generate token with context (for customer authentication)
+     */
+    public String generateTokenWithContext(String username, String role, Long accountId, String fullName) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("role", role);
+        claims.put("accountId", accountId);
+        claims.put("fullName", fullName);
+        claims.put("authorities", List.of("ROLE_CUSTOMER"));
+        return createToken(claims, username, jwtExpiration);
+    }
+
+    /**
+     * Generate temporary signup token (valid for 10 minutes)
+     */
+    public String generateSignupToken(String phoneNumber) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("type", "signup");
+        claims.put("purpose", "account_creation");
+        long signupExpiration = 10 * 60 * 1000; // 10 minutes
+        return createToken(claims, phoneNumber, signupExpiration);
+    }
+
+    /**
+     * Validate signup token
+     */
+    public Boolean validateSignupToken(String token, String phoneNumber) {
+        try {
+            Claims claims = extractAllClaims(token);
+            String type = claims.get("type", String.class);
+            String subject = extractUsername(token);
+            return "signup".equals(type) && subject.equals(phoneNumber) && !isTokenExpired(token);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * Generate temporary reset token (valid for 10 minutes)
+     */
+    public String generateResetToken(String phoneNumber) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("type", "reset");
+        claims.put("purpose", "pin_reset");
+        long resetExpiration = 10 * 60 * 1000; // 10 minutes
+        return createToken(claims, phoneNumber, resetExpiration);
+    }
+
+    /**
+     * Validate reset token
+     */
+    public Boolean validateResetToken(String token, String phoneNumber) {
+        try {
+            Claims claims = extractAllClaims(token);
+            String type = claims.get("type", String.class);
+            String subject = extractUsername(token);
+            return "reset".equals(type) && subject.equals(phoneNumber) && !isTokenExpired(token);
+        } catch (Exception e) {
+            return false;
+        }
+    }
 }

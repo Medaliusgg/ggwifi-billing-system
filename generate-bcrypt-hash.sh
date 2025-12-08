@@ -50,3 +50,4 @@ echo "✅ Copy the hash above and use it in the SQL UPDATE command"
 
 
 
+

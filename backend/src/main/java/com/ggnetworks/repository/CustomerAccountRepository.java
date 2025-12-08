@@ -24,6 +24,8 @@ public interface CustomerAccountRepository extends JpaRepository<CustomerAccount
     
     @Query("SELECT COUNT(ca) FROM CustomerAccount ca WHERE ca.lastLoginAt >= :startDate")
     Long countActiveUsersSince(@Param("startDate") LocalDateTime startDate);
+    
+    Optional<CustomerAccount> findByReferralCode(String referralCode);
 }
 
 

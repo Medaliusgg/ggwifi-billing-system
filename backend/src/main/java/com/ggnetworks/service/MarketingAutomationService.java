@@ -17,7 +17,10 @@ import java.util.stream.Collectors;
 public class MarketingAutomationService {
 
     @Autowired
-    private MarketingCampaignRepository marketingCampaignRepository;
+    private MarketingCampaignRepository marketingCampaignRepository; // For media campaigns (VIDEO/IMAGE)
+
+    @Autowired
+    private SmsMarketingCampaignRepository smsMarketingCampaignRepository; // For SMS campaigns
 
     @Autowired
     private MarketingEventLogRepository marketingEventLogRepository;
@@ -49,19 +52,30 @@ public class MarketingAutomationService {
     @Autowired
     private ObjectMapper objectMapper;
 
-    public List<MarketingCampaign> getCampaigns() {
-        return marketingCampaignRepository.findAll();
+    // SMS Campaign methods
+    public List<SmsMarketingCampaign> getCampaigns() {
+        return smsMarketingCampaignRepository.findAll();
     }
 
-    public MarketingCampaign createCampaign(MarketingCampaign campaign) {
-        if (campaign.getCampaignId() == null || campaign.getCampaignId().isEmpty()) {
-            campaign.setCampaignId("MC-" + System.currentTimeMillis());
+    public SmsMarketingCampaign createCampaign(SmsMarketingCampaign campaign) {
+        // Validate required fields
+        if (campaign.getName() == null || campaign.getName().trim().isEmpty()) {
+            throw new IllegalArgumentException("Name is required");
         }
-        return marketingCampaignRepository.save(campaign);
+        if (campaign.getCampaignId() == null || campaign.getCampaignId().isEmpty()) {
+            campaign.setCampaignId("SMS-" + System.currentTimeMillis());
+        }
+        if (campaign.getStatus() == null) {
+            campaign.setStatus(SmsMarketingCampaign.CampaignStatus.DRAFT);
+        }
+        if (campaign.getChannel() == null || campaign.getChannel().isEmpty()) {
+            campaign.setChannel("SMS");
+        }
+        return smsMarketingCampaignRepository.save(campaign);
     }
 
-    public MarketingCampaign updateCampaign(String campaignId, MarketingCampaign payload) {
-        return marketingCampaignRepository.findByCampaignId(campaignId)
+    public SmsMarketingCampaign updateCampaign(String campaignId, SmsMarketingCampaign payload) {
+        return smsMarketingCampaignRepository.findByCampaignId(campaignId)
             .map(existing -> {
                 existing.setName(payload.getName());
                 existing.setDescription(payload.getDescription());
@@ -69,65 +83,81 @@ public class MarketingAutomationService {
                 existing.setStatus(payload.getStatus());
                 existing.setChannel(payload.getChannel());
                 existing.setMessageTemplate(payload.getMessageTemplate());
+                existing.setTemplateId(payload.getTemplateId());
                 existing.setSubject(payload.getSubject());
                 existing.setScheduleAt(payload.getScheduleAt());
                 existing.setTargetFilters(payload.getTargetFilters());
+                existing.setSegmentId(payload.getSegmentId());
                 existing.setAutoRepeat(payload.getAutoRepeat());
                 existing.setRepeatIntervalDays(payload.getRepeatIntervalDays());
                 existing.setIncludeHotspotCustomers(payload.getIncludeHotspotCustomers());
                 existing.setIncludePppoeCustomers(payload.getIncludePppoeCustomers());
                 existing.setLoyaltyPointThreshold(payload.getLoyaltyPointThreshold());
                 existing.setInactivityDaysThreshold(payload.getInactivityDaysThreshold());
-                return marketingCampaignRepository.save(existing);
+                return smsMarketingCampaignRepository.save(existing);
             })
             .orElseThrow(() -> new IllegalArgumentException("Campaign not found"));
     }
 
     public void deleteCampaign(String campaignId) {
-        marketingCampaignRepository.findByCampaignId(campaignId)
-            .ifPresent(marketingCampaignRepository::delete);
+        smsMarketingCampaignRepository.findByCampaignId(campaignId)
+            .ifPresent(smsMarketingCampaignRepository::delete);
     }
 
     @Transactional
     public Map<String, Object> triggerCampaign(String campaignId) {
-        MarketingCampaign campaign = marketingCampaignRepository.findByCampaignId(campaignId)
+        SmsMarketingCampaign campaign = smsMarketingCampaignRepository.findByCampaignId(campaignId)
             .orElseThrow(() -> new IllegalArgumentException("Campaign not found"));
 
         List<Customer> audience = resolveAudience(campaign);
         int sent = 0;
+        int failed = 0;
 
-        campaign.setStatus(MarketingCampaign.CampaignStatus.RUNNING);
-        marketingCampaignRepository.save(campaign);
+        campaign.setStatus(SmsMarketingCampaign.CampaignStatus.RUNNING);
+        smsMarketingCampaignRepository.save(campaign);
 
         String template = resolveTemplate(campaign);
         for (Customer customer : audience) {
             if (customer.getPrimaryPhoneNumber() == null) {
                 continue;
             }
-            String personalized = renderTemplate(template, customer, campaign);
-            sendMessage(campaign, customer, personalized);
-            sent++;
+            try {
+                String personalized = renderTemplate(template, customer, campaign);
+                sendMessage(campaign, customer, personalized);
+                sent++;
+            } catch (Exception e) {
+                failed++;
+                // Log error but continue with other customers
+                System.err.println("Failed to send SMS to " + customer.getPrimaryPhoneNumber() + ": " + e.getMessage());
+            }
         }
 
         campaign.setLastExecutedAt(LocalDateTime.now());
-        campaign.setStatus(MarketingCampaign.CampaignStatus.COMPLETED);
-        marketingCampaignRepository.save(campaign);
+        campaign.setStatus(SmsMarketingCampaign.CampaignStatus.COMPLETED);
+        campaign.setTotalSent(campaign.getTotalSent() != null ? campaign.getTotalSent() + sent : (long) sent);
+        campaign.setTotalFailed(campaign.getTotalFailed() != null ? campaign.getTotalFailed() + failed : (long) failed);
+        smsMarketingCampaignRepository.save(campaign);
 
         Map<String, Object> result = new HashMap<>();
         result.put("campaignId", campaignId);
         result.put("audience", audience.size());
         result.put("messagesSent", sent);
+        result.put("messagesFailed", failed);
         return result;
     }
 
     @Transactional
     public int processScheduledCampaigns() {
-        List<MarketingCampaign> scheduled = marketingCampaignRepository
-            .findByScheduleAtBeforeAndStatus(LocalDateTime.now(), MarketingCampaign.CampaignStatus.SCHEDULED);
+        List<SmsMarketingCampaign> scheduled = smsMarketingCampaignRepository
+            .findScheduledCampaignsReadyToRun(LocalDateTime.now());
         int processed = 0;
-        for (MarketingCampaign campaign : scheduled) {
-            triggerCampaign(campaign.getCampaignId());
-            processed++;
+        for (SmsMarketingCampaign campaign : scheduled) {
+            try {
+                triggerCampaign(campaign.getCampaignId());
+                processed++;
+            } catch (Exception e) {
+                System.err.println("Failed to process scheduled campaign " + campaign.getCampaignId() + ": " + e.getMessage());
+            }
         }
         return processed;
     }
@@ -323,8 +353,22 @@ public class MarketingAutomationService {
         }
     }
 
-    private List<Customer> resolveAudience(MarketingCampaign campaign) {
-        List<Customer> customers = customerRepository.findAll();
+    private List<Customer> resolveAudience(SmsMarketingCampaign campaign) {
+        List<Customer> customers = new ArrayList<>();
+        
+        // If segment is specified, use segment filtering
+        if (campaign.getSegmentId() != null && !campaign.getSegmentId().isEmpty()) {
+            Optional<AudienceSegment> segmentOpt = audienceSegmentRepository.findBySegmentId(campaign.getSegmentId());
+            if (segmentOpt.isPresent()) {
+                // Apply segment rules (simplified - can be enhanced)
+                customers = customerRepository.findAll();
+            } else {
+                customers = customerRepository.findAll();
+            }
+        } else {
+            customers = customerRepository.findAll();
+        }
+        
         return customers.stream()
             .filter(c -> c.getStatus() == Customer.CustomerStatus.ACTIVE)
             .filter(c -> includeByAccountType(campaign, c))
@@ -332,7 +376,7 @@ public class MarketingAutomationService {
             .collect(Collectors.toList());
     }
 
-    private boolean includeByAccountType(MarketingCampaign campaign, Customer customer) {
+    private boolean includeByAccountType(SmsMarketingCampaign campaign, Customer customer) {
         boolean includeHotspot = Boolean.TRUE.equals(campaign.getIncludeHotspotCustomers());
         boolean includePppoe = Boolean.TRUE.equals(campaign.getIncludePppoeCustomers());
 
@@ -351,67 +395,88 @@ public class MarketingAutomationService {
         return includePppoe && isPppoeCustomer;
     }
 
-    private boolean matchCampaignSpecificCriteria(MarketingCampaign campaign, Customer customer) {
-        switch (campaign.getCampaignType()) {
-            case BIRTHDAY -> {
-                LocalDate dob = customer.getDateOfBirth();
-                if (dob == null) return false;
-                LocalDate today = LocalDate.now();
-                return dob.getDayOfMonth() == today.getDayOfMonth() &&
-                       dob.getMonth() == today.getMonth();
+    private boolean matchCampaignSpecificCriteria(SmsMarketingCampaign campaign, Customer customer) {
+        SmsMarketingCampaign.CampaignType type = campaign.getCampaignType();
+        if (type == null) {
+            return true; // Default: include all
+        }
+        
+        switch (type) {
+            case SMS_BROADCAST -> {
+                return true; // Broadcast to all
             }
-            case FLASH_PROMOTION -> {
-                LocalDateTime lastActivity = customer.getLastActivityAt();
-                return lastActivity != null && lastActivity.isAfter(LocalDateTime.now().minusDays(7));
+            case SMS_AUTOMATION -> {
+                // Apply automation rules based on target filters
+                // For now, return true - can be enhanced with JSON filter parsing
+                return true;
             }
-            case UPSELL -> {
-                Integer threshold = Optional.ofNullable(campaign.getLoyaltyPointThreshold()).orElse(100);
-                return customer.getLoyaltyPoints() != null && customer.getLoyaltyPoints() >= threshold;
-            }
-            case WIN_BACK -> {
-                Integer days = Optional.ofNullable(campaign.getInactivityDaysThreshold()).orElse(30);
-                LocalDateTime lastActivity = customer.getLastActivityAt();
-                return lastActivity == null || lastActivity.isBefore(LocalDateTime.now().minusDays(days));
-            }
-            case LOYALTY_REMINDER -> {
-                Integer threshold = Optional.ofNullable(campaign.getLoyaltyPointThreshold()).orElse(30);
-                return customer.getLoyaltyPoints() != null && customer.getLoyaltyPoints() >= threshold;
+            case SCHEDULED_PROMOTION -> {
+                // Check loyalty threshold if set
+                if (campaign.getLoyaltyPointThreshold() != null) {
+                    Integer points = customer.getLoyaltyPoints();
+                    if (points == null || points < campaign.getLoyaltyPointThreshold()) {
+                        return false;
+                    }
+                }
+                // Check inactivity threshold if set (for winback)
+                if (campaign.getInactivityDaysThreshold() != null) {
+                    LocalDateTime lastActivity = customer.getLastActivityAt();
+                    if (lastActivity != null) {
+                        long daysInactive = java.time.temporal.ChronoUnit.DAYS.between(lastActivity, LocalDateTime.now());
+                        if (daysInactive < campaign.getInactivityDaysThreshold()) {
+                            return false; // Not inactive enough
+                        }
+                    } else {
+                        return true; // No activity = inactive
+                    }
+                }
+                return true;
             }
             default -> {
-                return true; // Broadcast / fallback
+                return true; // Default: include all
             }
         }
     }
 
-    private String resolveTemplate(MarketingCampaign campaign) {
+    private String resolveTemplate(SmsMarketingCampaign campaign) {
+        // First check if template ID is provided
+        if (campaign.getTemplateId() != null && !campaign.getTemplateId().isEmpty()) {
+            Optional<SmsTemplate> templateOpt = smsTemplateRepository.findByTemplateId(campaign.getTemplateId());
+            if (templateOpt.isPresent()) {
+                return templateOpt.get().getContentBody();
+            }
+        }
+        
+        // Then check if message template is directly provided
         if (campaign.getMessageTemplate() != null && !campaign.getMessageTemplate().isBlank()) {
             return campaign.getMessageTemplate();
         }
-        return switch (campaign.getCampaignType()) {
-            case BIRTHDAY ->
-                "Happy Birthday {{name}}! Enjoy browsing on GG Wi-Fi. Use your GG Points today.";
-            case FLASH_PROMOTION ->
-                "FLASH PROMO: {{campaignName}} - Limited time offer for our premium plans!";
-            case UPSELL ->
-                "Hi {{name}}, unlock faster internet with our premium plan. Reply to upgrade instantly.";
-            case WIN_BACK ->
-                "We miss you {{name}}! Come back to GG Wi-Fi and enjoy a loyalty bonus.";
-            case LOYALTY_REMINDER ->
-                "You have {{points}} GG Points waiting. Redeem now for exclusive rewards.";
-            default ->
+        
+        // Default templates based on campaign type
+        SmsMarketingCampaign.CampaignType type = campaign.getCampaignType();
+        if (type == null) {
+            return "{{campaignName}} - Stay connected with GG Wi-Fi. {{description}}";
+        }
+        
+        return switch (type) {
+            case SMS_BROADCAST ->
                 "{{campaignName}} - Stay connected with GG Wi-Fi. {{description}}";
+            case SMS_AUTOMATION ->
+                "Hi {{name}}, welcome to GG Wi-Fi! Enjoy fast internet with {{points}} loyalty points.";
+            case SCHEDULED_PROMOTION ->
+                "{{campaignName}} - Limited time offer! {{description}}";
         };
     }
 
-    private String renderTemplate(String template, Customer customer, MarketingCampaign campaign) {
+    private String renderTemplate(String template, Customer customer, SmsMarketingCampaign campaign) {
         return renderTemplate(template, customer, campaign, Collections.emptyMap());
     }
 
-    private String renderTemplate(String template, Customer customer, MarketingCampaign campaign,
+    private String renderTemplate(String template, Customer customer, SmsMarketingCampaign campaign,
                                   Map<String, String> extraTokens) {
         Map<String, String> tokens = new HashMap<>();
         tokens.put("{{name}}", Optional.ofNullable(customer.getFirstName()).orElse("GG Customer"));
-        tokens.put("{{phone}}", customer.getPrimaryPhoneNumber());
+        tokens.put("{{phone}}", customer.getPrimaryPhoneNumber() != null ? customer.getPrimaryPhoneNumber() : "");
         tokens.put("{{points}}", String.valueOf(
             Optional.ofNullable(customer.getLoyaltyPoints()).orElse(0)));
         if (campaign != null) {
@@ -429,12 +494,12 @@ public class MarketingAutomationService {
         return message;
     }
 
-    private void sendMessage(MarketingCampaign campaign, Customer customer, String message) {
+    private void sendMessage(SmsMarketingCampaign campaign, Customer customer, String message) {
         MarketingEventLog log = new MarketingEventLog();
         log.setCampaignId(campaign.getCampaignId());
         log.setCustomerId(customer.getId());
         log.setPhoneNumber(customer.getPrimaryPhoneNumber());
-        log.setChannel(campaign.getChannel());
+        log.setChannel(campaign.getChannel() != null ? campaign.getChannel() : "SMS");
         log.setMessagePreview(message.length() > 180 ? message.substring(0, 180) : message);
 
         try {
@@ -505,4 +570,5 @@ public class MarketingAutomationService {
         return defaultValue;
     }
 }
+
 

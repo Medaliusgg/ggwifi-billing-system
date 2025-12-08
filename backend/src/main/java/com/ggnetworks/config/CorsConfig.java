@@ -15,9 +15,10 @@ public class CorsConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         
+        // CRITICAL: When using allowCredentials(true), we MUST use allowedOriginPatterns
+        // instead of allowedOrigins to avoid the "*" conflict.
+        // DO NOT call setAllowedOrigins() - only use setAllowedOriginPatterns()
         // Use allowedOriginPatterns for more flexibility (supports wildcards)
-        // IMPORTANT: When using allowCredentials(true), we MUST use allowedOriginPatterns
-        // instead of allowedOrigins to avoid the "*" conflict
         configuration.setAllowedOriginPatterns(Arrays.asList(
             "http://localhost:*",           // All localhost ports
             "http://127.0.0.1:*",         // All 127.0.0.1 ports

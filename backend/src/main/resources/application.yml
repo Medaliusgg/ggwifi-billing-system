@@ -33,7 +33,7 @@ spring:
 
   # Flyway Migration - ENABLED for database migrations
   flyway:
-    enabled: ${FLYWAY_ENABLED:false}  # Disabled temporarily to fix failed migration
+    enabled: ${FLYWAY_ENABLED:false}  # Temporarily disabled - apply V24 migration manually
     locations: classpath:db/migration
     baseline-on-migrate: true
     validate-on-migrate: false  # Disabled for local testing to allow faster startup
@@ -152,24 +152,29 @@ backend:
     router-management: ${BACKEND_FEATURE_ROUTER_MANAGEMENT:true}
 
 # CORS Configuration
-cors:
-  allowed-origins:
-    - https://admin.ggwifi.co.tz
-    - https://connect.ggwifi.co.tz
-    - https://www.ggwifi.co.tz
-    - http://localhost:3000
-    - http://localhost:3001
-    - http://localhost:3002
-  allowed-methods:
-    - GET
-    - POST
-    - PUT
-    - DELETE
-    - OPTIONS
-  allowed-headers:
-    - "*"
-  allow-credentials: true
-  max-age: 3600
+# NOTE: CORS is configured via Java configuration in CorsConfig.java
+# This YAML config is commented out to avoid conflicts with Java-based CORS config
+# which properly uses allowedOriginPatterns instead of allowedOrigins
+# cors:
+#   allowed-origin-patterns:
+#     - https://admin.ggwifi.co.tz
+#     - https://connect.ggwifi.co.tz
+#     - https://www.ggwifi.co.tz
+#     - http://localhost:*
+#   allowed-methods:
+#     - GET
+#     - POST
+#     - PUT
+#     - DELETE
+#     - OPTIONS
+#   allowed-headers:
+#     - Content-Type
+#     - Authorization
+#     - X-Requested-With
+#     - Accept
+#     - Origin
+#   allow-credentials: true
+#   max-age: 3600
 
 # RADIUS Configuration
 radius:

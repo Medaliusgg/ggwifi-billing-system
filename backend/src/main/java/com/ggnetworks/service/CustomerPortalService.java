@@ -20,6 +20,9 @@ public class CustomerPortalService {
     private CustomerRepository customerRepository;
     
     @Autowired
+    private CustomerAccountRepository customerAccountRepository;
+    
+    @Autowired
     private VoucherRepository voucherRepository;
     
     @Autowired
@@ -234,10 +237,43 @@ public class CustomerPortalService {
                 packageInfo.put("type", pkg.getPackageType());
                 packageInfo.put("price", pkg.getPrice());
                 packageInfo.put("durationDays", pkg.getDurationDays());
+                packageInfo.put("duration", pkg.getDuration());
                 packageInfo.put("dataLimitMb", pkg.getDataLimitMb());
+                packageInfo.put("dataLimit", pkg.getDataLimit());
+                packageInfo.put("speedLimit", pkg.getSpeedLimit());
                 packageInfo.put("description", pkg.getDescription());
                 packageInfo.put("isPopular", pkg.getIsPopular());
+                packageInfo.put("isFeatured", pkg.getIsFeatured());
                 packageInfo.put("isActive", pkg.getIsActive());
+                packageInfo.put("originalPrice", pkg.getOriginalPrice());
+                packageInfo.put("discountPercentage", pkg.getDiscountPercentage());
+                packageInfo.put("isTimeBasedOffer", pkg.getIsTimeBasedOffer());
+                packageInfo.put("offerType", pkg.getOfferType());
+                packageInfo.put("offerDescription", pkg.getOfferDescription());
+                
+                // Calculate GG Points if not set
+                Integer points = pkg.getLoyaltyPointsAwarded();
+                if (points == null || points == 0) {
+                    // Calculate based on package type and duration
+                    if (pkg.getDurationDays() != null) {
+                        if (pkg.getDurationDays() <= 1) {
+                            points = 2; // Daily
+                        } else if (pkg.getDurationDays() <= 7) {
+                            points = 6; // Weekly
+                        } else if (pkg.getDurationDays() <= 30) {
+                            points = 10; // Monthly
+                        } else if (pkg.getDurationDays() >= 150) {
+                            points = 40; // Semester
+                        } else {
+                            points = Math.max(1, pkg.getDurationDays() / 3);
+                        }
+                    } else {
+                        points = 1; // Default
+                    }
+                }
+                packageInfo.put("loyaltyPointsAwarded", points);
+                packageInfo.put("ggPoints", points); // Alias for frontend
+                
                 packageInfo.put("createdAt", pkg.getCreatedAt());
                 
                 packageList.add(packageInfo);
@@ -267,6 +303,9 @@ public class CustomerPortalService {
         Map<String, Object> response = new HashMap<>();
         
         try {
+            // Get customer account (for trial info)
+            Optional<CustomerAccount> accountOpt = customerAccountRepository.findByPhoneNumber(phoneNumber);
+            
             // Get customer details
             Customer customer = customerRepository.findByPhoneNumber(phoneNumber)
                 .orElseThrow(() -> new RuntimeException("Customer not found"));
@@ -302,6 +341,19 @@ public class CustomerPortalService {
             customerInfo.put("status", customer.getStatus());
             customerInfo.put("lastLoginAt", customer.getLastLoginAt());
             customerInfo.put("lastActivityAt", customer.getLastActivityAt());
+            
+            // Add trial information from CustomerAccount
+            if (accountOpt.isPresent()) {
+                CustomerAccount account = accountOpt.get();
+                customerInfo.put("isTrialUsed", account.getIsTrialUsed() != null ? account.getIsTrialUsed() : false);
+                customerInfo.put("trialVoucherCode", account.getTrialVoucherCode());
+                customerInfo.put("referralCode", account.getReferralCode());
+            } else {
+                customerInfo.put("isTrialUsed", false);
+                customerInfo.put("trialVoucherCode", null);
+                customerInfo.put("referralCode", null);
+            }
+            
             response.put("customer", customerInfo);
             
             response.put("vouchers", vouchers);

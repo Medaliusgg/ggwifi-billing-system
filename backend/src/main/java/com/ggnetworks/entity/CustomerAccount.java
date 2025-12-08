@@ -62,6 +62,21 @@ public class CustomerAccount {
     @Column(name = "customer_id")
     private Long customerId; // Link to existing Customer entity if exists
 
+    @Column(name = "pin_hash")
+    private String pinHash; // BCrypt hashed PIN (4 digits)
+
+    @Column(name = "is_trial_used", nullable = false)
+    private Boolean isTrialUsed = false;
+
+    @Column(name = "trial_voucher_code", length = 20)
+    private String trialVoucherCode;
+
+    @Column(name = "referral_code", length = 20, unique = true)
+    private String referralCode;
+
+    @Column(name = "referred_by", length = 20)
+    private String referredBy;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -134,6 +149,21 @@ public class CustomerAccount {
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    public String getPinHash() { return pinHash; }
+    public void setPinHash(String pinHash) { this.pinHash = pinHash; }
+
+    public Boolean getIsTrialUsed() { return isTrialUsed; }
+    public void setIsTrialUsed(Boolean isTrialUsed) { this.isTrialUsed = isTrialUsed; }
+
+    public String getTrialVoucherCode() { return trialVoucherCode; }
+    public void setTrialVoucherCode(String trialVoucherCode) { this.trialVoucherCode = trialVoucherCode; }
+
+    public String getReferralCode() { return referralCode; }
+    public void setReferralCode(String referralCode) { this.referralCode = referralCode; }
+
+    public String getReferredBy() { return referredBy; }
+    public void setReferredBy(String referredBy) { this.referredBy = referredBy; }
 }
 
 

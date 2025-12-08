@@ -12,7 +12,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/marketing")
-@CrossOrigin(origins = "*")
+// CORS handled globally via CorsConfig - no need for @CrossOrigin here
 public class MarketingAutomationController {
 
     @Autowired
@@ -20,21 +20,21 @@ public class MarketingAutomationController {
 
     @GetMapping("/campaigns")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MARKETING')")
-    public ResponseEntity<List<MarketingCampaign>> getCampaigns() {
+    public ResponseEntity<List<SmsMarketingCampaign>> getCampaigns() {
         return ResponseEntity.ok(marketingAutomationService.getCampaigns());
     }
 
     @PostMapping("/campaigns")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MARKETING')")
-    public ResponseEntity<MarketingCampaign> createCampaign(@RequestBody MarketingCampaign campaign) {
+    public ResponseEntity<SmsMarketingCampaign> createCampaign(@RequestBody SmsMarketingCampaign campaign) {
         return ResponseEntity.ok(marketingAutomationService.createCampaign(campaign));
     }
 
     @PutMapping("/campaigns/{campaignId}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MARKETING')")
-    public ResponseEntity<MarketingCampaign> updateCampaign(
+    public ResponseEntity<SmsMarketingCampaign> updateCampaign(
             @PathVariable String campaignId,
-            @RequestBody MarketingCampaign campaign) {
+            @RequestBody SmsMarketingCampaign campaign) {
         return ResponseEntity.ok(marketingAutomationService.updateCampaign(campaignId, campaign));
     }
 

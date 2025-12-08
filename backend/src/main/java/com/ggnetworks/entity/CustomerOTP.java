@@ -61,7 +61,7 @@ public class CustomerOTP {
 
     // Enums
     public enum OTPPurpose {
-        LOGIN, VERIFICATION, PASSWORD_RESET, TRANSACTION
+        LOGIN, SIGNUP, VERIFICATION, PIN_RESET, TRANSACTION
     }
 
     // Constructors
