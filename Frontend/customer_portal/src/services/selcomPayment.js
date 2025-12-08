@@ -4,7 +4,8 @@
 
 class SelcomPaymentService {
   constructor() {
-    this.baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1';
+    // Production API URL - Update VITE_API_URL in .env for different environments
+    this.baseUrl = import.meta.env.VITE_API_URL || 'https://api.ggwifi.co.tz/api/v1';
     this.selcomApiUrl = import.meta.env.VITE_SELCOM_API_URL || 'https://api.selcom.co.tz';
     this.selcomApiKey = import.meta.env.VITE_SELCOM_API_KEY || 'your-selcom-api-key';
   }

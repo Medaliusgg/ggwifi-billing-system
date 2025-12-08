@@ -1,7 +1,8 @@
 // API Service for GG Wi-Fi Customer Portal
 // Handles all backend API calls for voucher login and payment processing
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1';
+// Production API URL - Update VITE_API_URL in .env for different environments
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.ggwifi.co.tz/api/v1';
 
 class ApiService {
   constructor() {
