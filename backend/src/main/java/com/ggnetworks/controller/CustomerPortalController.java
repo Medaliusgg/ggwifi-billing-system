@@ -502,12 +502,17 @@ public class CustomerPortalController {
      * Enhanced with idempotency checks and audit logging
      */
     @PostMapping("/webhook/zenopay")
+    @org.springframework.transaction.annotation.Transactional // Ensure atomic transaction
     public ResponseEntity<Map<String, Object>> handleZenoPayWebhook(
             @RequestBody Map<String, Object> webhookData,
             @RequestHeader(value = "x-api-key", required = false) String apiKey,
             jakarta.servlet.http.HttpServletRequest request) {
         Map<String, Object> response = new HashMap<>();
         com.ggnetworks.entity.WebhookProcessing webhookRecord = null;
+        
+        // CRITICAL: Start timing for real-time processing
+        long webhookStartTime = System.currentTimeMillis();
+        System.out.println("⏱️ WEBHOOK PROCESSING STARTED at " + java.time.LocalDateTime.now());
         
         try {
             // Get client IP for audit
