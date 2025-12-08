@@ -12,7 +12,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/marketing")
-// CORS handled globally via CorsConfig - no need for @CrossOrigin here
 public class MarketingAutomationController {
 
     @Autowired

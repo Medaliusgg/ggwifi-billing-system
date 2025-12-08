@@ -17,7 +17,6 @@ import java.util.Optional;
  */
 @RestController
 @RequestMapping("/api/v1/mfa")
-@CrossOrigin(origins = "*")
 public class MFAController {
     
     @Autowired

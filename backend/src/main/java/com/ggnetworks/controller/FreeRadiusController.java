@@ -21,7 +21,6 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/radius")
-@CrossOrigin(origins = "*")
 public class FreeRadiusController {
 
     @Autowired

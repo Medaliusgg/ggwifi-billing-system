@@ -26,7 +26,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/admin")
-@CrossOrigin(origins = "*")
 public class AdminController {
     
     @Autowired
@@ -1222,7 +1221,6 @@ public class AdminController {
 
 @RestController
 @RequestMapping("/api/v1/technician")
-@CrossOrigin(origins = "*")
 class TechnicianController {
     
     @Autowired
@@ -1274,7 +1272,6 @@ class TechnicianController {
 
 @RestController
 @RequestMapping("/api/v1/finance")
-@CrossOrigin(origins = "*")
 class FinanceController {
     
     @Autowired
@@ -1349,7 +1346,6 @@ class FinanceController {
 
 @RestController
 @RequestMapping("/api/v1/sales")
-@CrossOrigin(origins = "*")
 class SalesController {
     
     @Autowired

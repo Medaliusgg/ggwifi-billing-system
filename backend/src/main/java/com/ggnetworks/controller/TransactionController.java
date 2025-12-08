@@ -19,7 +19,6 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/admin/transactions")
-@CrossOrigin(origins = "*")
 public class TransactionController {
 
     @Autowired

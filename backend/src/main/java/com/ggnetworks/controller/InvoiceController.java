@@ -17,7 +17,6 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/admin/invoices")
-@CrossOrigin(origins = "*")
 public class InvoiceController {
 
     @Autowired

@@ -13,7 +13,6 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/device-management")
-@CrossOrigin(origins = "*")
 public class DeviceManagementController {
 
     @Autowired

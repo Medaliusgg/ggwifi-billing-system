@@ -13,7 +13,6 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/admin/projects/{projectId}/tasks")
-@CrossOrigin(origins = "*")
 public class ProjectTaskController {
 
     @Autowired

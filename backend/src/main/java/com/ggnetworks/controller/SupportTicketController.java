@@ -18,7 +18,6 @@ import java.util.Optional;
  */
 @RestController
 @RequestMapping("/api/v1/support/tickets")
-@CrossOrigin(origins = "*")
 public class SupportTicketController {
     
     @Autowired

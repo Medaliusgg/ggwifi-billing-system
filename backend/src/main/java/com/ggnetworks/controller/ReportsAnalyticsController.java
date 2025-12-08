@@ -16,7 +16,6 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/admin/reports-analytics")
-@CrossOrigin(origins = "*")
 public class ReportsAnalyticsController {
 
     @Autowired

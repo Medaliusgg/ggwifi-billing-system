@@ -12,7 +12,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/ap-management")
-@CrossOrigin(origins = "*")
 public class APManagementController {
 
     @Autowired

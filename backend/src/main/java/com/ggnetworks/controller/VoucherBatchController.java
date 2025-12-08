@@ -17,7 +17,6 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/v1/admin/voucher-batches")
-@CrossOrigin(origins = "*")
 public class VoucherBatchController {
     
     @Autowired

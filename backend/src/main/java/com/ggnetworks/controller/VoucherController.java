@@ -23,7 +23,6 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/admin/vouchers")
-@CrossOrigin(origins = "*")
 public class VoucherController {
 
     @Autowired

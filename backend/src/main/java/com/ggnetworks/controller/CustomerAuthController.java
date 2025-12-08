@@ -15,7 +15,6 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/v1/customer-auth")
-@CrossOrigin(origins = "*")
 public class CustomerAuthController {
 
     @Autowired

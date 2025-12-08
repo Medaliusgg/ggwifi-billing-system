@@ -19,7 +19,6 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/auth")  // Using full path since context-path is removed
-@CrossOrigin(origins = "*")
 public class AuthController {
 
     @Autowired

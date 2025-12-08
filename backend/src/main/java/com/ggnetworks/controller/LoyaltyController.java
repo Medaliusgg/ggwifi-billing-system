@@ -18,7 +18,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/loyalty")
-@CrossOrigin(origins = "*")
 public class LoyaltyController {
 
     @Autowired

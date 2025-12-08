@@ -30,7 +30,6 @@ import java.util.stream.Stream;
 
 @RestController
 @RequestMapping("/api/v1/admin/finance")
-@CrossOrigin(origins = "*")
 public class FinanceManagementController {
 
     @Autowired

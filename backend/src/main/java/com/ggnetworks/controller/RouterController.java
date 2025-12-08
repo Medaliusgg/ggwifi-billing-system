@@ -13,7 +13,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/admin/routers")
-@CrossOrigin(origins = "*")
 public class RouterController {
 
     @Autowired
