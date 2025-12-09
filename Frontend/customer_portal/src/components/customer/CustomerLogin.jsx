@@ -1,132 +1,35 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  TextField,
-  Button,
-  Stack,
-  Divider,
-  IconButton,
-  InputAdornment,
-  LinearProgress,
-  Chip,
-} from '@mui/material';
-import PhoneIphoneIcon from '@mui/icons-material/PhoneIphone';
-import KeyIcon from '@mui/icons-material/Key';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import ReplayIcon from '@mui/icons-material/Replay';
-import LockOpenIcon from '@mui/icons-material/LockOpen';
-import ShieldRoundedIcon from '@mui/icons-material/ShieldRounded';
-import { motion } from 'framer-motion';
-import { customerAuthAPI } from '../../services/api';
-import { getDeviceFingerprint } from '../../utils/deviceFingerprint';
-import { toast } from 'react-hot-toast';
+import React from 'react';
+import { Box } from '@mui/material';
+import PinLogin from '../PinLogin';
+import SignUp from '../SignUp';
 
-const RESEND_TIMEOUT = 60;
-
-const CustomerLogin = ({ onSuccess, onBack }) => {
-  const [step, setStep] = useState('PHONE'); // PHONE | OTP
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [otpCode, setOtpCode] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [countdown, setCountdown] = useState(0);
-  const [error, setError] = useState('');
-  const [fingerprint, setFingerprint] = useState('');
-
-  useEffect(() => {
-    let timer;
-    if (countdown > 0) {
-      timer = setTimeout(() => setCountdown((prev) => prev - 1), 1000);
-    }
-    return () => {
-      if (timer) clearTimeout(timer);
+/**
+ * CustomerLogin Component
+ * Uses PIN-based authentication (phone + 4-digit PIN) instead of OTP
+ * Shows signup option for new customers
+ */
+const CustomerLogin = ({ onSuccess, onBack, onNavigateToSignUp }) => {
+  const handleLoginSuccess = (response) => {
+    // Transform PinLogin response to match expected format
+    const sessionPayload = {
+      phoneNumber: response.phoneNumber || response.account?.phoneNumber,
+      token: response.token,
+      refreshToken: response.refreshToken,
+      account: response.account || response,
     };
-  }, [countdown]);
-
-  useEffect(() => {
-    (async () => {
-      const fp = await getDeviceFingerprint();
-      setFingerprint(fp);
-    })();
-  }, []);
-
-  const maskedPhone = useMemo(() => {
-    if (!phoneNumber) return '';
-    const suffix = phoneNumber.slice(-4);
-    return `****${suffix}`;
-  }, [phoneNumber]);
-
-  const handleRequestOtp = async () => {
-    if (!phoneNumber || phoneNumber.length < 9) {
-      setError('Please enter a valid phone number with country code.');
-      return;
-    }
-
-    try {
-      setIsSubmitting(true);
-      setError('');
-      await customerAuthAPI.requestOtp({ phoneNumber, deviceFingerprint: fingerprint });
-      setStep('OTP');
-      setCountdown(RESEND_TIMEOUT);
-      toast.success('OTP sent successfully');
-    } catch (err) {
-      const message = err?.response?.data?.message || 'Failed to send OTP. Please try again.';
-      setError(message);
-      toast.error(message);
-    } finally {
-      setIsSubmitting(false);
-    }
+    onSuccess?.(sessionPayload);
   };
 
-  const handleVerifyOtp = async () => {
-    if (!otpCode || otpCode.length !== 6) {
-      setError('Please enter the 6-digit OTP code.');
-      return;
-    }
-
-    try {
-      setIsSubmitting(true);
-      setError('');
-      const { data } = await customerAuthAPI.verifyOtp({
-        phoneNumber,
-        otpCode,
-        deviceFingerprint: fingerprint,
-      });
-
-      if (data?.status !== 'success') {
-        throw new Error(data?.message || 'Verification failed');
-      }
-
-      const sessionPayload = {
-        phoneNumber,
-        token: data?.token,
-        refreshToken: data?.refreshToken,
-        account: data?.account,
-      };
-
-      onSuccess?.(sessionPayload);
-      toast.success('Welcome back!');
-    } catch (err) {
-      const message = err?.response?.data?.message || err.message || 'Verification failed';
-      setError(message);
-      toast.error(message);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleResend = async () => {
-    if (countdown > 0) return;
-    await handleRequestOtp();
-  };
-
-  const handleBackToPhone = () => {
-    setStep('PHONE');
-    setOtpCode('');
-    setCountdown(0);
-    setError('');
+  const handleSignUpSuccess = (response) => {
+    // After signup, user is automatically logged in
+    // Transform SignUp response to match expected format
+    const sessionPayload = {
+      phoneNumber: response.phoneNumber || response.account?.phoneNumber,
+      token: response.token,
+      refreshToken: response.refreshToken,
+      account: response.account || response,
+    };
+    onSuccess?.(sessionPayload);
   };
 
   return (
@@ -137,192 +40,13 @@ const CustomerLogin = ({ onSuccess, onBack }) => {
         alignItems: 'center',
         justifyContent: 'center',
         p: { xs: 2, md: 3 },
-        pt: { xs: 1, md: 2 },
       }}
     >
-      <Stack spacing={3} sx={{ width: '100%', maxWidth: 520 }}>
-        <Button
-          startIcon={<ArrowBackIcon />}
-          onClick={onBack}
-          sx={{ alignSelf: 'flex-start', textTransform: 'none' }}
-        >
-          Back to Home
-        </Button>
-        <Card
-          component={motion.div}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          sx={{
-            borderRadius: 4,
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-            background: '#FFFFFF',
-            border: '1px solid #EDEDED',
-            color: '#0B0B0B',
-          }}
-        >
-          {isSubmitting && <LinearProgress color="warning" />}
-          <CardContent sx={{ p: { xs: 3, md: 4 } }}>
-            <Stack spacing={3}>
-              <Box>
-                <Chip
-                  icon={<ShieldRoundedIcon />}
-                  label="Secure OTP Login"
-                  color="warning"
-                  variant="outlined"
-                  sx={{ mb: 2 }}
-                />
-                <Typography variant="h4" fontWeight={700} gutterBottom sx={{ color: '#0B0B0B' }}>
-                  Access your customer portal
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#8D8D8D' }}>
-                  Use your registered phone number to receive a one-time password (OTP). No password
-                  needed.
-                </Typography>
-              </Box>
-
-              <Divider sx={{ borderColor: '#EDEDED' }} />
-
-              {step === 'PHONE' ? (
-                <Stack spacing={2}>
-                  <TextField
-                    label="Phone Number"
-                    placeholder="+255 712 345 678"
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <PhoneIphoneIcon color="action" />
-                        </InputAdornment>
-                      ),
-                    }}
-                    fullWidth
-                    variant="outlined"
-                    sx={{
-                      '& .MuiInputLabel-root': { color: '#8D8D8D' },
-                      '& .MuiOutlinedInput-root': {
-                        color: '#0B0B0B',
-                        background: '#FFFFFF',
-                        border: '1px solid #EDEDED',
-                        '& fieldset': { borderColor: '#EDEDED' },
-                        '&:hover fieldset': { borderColor: '#F5C400' },
-                        '&.Mui-focused fieldset': { borderColor: '#F5C400' },
-                      },
-                    }}
-                  />
-                  {error && (
-                    <Typography variant="body2" color="error">
-                      {error}
-                    </Typography>
-                  )}
-                  <Button
-                    variant="contained"
-                    size="large"
-                    onClick={handleRequestOtp}
-                    disabled={isSubmitting}
-                    startIcon={<LockOpenIcon />}
-                    sx={{
-                      py: 1.5,
-                      fontWeight: 600,
-                      fontSize: '1rem',
-                      background: '#F5C400',
-                      color: '#0B0B0B',
-                      boxShadow: 'none',
-                      '&:hover': {
-                        background: '#D4A100',
-                        boxShadow: '0 2px 8px rgba(245, 196, 0, 0.3)',
-                      },
-                    }}
-                  >
-                    Request OTP
-                  </Button>
-                  <Typography variant="caption" sx={{ color: '#8D8D8D' }} align="center">
-                    By continuing you agree to our Terms of Service and Privacy Policy.
-                  </Typography>
-                </Stack>
-              ) : (
-                <Stack spacing={2}>
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <IconButton size="small" onClick={handleBackToPhone} color="inherit">
-                      <ArrowBackIcon />
-                    </IconButton>
-                    <Typography variant="body2" sx={{ color: '#0B0B0B' }}>
-                      Enter the code sent to <strong>{maskedPhone}</strong>
-                    </Typography>
-                  </Stack>
-                  <TextField
-                    label="6-digit OTP"
-                    value={otpCode}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 6);
-                      setOtpCode(value);
-                    }}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <KeyIcon color="action" />
-                        </InputAdornment>
-                      ),
-                    }}
-                    fullWidth
-                    variant="outlined"
-                    sx={{
-                      '& .MuiInputBase-input': {
-                        textAlign: 'center',
-                        letterSpacing: '0.5rem',
-                        fontSize: '1.5rem',
-                      },
-                      '& .MuiInputLabel-root': { color: '#8D8D8D' },
-                      '& .MuiOutlinedInput-root': {
-                        color: '#0B0B0B',
-                        background: '#FFFFFF',
-                        border: '1px solid #EDEDED',
-                        '& fieldset': { borderColor: '#EDEDED' },
-                        '&:hover fieldset': { borderColor: '#F5C400' },
-                        '&.Mui-focused fieldset': { borderColor: '#F5C400' },
-                      },
-                    }}
-                  />
-                  {error && (
-                    <Typography variant="body2" color="error">
-                      {error}
-                    </Typography>
-                  )}
-                  <Button
-                    variant="contained"
-                    size="large"
-                    onClick={handleVerifyOtp}
-                    disabled={isSubmitting}
-                    sx={{
-                      py: 1.5,
-                      fontWeight: 600,
-                      fontSize: '1rem',
-                      background: '#F5C400',
-                      color: '#0B0B0B',
-                      boxShadow: 'none',
-                      '&:hover': {
-                        background: '#D4A100',
-                        boxShadow: '0 2px 8px rgba(245, 196, 0, 0.3)',
-                      },
-                    }}
-                  >
-                    Verify & Continue
-                  </Button>
-                  <Button
-                    variant="text"
-                    startIcon={<ReplayIcon />}
-                    onClick={handleResend}
-                    disabled={countdown > 0 || isSubmitting}
-                    sx={{ color: '#F5C400', textTransform: 'none', '&:hover': { background: '#FFE89C' } }}
-                  >
-                    {countdown > 0 ? `Resend OTP in ${countdown}s` : 'Resend OTP'}
-                  </Button>
-                </Stack>
-              )}
-            </Stack>
-          </CardContent>
-        </Card>
-      </Stack>
+      <PinLogin
+        onSuccess={handleLoginSuccess}
+        onBack={onBack}
+        onNavigateToSignUp={onNavigateToSignUp}
+      />
     </Box>
   );
 };

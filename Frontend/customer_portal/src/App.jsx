@@ -10,6 +10,8 @@ import LandingPage from './components/LandingPage';
 import VoucherLogin from './components/VoucherLogin';
 import BuyPackage from './components/BuyPackage';
 import CustomerAccess from './components/customer/CustomerAccess';
+import PinLogin from './components/PinLogin';
+import SignUp from './components/SignUp';
 import Footer from './components/Footer';
 import LoadingSpinner from './components/LoadingSpinner';
 import AnimatedBackground from './components/AnimatedBackground';
@@ -63,6 +65,14 @@ const AppContent = () => {
 
   const handleNavigateToCustomer = () => {
     setCurrentView('customer');
+  };
+
+  const handleNavigateToSignUp = () => {
+    setCurrentView('signup');
+  };
+
+  const handleNavigateToLogin = () => {
+    setCurrentView('login');
   };
 
   const handleBackToLanding = () => {
@@ -123,6 +133,8 @@ const AppContent = () => {
               <LandingPage
                 onNavigateToVoucher={handleNavigateToVoucher}
                 onNavigateToPackages={handleNavigateToPackages}
+                onNavigateToSignUp={handleNavigateToSignUp}
+                onNavigateToLogin={handleNavigateToLogin}
                 currentLanguage={currentLanguage}
               />
             </motion.div>
@@ -154,6 +166,8 @@ const AppContent = () => {
               <BuyPackage
                 onBack={handleBackToLanding}
                 currentLanguage={currentLanguage}
+                onNavigateToLogin={handleNavigateToLogin}
+                onNavigateToSignUp={handleNavigateToSignUp}
               />
             </motion.div>
           )}
@@ -176,6 +190,39 @@ const AppContent = () => {
                   // If packageId is provided, we could scroll to that package
                   // This would require BuyPackage to support packageId highlighting
                 }}
+                onNavigateToSignUp={handleNavigateToSignUp}
+              />
+            </motion.div>
+          )}
+
+          {currentView === 'login' && (
+            <motion.div
+              key="login"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.4 }}
+            >
+              <PinLogin
+                onSuccess={handleCustomerLoginSuccess}
+                onBack={handleBackToLanding}
+                onNavigateToSignUp={handleNavigateToSignUp}
+              />
+            </motion.div>
+          )}
+
+          {currentView === 'signup' && (
+            <motion.div
+              key="signup"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.4 }}
+            >
+              <SignUp
+                onSuccess={handleCustomerLoginSuccess}
+                onBack={handleBackToLanding}
+                onNavigateToLogin={handleNavigateToLogin}
               />
             </motion.div>
           )}

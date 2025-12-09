@@ -50,6 +50,9 @@ export const customerPortalAPI = {
   // Referral endpoints
   getReferralCode: () => apiClient.get('/customer-portal/referral/code'),
   getReferralStats: () => apiClient.get('/customer-portal/referral/stats'),
+  
+  // Phone check endpoint
+  checkPhoneExists: (phoneNumber) => apiClient.get(`/customer-portal/check-phone/${encodeURIComponent(phoneNumber)}`),
 };
 
 export default customerPortalAPI;

@@ -34,6 +34,7 @@ import {
   Tabs,
   Tab,
   Paper,
+  InputAdornment,
 } from '@mui/material';
 import {
   ArrowBack as ArrowBackIcon,
@@ -49,6 +50,7 @@ import {
   AllInclusive as AllInclusiveIcon,
   Schedule as ScheduleIcon,
   Error as ErrorIcon,
+  Phone as PhoneIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -56,7 +58,7 @@ import paymentService from '../services/paymentService';
 import apiService from '../services/apiService';
 import { customerPortalAPI } from '../services/customerPortalApi';
 
-const BuyPackage = ({ onBack, currentLanguage }) => {
+const BuyPackage = ({ onBack, currentLanguage, onNavigateToLogin, onNavigateToSignUp }) => {
   const theme = useTheme();
   const [packages, setPackages] = useState([]);
   const [universalPackages, setUniversalPackages] = useState([]);
@@ -81,7 +83,10 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
   const packagesLoadedRef = React.useRef(false); // Track if packages have been loaded
   const [paymentElapsedTime, setPaymentElapsedTime] = useState(0); // Track elapsed time in seconds
   const [paymentPollingAttempts, setPaymentPollingAttempts] = useState(0); // Track polling attempts
-  const [cardStyle, setCardStyle] = useState('detailed'); // 'detailed' or 'colorful' - card style toggle
+  const [cardStyle, setCardStyle] = useState('colorful'); // 'detailed' or 'colorful' - card style toggle (default: colorful)
+  const [showOffers, setShowOffers] = useState(false); // Toggle between universal packages and offer packages
+  const [phoneCheckStep, setPhoneCheckStep] = useState(null); // null, 'checking', 'exists', 'not_found'
+  const [tempPhoneNumber, setTempPhoneNumber] = useState(''); // Temporary phone for checking before signup
   const paymentStartTimeRef = React.useRef(null); // Track when payment was initiated
   const [actualPaymentStep, setActualPaymentStep] = useState('request_sent'); // Track actual payment step: request_sent, ussd_received, pin_entered, processing, completed, failed
 
@@ -371,11 +376,75 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
     fetchPackages();
   }, []);
 
-  const handleSelectPackage = (pkg) => {
+  // Check if phone number exists in the system
+  const checkPhoneExists = async (phoneNumber) => {
+    try {
+      // Normalize phone number
+      let formattedPhone = phoneNumber.replace(/[^0-9]/g, '');
+      if (formattedPhone.startsWith('0')) {
+        formattedPhone = '255' + formattedPhone.substring(1);
+      } else if (!formattedPhone.startsWith('255')) {
+        formattedPhone = '255' + formattedPhone;
+      }
+      formattedPhone = '+' + formattedPhone;
+
+      // Check if phone exists via backend
+      const response = await customerPortalAPI.checkPhoneExists(formattedPhone);
+      return response?.data?.exists || false;
+    } catch (error) {
+      console.error('Error checking phone:', error);
+      return false;
+    }
+  };
+
+  const handleSelectPackage = async (pkg) => {
+    // No authentication required - just ask for phone number
     setSelectedPackage(pkg);
+    
+    // Show phone number input dialog first
+    setPhoneCheckStep('checking');
     setShowCustomerForm(true);
-    setPaymentStep(1);
-    toast.success(`${pkg.name} selected! Please fill in your details.`);
+    setPaymentStep(0); // New step: phone check
+    toast.success(`${pkg.name} selected! Please enter your phone number.`);
+  };
+
+  const handlePhoneNumberSubmit = async () => {
+    if (!tempPhoneNumber || tempPhoneNumber.replace(/[^0-9]/g, '').length < 9) {
+      toast.error('Please enter a valid phone number');
+      return;
+    }
+
+    setPhoneCheckStep('checking');
+    
+    try {
+      const exists = await checkPhoneExists(tempPhoneNumber);
+      
+      if (exists) {
+        // Phone exists - proceed to payment
+        setPhoneCheckStep('exists');
+        setCustomerDetails(prev => ({
+          ...prev,
+          phoneNumber: tempPhoneNumber
+        }));
+        setPaymentStep(1); // Move to customer details step
+        toast.success('Phone number verified! Please complete your details.');
+      } else {
+        // Phone not found - show signup
+        setPhoneCheckStep('not_found');
+        toast.info('Phone number not found. Please sign up first.');
+        // Redirect to signup with phone number pre-filled
+        if (onNavigateToSignUp) {
+          // Store phone number for signup
+          sessionStorage.setItem('signupPhoneNumber', tempPhoneNumber);
+          setTimeout(() => {
+            onNavigateToSignUp();
+          }, 1500);
+        }
+      }
+    } catch (error) {
+      toast.error('Failed to verify phone number. Please try again.');
+      setPhoneCheckStep(null);
+    }
   };
 
   const handleCustomerDetailsChange = (field, value) => {
@@ -419,14 +488,8 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
   };
 
   const initiateZenoPayPayment = async () => {
-    // Check authentication before proceeding
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      toast.error('Please login first to make a payment');
-      // Could trigger login modal or redirect
-      return;
-    }
-
+    // Payment can proceed without login if phone number exists
+    // Authentication is optional - phone number verification is sufficient
     setIsLoading(true);
     setPaymentStatus('processing');
     toast.loading('Initializing ZenoPay payment...');
@@ -908,14 +971,14 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                 ))}
               </Stack>
 
-              {/* Card Style Toggle */}
+              {/* Package View Toggle */}
               <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4, gap: 2 }}>
                 <Button
-                  variant={cardStyle === 'detailed' ? 'contained' : 'outlined'}
-                  onClick={() => setCardStyle('detailed')}
+                  variant={!showOffers ? 'contained' : 'outlined'}
+                  onClick={() => setShowOffers(false)}
                   sx={{
-                    backgroundColor: cardStyle === 'detailed' ? '#F2C94C' : 'transparent',
-                    color: cardStyle === 'detailed' ? '#0A0A0A' : '#666666',
+                    backgroundColor: !showOffers ? '#F2C94C' : 'transparent',
+                    color: !showOffers ? '#0A0A0A' : '#666666',
                     borderColor: '#F2C94C',
                     borderRadius: '12px',
                     px: 3,
@@ -923,30 +986,53 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                     fontWeight: 600,
                     textTransform: 'none',
                     '&:hover': {
-                      backgroundColor: cardStyle === 'detailed' ? '#E0B335' : 'rgba(242, 201, 76, 0.1)',
+                      backgroundColor: !showOffers ? '#E0B335' : 'rgba(242, 201, 76, 0.1)',
                     },
                   }}
                 >
-                  Detailed View
+                  Universal Packages
                 </Button>
                 <Button
-                  variant={cardStyle === 'colorful' ? 'contained' : 'outlined'}
-                  onClick={() => setCardStyle('colorful')}
+                  variant={showOffers ? 'contained' : 'outlined'}
+                  onClick={() => setShowOffers(true)}
+                  startIcon={offerPackages.length > 0 && (
+                    <motion.div
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 1, repeat: Infinity, repeatDelay: 2 }}
+                    >
+                      <LocalOfferIcon sx={{ fontSize: 20 }} />
+                    </motion.div>
+                  )}
                   sx={{
-                    backgroundColor: cardStyle === 'colorful' ? '#F2C94C' : 'transparent',
-                    color: cardStyle === 'colorful' ? '#0A0A0A' : '#666666',
+                    backgroundColor: showOffers ? '#F2C94C' : 'transparent',
+                    color: showOffers ? '#0A0A0A' : '#666666',
                     borderColor: '#F2C94C',
                     borderRadius: '12px',
                     px: 3,
                     py: 1,
                     fontWeight: 600,
                     textTransform: 'none',
+                    position: 'relative',
                     '&:hover': {
-                      backgroundColor: cardStyle === 'colorful' ? '#E0B335' : 'rgba(242, 201, 76, 0.1)',
+                      backgroundColor: showOffers ? '#E0B335' : 'rgba(242, 201, 76, 0.1)',
                     },
                   }}
                 >
-                  Colorful View
+                  Offer Packages
+                  {offerPackages.length > 0 && (
+                    <Chip
+                      label={offerPackages.length}
+                      size="small"
+                      sx={{
+                        ml: 1,
+                        height: 20,
+                        backgroundColor: '#E74C3C',
+                        color: '#FFFFFF',
+                        fontWeight: 700,
+                        fontSize: '0.7rem',
+                      }}
+                    />
+                  )}
                 </Button>
               </Box>
             </Box>
@@ -957,11 +1043,11 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
             <LoadingSpinner message="Loading packages..." fullScreen={false} />
           )}
 
-          {/* Packages Grid */}
-          {!isLoadingPackages && (
+          {/* Universal Packages Grid */}
+          {!isLoadingPackages && !showOffers && (
             <motion.div variants={itemVariants}>
               <Grid container spacing={{ xs: 2, sm: 3, md: 4 }} sx={{ mb: { xs: 4, md: 6 } }}>
-                {packages.length === 0 ? (
+                {universalPackages.length === 0 ? (
                   <Grid item xs={12}>
                     <Alert severity="info" sx={{ borderRadius: 3 }}>
                       <Typography variant="h6" sx={{ mb: 1 }}>
@@ -973,7 +1059,7 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                     </Alert>
                   </Grid>
                 ) : (
-                  packages.map((pkg, index) => {
+                  universalPackages.map((pkg, index) => {
                     return (
                       <Grid item xs={12} sm={6} lg={3} key={pkg.id}>
                         <EnhancedPackageCard
@@ -991,6 +1077,107 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                   })
                 )}
               </Grid>
+            </motion.div>
+          )}
+
+          {/* Offer Packages Grid */}
+          {!isLoadingPackages && showOffers && (
+            <motion.div variants={itemVariants}>
+              {offerPackages.length === 0 ? (
+                <Alert severity="info" sx={{ borderRadius: 3, mb: 4 }}>
+                  <Typography variant="h6" sx={{ mb: 1 }}>
+                    No offer packages available
+                  </Typography>
+                  <Typography variant="body2">
+                    Check back later for special offers and limited-time deals!
+                  </Typography>
+                </Alert>
+              ) : (
+                <>
+                  <Box sx={{ mb: 3, textAlign: 'center' }}>
+                    <motion.div
+                      animate={{ scale: [1, 1.05, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      <Chip
+                        icon={<LocalOfferIcon />}
+                        label={`${offerPackages.length} Special Offer${offerPackages.length > 1 ? 's' : ''} Available`}
+                        sx={{
+                          backgroundColor: '#FF8A3D',
+                          color: '#FFFFFF',
+                          fontWeight: 700,
+                          fontSize: '0.9rem',
+                          py: 2,
+                          px: 1,
+                          '& .MuiChip-icon': {
+                            color: '#FFFFFF',
+                            fontSize: 24,
+                          },
+                        }}
+                      />
+                    </motion.div>
+                  </Box>
+                  <Grid container spacing={{ xs: 2, sm: 3, md: 4 }} sx={{ mb: { xs: 4, md: 6 } }}>
+                    {offerPackages.map((pkg, index) => {
+                      // Calculate remaining availability (mock data - should come from backend)
+                      const remainingCount = pkg.remainingCount || Math.floor(Math.random() * 20) + 1;
+                      const isLowStock = remainingCount <= 10;
+                      
+                      return (
+                        <Grid item xs={12} sm={6} lg={3} key={pkg.id}>
+                          <Box sx={{ position: 'relative' }}>
+                            {/* Scarcity Indicator */}
+                            {isLowStock && (
+                              <motion.div
+                                animate={{ 
+                                  scale: [1, 1.1, 1],
+                                  opacity: [0.8, 1, 0.8]
+                                }}
+                                transition={{ duration: 1.5, repeat: Infinity }}
+                                style={{
+                                  position: 'absolute',
+                                  top: -8,
+                                  right: -8,
+                                  zIndex: 10,
+                                }}
+                              >
+                                <Chip
+                                  icon={<LocalOfferIcon />}
+                                  label={`Only ${remainingCount} left!`}
+                                  sx={{
+                                    backgroundColor: '#E74C3C',
+                                    color: '#FFFFFF',
+                                    fontWeight: 700,
+                                    fontSize: '0.75rem',
+                                    boxShadow: '0 4px 12px rgba(231, 76, 60, 0.4)',
+                                    animation: 'pulse 2s infinite',
+                                    '@keyframes pulse': {
+                                      '0%, 100%': { transform: 'scale(1)' },
+                                      '50%': { transform: 'scale(1.05)' }
+                                    }
+                                  }}
+                                />
+                              </motion.div>
+                            )}
+                            <EnhancedPackageCard
+                              pkg={{
+                                ...pkg,
+                                ggPoints: pkg.ggPoints || pkg.loyaltyPointsAwarded || Math.floor((pkg.price || 0) / 200),
+                                remainingCount: remainingCount,
+                                isLowStock: isLowStock,
+                              }}
+                              isSelected={selectedPackage?.id === pkg.id}
+                              onClick={() => handleSelectPackage(pkg)}
+                              onBuyClick={() => handleSelectPackage(pkg)}
+                              style={cardStyle}
+                            />
+                          </Box>
+                        </Grid>
+                      );
+                    })}
+                  </Grid>
+                </>
+              )}
             </motion.div>
           )}
 
@@ -1255,6 +1442,100 @@ const BuyPackage = ({ onBack, currentLanguage }) => {
                     {paymentStatus === 'failed' && 'There was an issue with your payment. Please try again.'}
                   </Typography>
                 </Alert>
+              )}
+
+              {/* Phone Number Check Step */}
+              {paymentStep === 0 && (
+                <Stack spacing={3}>
+                  <Alert severity="info" sx={{ borderRadius: 2, background: '#F0F7FF', border: '1px solid #0072CE' }}>
+                    <Typography variant="body2" fontWeight={600} sx={{ mb: 0.5 }}>
+                      Enter Your Phone Number
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: '#505050' }}>
+                      We'll check if you have an account. If not, we'll help you sign up quickly.
+                    </Typography>
+                  </Alert>
+                  
+                  <TextField
+                    fullWidth
+                    label="Phone Number"
+                    type="tel"
+                    value={tempPhoneNumber}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^0-9+]/g, '');
+                      setTempPhoneNumber(value);
+                    }}
+                    placeholder="0773404760 or +255773404760"
+                    required
+                    disabled={phoneCheckStep === 'checking'}
+                    error={!!(tempPhoneNumber && tempPhoneNumber.replace(/[^0-9]/g, '').length < 9)}
+                    helperText={tempPhoneNumber && tempPhoneNumber.replace(/[^0-9]/g, '').length < 9
+                      ? 'Please enter a valid Tanzanian phone number (9-10 digits)'
+                      : 'Enter your phone number to continue'}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <PhoneIcon />
+                        </InputAdornment>
+                      ),
+                    }}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: 2,
+                        background: '#FFFFFF',
+                        border: '1px solid #EDEDED',
+                        '&:hover': {
+                          borderColor: '#F2C94C',
+                        },
+                        '&.Mui-focused': {
+                          borderColor: '#F2C94C',
+                        },
+                        '& .MuiOutlinedInput-notchedOutline': {
+                          borderColor: '#EDEDED',
+                        },
+                      },
+                      '& .MuiInputLabel-root': {
+                        color: '#8D8D8D',
+                        '&.Mui-focused': {
+                          color: '#F2C94C',
+                        },
+                      },
+                      '& .MuiInputBase-input': {
+                        color: '#0B0B0B',
+                      },
+                    }}
+                  />
+
+                  {phoneCheckStep === 'checking' && (
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
+                      <CircularProgress size={24} />
+                      <Typography variant="body2" sx={{ color: '#666666' }}>
+                        Checking phone number...
+                      </Typography>
+                    </Box>
+                  )}
+
+                  <Button
+                    variant="contained"
+                    fullWidth
+                    size="large"
+                    onClick={handlePhoneNumberSubmit}
+                    disabled={phoneCheckStep === 'checking' || !tempPhoneNumber || tempPhoneNumber.replace(/[^0-9]/g, '').length < 9}
+                    sx={{
+                      py: 1.5,
+                      fontWeight: 600,
+                      fontSize: '1rem',
+                      background: 'linear-gradient(135deg, #F2C94C 0%, #E0B335 100%)',
+                      color: '#0A0A0A',
+                      borderRadius: '12px',
+                      '&:hover': {
+                        background: 'linear-gradient(135deg, #E0B335 0%, #D4A32A 100%)',
+                      },
+                    }}
+                  >
+                    {phoneCheckStep === 'checking' ? 'Checking...' : 'Continue'}
+                  </Button>
+                </Stack>
               )}
 
               {/* Customer Details Form */}

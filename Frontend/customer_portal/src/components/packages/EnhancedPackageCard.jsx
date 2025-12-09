@@ -13,6 +13,7 @@ import {
 import {
   Star as StarIcon,
   LocalOffer as OfferIcon,
+  LocalOffer as LocalOfferIcon,
   CheckCircle as CheckCircleIcon,
   Favorite as FavoriteIcon,
 } from '@mui/icons-material';
@@ -41,6 +42,10 @@ const EnhancedPackageCard = ({
 
   // Calculate GG Points (if not provided, estimate based on price)
   const ggPoints = pkg.ggPoints || pkg.loyaltyPointsAwarded || Math.floor((pkg.price || 0) / 200);
+  
+  // Scarcity indicator for offer packages
+  const remainingCount = pkg.remainingCount;
+  const isLowStock = pkg.isLowStock || (remainingCount !== undefined && remainingCount <= 10);
 
   // Color scheme based on package type
   const getPackageColor = () => {
@@ -117,7 +122,7 @@ const EnhancedPackageCard = ({
         )}
 
         {/* GG Points Badge */}
-        {ggPoints > 0 && (
+        {ggPoints > 0 && !isLowStock && (
           <Box
             sx={{
               position: 'absolute',
@@ -142,6 +147,40 @@ const EnhancedPackageCard = ({
                 },
               }}
             />
+          </Box>
+        )}
+
+        {/* Scarcity Badge (for offer packages) */}
+        {isLowStock && remainingCount !== undefined && (
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 12,
+              left: 12,
+              zIndex: 2,
+            }}
+          >
+            <motion.div
+              animate={{ scale: [1, 1.1, 1] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+            >
+              <Chip
+                icon={<LocalOfferIcon sx={{ fontSize: 16 }} />}
+                label={`Only ${remainingCount} left!`}
+                size="small"
+                sx={{
+                  background: '#E74C3C',
+                  color: '#FFFFFF',
+                  fontWeight: 700,
+                  fontSize: '0.75rem',
+                  height: 28,
+                  boxShadow: '0 4px 12px rgba(231, 76, 60, 0.4)',
+                  '& .MuiChip-icon': {
+                    color: '#FFFFFF',
+                  },
+                }}
+              />
+            </motion.div>
           </Box>
         )}
 

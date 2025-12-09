@@ -265,7 +265,9 @@ public class CustomerPortalController {
 
     /**
      * Process customer payment with ZenoPay Mobile Money Tanzania
-     * REQUIRES AUTHENTICATION - Customer must be logged in
+     * Supports two modes:
+     * 1. Authenticated (JWT token) - preferred for logged-in users
+     * 2. Phone-verified (phone number exists in system) - for quick purchases without login
      */
     @PostMapping("/payment")
     public ResponseEntity<Map<String, Object>> processCustomerPayment(@RequestBody Map<String, Object> paymentData) {
@@ -274,30 +276,65 @@ public class CustomerPortalController {
         try {
             System.out.println("🚀 Processing customer payment...");
             
-            // CRITICAL: Require authentication - get authenticated customer
-            String authenticatedPhoneNumber;
-            try {
-                authenticatedPhoneNumber = getAuthenticatedPhoneNumber();
-                System.out.println("✅ Authenticated customer: " + authenticatedPhoneNumber);
-            } catch (IllegalStateException e) {
-                System.out.println("❌ Payment requires authentication: " + e.getMessage());
-                response.put("status", "error");
-                response.put("message", "Authentication required. Please login first.");
-                response.put("error_code", "UNAUTHORIZED");
-                response.put("redirect_to", "login");
-                return ResponseEntity.status(401).body(response);
-            }
-            
             // Extract payment data
             String customerName = (String) paymentData.get("customerName");
             String phoneNumber = (String) paymentData.get("phoneNumber");
             String packageId = (String) paymentData.get("packageId");
             String amount = (String) paymentData.get("amount");
             
-            // SECURITY: Use authenticated phone number, ignore phoneNumber from request body
-            // This prevents users from making payments on behalf of others
-            final String finalPhoneNumber = authenticatedPhoneNumber;
-            System.out.println("🔐 Using authenticated phone number: " + finalPhoneNumber);
+            // Normalize phone number from request
+            String normalizedPhone = phoneNumber;
+            if (normalizedPhone != null) {
+                normalizedPhone = normalizedPhone.replaceAll("[^0-9+]", "");
+                if (normalizedPhone.startsWith("0")) {
+                    normalizedPhone = "+255" + normalizedPhone.substring(1);
+                } else if (!normalizedPhone.startsWith("+")) {
+                    normalizedPhone = "+" + normalizedPhone;
+                }
+                if (!normalizedPhone.startsWith("+255")) {
+                    normalizedPhone = "+255" + normalizedPhone.substring(1);
+                }
+            }
+            
+            // Try to get authenticated phone number (JWT token)
+            String authenticatedPhoneNumber = null;
+            try {
+                authenticatedPhoneNumber = getAuthenticatedPhoneNumber();
+                System.out.println("✅ Authenticated customer (JWT): " + authenticatedPhoneNumber);
+            } catch (IllegalStateException e) {
+                System.out.println("ℹ️ No JWT authentication - using phone verification mode");
+                // Continue with phone verification mode
+            }
+            
+            // Determine which phone number to use
+            final String finalPhoneNumber;
+            if (authenticatedPhoneNumber != null) {
+                // Use authenticated phone (JWT takes precedence)
+                finalPhoneNumber = authenticatedPhoneNumber;
+                System.out.println("🔐 Using authenticated phone number (JWT): " + finalPhoneNumber);
+            } else if (normalizedPhone != null && !normalizedPhone.trim().isEmpty()) {
+                // Verify phone number exists in system (phone-verified mode)
+                boolean phoneExists = customerAccountRepository.existsByPhoneNumber(normalizedPhone) ||
+                                     customerRepository.findByPhoneNumber(normalizedPhone).isPresent();
+                
+                if (!phoneExists) {
+                    System.out.println("❌ Phone number not found in system: " + normalizedPhone);
+                    response.put("status", "error");
+                    response.put("message", "Phone number not registered. Please sign up first.");
+                    response.put("error_code", "PHONE_NOT_FOUND");
+                    response.put("redirect_to", "signup");
+                    return ResponseEntity.status(400).body(response);
+                }
+                
+                finalPhoneNumber = normalizedPhone;
+                System.out.println("✅ Using phone-verified number: " + finalPhoneNumber);
+            } else {
+                System.out.println("❌ No phone number provided and no authentication");
+                response.put("status", "error");
+                response.put("message", "Phone number is required for payment.");
+                response.put("error_code", "PHONE_REQUIRED");
+                return ResponseEntity.status(400).body(response);
+            }
             
             // Get customer account to retrieve full name if not provided
             String finalCustomerName;
@@ -1325,6 +1362,47 @@ public class CustomerPortalController {
         return ResponseEntity.ok(response);
     }
     
+    /**
+     * Check if phone number exists in the system
+     * Used for payment flow - allows payment without login if phone is registered
+     */
+    @GetMapping("/check-phone/{phoneNumber}")
+    public ResponseEntity<Map<String, Object>> checkPhoneExists(@PathVariable String phoneNumber) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            // Normalize phone number
+            String normalizedPhone = phoneNumber.replaceAll("[^0-9+]", "");
+            if (normalizedPhone.startsWith("0")) {
+                normalizedPhone = "+255" + normalizedPhone.substring(1);
+            } else if (!normalizedPhone.startsWith("+")) {
+                normalizedPhone = "+" + normalizedPhone;
+            }
+            if (!normalizedPhone.startsWith("+255")) {
+                normalizedPhone = "+255" + normalizedPhone.substring(1);
+            }
+            
+            // Check in CustomerAccount table (new unified account system)
+            boolean existsInAccount = customerAccountRepository.existsByPhoneNumber(normalizedPhone);
+            
+            // Also check in Customer table (legacy support)
+            boolean existsInCustomer = customerRepository.findByPhoneNumber(normalizedPhone).isPresent();
+            
+            boolean exists = existsInAccount || existsInCustomer;
+            
+            response.put("status", "success");
+            response.put("exists", exists);
+            response.put("phoneNumber", normalizedPhone);
+            response.put("message", exists ? "Phone number found" : "Phone number not found");
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("exists", false);
+            response.put("message", "Error checking phone number: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
     /**
      * Get all active internet packages for customer portal (with time-based filtering)
      */
