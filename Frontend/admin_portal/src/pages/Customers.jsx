@@ -336,23 +336,52 @@ const CustomerManagement = () => {
   }
 
   return (
-    <Box sx={{ p: isMobile ? 2 : 3 }}>
-      {/* Header */}
+    <Box sx={{ p: isMobile ? 2 : 3, backgroundColor: '#FFFFFF', minHeight: '100vh' }}>
+      {/* Header with Module Header Component */}
       <Box sx={{ 
         display: 'flex', 
         justifyContent: 'space-between', 
         alignItems: 'center', 
         mb: 3,
         flexWrap: 'wrap',
-        gap: 2
+        gap: 2,
+        pb: 2,
+        borderBottom: '1px solid #EEEEEE',
       }}>
-        <Box>
-          <Typography variant="h4" sx={{ fontWeight: 700, color: 'text.primary' }}>
-            Customer Management
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Manage customer accounts and track their activity
-          </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Avatar
+            sx={{
+              width: 56,
+              height: 56,
+              bgcolor: '#F2C94C', // Gold
+              color: '#0A0A0A', // Black
+              boxShadow: '0 4px 12px rgba(242, 201, 76, 0.3)',
+            }}
+          >
+            <PersonIcon />
+          </Avatar>
+          <Box>
+            <Typography
+              variant="h4"
+              sx={{
+                fontWeight: 700,
+                color: '#0A0A0A', // Black
+                fontSize: { xs: '24px', md: '28px' },
+                mb: 0.5,
+              }}
+            >
+              Customer Management
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{
+                color: '#666666', // Neutral-600
+                fontSize: '14px',
+              }}
+            >
+              Module B: Manage customer accounts, profiles, sessions, and notes
+            </Typography>
+          </Box>
         </Box>
         
         {canManageCustomers && (
@@ -361,20 +390,49 @@ const CustomerManagement = () => {
             startIcon={<AddIcon />}
             onClick={() => handleOpenDialog()}
             sx={{
-              background: 'linear-gradient(45deg, #F5B700 30%, #FFCB00 90%)',
-              color: '#000000',
-              fontWeight: 700,
-              boxShadow: '0 4px 16px rgba(245, 183, 0, 0.3)',
+              backgroundColor: '#F2C94C', // Gold
+              color: '#0A0A0A', // Black
+              fontWeight: 600,
               '&:hover': {
-                background: 'linear-gradient(45deg, #FFCB00 30%, #F5B700 90%)',
-                boxShadow: '0 6px 20px rgba(245, 183, 0, 0.4)',
-              }
+                backgroundColor: '#E0B335', // Gold Strong
+                boxShadow: '0 4px 12px rgba(242, 201, 76, 0.3)',
+              },
             }}
           >
             Add Customer
           </Button>
         )}
       </Box>
+
+      {/* Module Tabs for Sub-modules */}
+      <Card sx={{ mb: 3 }}>
+        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+          <Tabs 
+            value={activeTab} 
+            onChange={(e, newValue) => setActiveTab(newValue)}
+            sx={{
+              '& .MuiTab-root': {
+                textTransform: 'none',
+                fontWeight: 600,
+                fontSize: '14px',
+                minHeight: 48,
+                '&.Mui-selected': {
+                  color: '#F2C94C', // Gold
+                },
+              },
+              '& .MuiTabs-indicator': {
+                backgroundColor: '#F2C94C', // Gold indicator
+                height: 3,
+              },
+            }}
+          >
+            <Tab label="Customer List" icon={<PersonIcon />} iconPosition="start" />
+            <Tab label="Customer Profiles" icon={<PersonIcon />} iconPosition="start" />
+            <Tab label="Customer Sessions" icon={<WifiIcon />} iconPosition="start" />
+            <Tab label="Account Notes" icon={<ReceiptIcon />} iconPosition="start" />
+          </Tabs>
+        </Box>
+      </Card>
 
       {/* Statistics Cards */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
@@ -385,20 +443,34 @@ const CustomerManagement = () => {
             transition={{ duration: 0.5 }}
           >
             <Card sx={{ 
-              background: 'linear-gradient(135deg, #F5B70015, #FFCB0005)',
-              border: '1px solid #F5B70020',
+              backgroundColor: '#FFFFFF',
+              borderRadius: '16px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+              border: '1px solid #EEEEEE',
+              position: 'relative',
+              overflow: 'hidden',
             }}>
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: 4,
+                  backgroundColor: '#F2C94C', // Gold
+                }}
+              />
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
-                    <Typography variant="h4" sx={{ fontWeight: 700, color: '#F5B700' }}>
+                    <Typography variant="h4" sx={{ fontWeight: 700, color: '#0A0A0A' }}>
                       {customersList.length}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" sx={{ color: '#666666' }}>
                       Total Customers
                     </Typography>
                   </Box>
-                  <Avatar sx={{ bgcolor: '#F5B700', color: '#000000' }}>
+                  <Avatar sx={{ bgcolor: 'rgba(242, 201, 76, 0.1)', color: '#F2C94C' }}>
                     <PersonIcon />
                   </Avatar>
                 </Box>
@@ -414,20 +486,34 @@ const CustomerManagement = () => {
             transition={{ duration: 0.5, delay: 0.1 }}
           >
             <Card sx={{ 
-              background: 'linear-gradient(135deg, #4CAF5015, #4CAF5005)',
-              border: '1px solid #4CAF5020',
+              backgroundColor: '#FFFFFF',
+              borderRadius: '16px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+              border: '1px solid #EEEEEE',
+              position: 'relative',
+              overflow: 'hidden',
             }}>
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: 4,
+                  backgroundColor: '#10B981', // Success Green
+                }}
+              />
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
-                    <Typography variant="h4" sx={{ fontWeight: 700, color: '#4CAF50' }}>
+                    <Typography variant="h4" sx={{ fontWeight: 700, color: '#0A0A0A' }}>
                       {customersList.filter(c => c.isActive).length}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" sx={{ color: '#666666' }}>
                       Active Customers
                     </Typography>
                   </Box>
-                  <Avatar sx={{ bgcolor: '#4CAF50', color: '#FFFFFF' }}>
+                  <Avatar sx={{ bgcolor: '#ECFDF5', color: '#10B981' }}>
                     <CheckIcon />
                   </Avatar>
                 </Box>
@@ -495,71 +581,82 @@ const CustomerManagement = () => {
         </Grid>
       </Grid>
 
-      {/* Filters */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} md={4}>
-              <TextField
-                fullWidth
-                placeholder="Search customers..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <FormControl fullWidth>
-                <InputLabel>Status Filter</InputLabel>
-                <Select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  label="Status Filter"
-                >
-                  <MenuItem value="ALL">All Status</MenuItem>
-                  <MenuItem value="ACTIVE">Active</MenuItem>
-                  <MenuItem value="INACTIVE">Inactive</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} md={3}>
-              <FormControl fullWidth>
-                <InputLabel>Type Filter</InputLabel>
-                <Select
-                  value={typeFilter}
-                  onChange={(e) => setTypeFilter(e.target.value)}
-                  label="Type Filter"
-                >
-                  <MenuItem value="ALL">All Types</MenuItem>
-                  <MenuItem value="INDIVIDUAL">Individual</MenuItem>
-                  <MenuItem value="BUSINESS">Business</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} md={2}>
-              <Box sx={{ display: 'flex', gap: 1 }}>
-                <Button
-                  variant="outlined"
-                  startIcon={<RefreshIcon />}
-                  onClick={() => refetch()}
-                  disabled={isLoading}
-                >
-                  Refresh
-                </Button>
-              </Box>
-            </Grid>
-          </Grid>
-        </CardContent>
-      </Card>
+      {/* Tab Content */}
+      {activeTab === 0 && (
+        <>
+          {/* Filters */}
+          <Card sx={{ mb: 3 }}>
+            <CardContent>
+              <Grid container spacing={2} alignItems="center">
+                <Grid item xs={12} md={4}>
+                  <TextField
+                    fullWidth
+                    placeholder="Search customers..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <SearchIcon />
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12} md={3}>
+                  <FormControl fullWidth>
+                    <InputLabel>Status Filter</InputLabel>
+                    <Select
+                      value={statusFilter}
+                      onChange={(e) => setStatusFilter(e.target.value)}
+                      label="Status Filter"
+                    >
+                      <MenuItem value="ALL">All Status</MenuItem>
+                      <MenuItem value="ACTIVE">Active</MenuItem>
+                      <MenuItem value="INACTIVE">Inactive</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} md={3}>
+                  <FormControl fullWidth>
+                    <InputLabel>Type Filter</InputLabel>
+                    <Select
+                      value={typeFilter}
+                      onChange={(e) => setTypeFilter(e.target.value)}
+                      label="Type Filter"
+                    >
+                      <MenuItem value="ALL">All Types</MenuItem>
+                      <MenuItem value="INDIVIDUAL">Individual</MenuItem>
+                      <MenuItem value="BUSINESS">Business</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} md={2}>
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Button
+                      variant="outlined"
+                      startIcon={<RefreshIcon />}
+                      onClick={() => refetch()}
+                      disabled={isLoading}
+                      sx={{
+                        borderColor: '#F2C94C',
+                        color: '#0A0A0A',
+                        '&:hover': {
+                          borderColor: '#E0B335',
+                          backgroundColor: 'rgba(242, 201, 76, 0.1)',
+                        },
+                      }}
+                    >
+                      Refresh
+                    </Button>
+                  </Box>
+                </Grid>
+              </Grid>
+            </CardContent>
+          </Card>
 
-      {/* Customers Table */}
-      <Card>
+          {/* Customers Table */}
+          <Card>
         <CardContent sx={{ p: 0 }}>
           <TableContainer>
             <Table>
@@ -630,9 +727,10 @@ const CustomerManagement = () => {
                         <Chip
                           label={customer.customerType}
                           sx={{
-                            bgcolor: getTypeColor(customer.customerType),
-                            color: 'white',
+                            bgcolor: customer.customerType === 'INDIVIDUAL' ? '#EAF4FF' : '#FFF3E6',
+                            color: customer.customerType === 'INDIVIDUAL' ? '#3A8DFF' : '#FF8A3D',
                             fontWeight: 600,
+                            border: `1px solid ${customer.customerType === 'INDIVIDUAL' ? '#3A8DFF' : '#FF8A3D'}`,
                           }}
                         />
                       </TableCell>
@@ -641,9 +739,10 @@ const CustomerManagement = () => {
                           label={customer.isActive ? 'Active' : 'Blocked'}
                           icon={customer.isActive ? <CheckIcon /> : <CancelIcon />}
                           sx={{
-                            bgcolor: getStatusColor(customer.isActive),
-                            color: 'white',
+                            bgcolor: customer.isActive ? '#ECFDF5' : '#FFEBEE',
+                            color: customer.isActive ? '#10B981' : '#F44336',
                             fontWeight: 600,
+                            border: `1px solid ${customer.isActive ? '#10B981' : '#F44336'}`,
                           }}
                         />
                       </TableCell>
@@ -714,6 +813,73 @@ const CustomerManagement = () => {
           />
         </CardContent>
       </Card>
+        </>
+      )}
+
+      {/* Customer Profiles Tab (B.2) */}
+      {activeTab === 1 && (
+        <Card>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              Customer Profiles
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              View detailed customer profiles with personal details, account status, linked devices, loyalty information, purchase history, session history, and referral codes.
+            </Typography>
+            <Alert severity="info" sx={{ mb: 2 }}>
+              Click on a customer in the Customer List tab to view their detailed profile.
+            </Alert>
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+              <Typography variant="body2" color="text.secondary">
+                Select a customer from the Customer List to view their profile details.
+              </Typography>
+            </Box>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Customer Sessions Tab (B.3) */}
+      {activeTab === 2 && (
+        <Card>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              Customer Sessions
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              View and manage active customer sessions, remaining time, disconnect sessions, renew sessions, and device change logs.
+            </Typography>
+            <Alert severity="info">
+              Customer session management is available in the Session Management module. 
+              <Button 
+                variant="text" 
+                size="small" 
+                onClick={() => window.location.href = '/sessions'}
+                sx={{ ml: 1, textTransform: 'none' }}
+              >
+                Go to Session Management →
+              </Button>
+            </Alert>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Account Notes Tab (B.4) */}
+      {activeTab === 3 && (
+        <Card>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              Account Notes
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              Manage customer service notes, flags (fraud, abuse, refund history), and account annotations.
+            </Typography>
+            <Alert severity="info">
+              Account notes feature will be available in the customer detail view. 
+              This allows you to add notes, flags, and track customer service interactions.
+            </Alert>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Customer Dialog */}
       <Dialog 
@@ -855,12 +1021,13 @@ const CustomerManagement = () => {
               variant="contained"
               disabled={createCustomerMutation.isPending || updateCustomerMutation.isPending}
               sx={{
-                background: 'linear-gradient(45deg, #F5B700 30%, #FFCB00 90%)',
-                color: '#000000',
-                fontWeight: 700,
+                backgroundColor: '#F2C94C', // Gold
+                color: '#0A0A0A', // Black
+                fontWeight: 600,
                 '&:hover': {
-                  background: 'linear-gradient(45deg, #FFCB00 30%, #F5B700 90%)',
-                }
+                  backgroundColor: '#E0B335', // Gold Strong
+                  boxShadow: '0 4px 12px rgba(242, 201, 76, 0.3)',
+                },
               }}
             >
               {(createCustomerMutation.isPending || updateCustomerMutation.isPending) ? (

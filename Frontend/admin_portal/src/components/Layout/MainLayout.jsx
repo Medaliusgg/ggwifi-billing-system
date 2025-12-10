@@ -159,6 +159,12 @@ const MainLayout = () => {
       permission: 'dashboard', // Using dashboard permission for sessions
     },
     {
+      text: 'VPN Management',
+      icon: <SecurityIcon />,
+      path: '/vpn',
+      permission: 'routers', // Using routers permission for VPN
+    },
+    {
       text: 'Settings',
       icon: <SettingsIcon />,
       path: '/settings',

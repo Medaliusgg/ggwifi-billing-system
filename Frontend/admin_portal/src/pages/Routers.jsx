@@ -386,7 +386,7 @@ const RouterManagement = () => {
   }
 
   return (
-    <Box sx={{ p: isMobile ? 2 : 3 }}>
+    <Box sx={{ p: isMobile ? 2 : 3, backgroundColor: '#FFFFFF', minHeight: '100vh' }}>
       {/* Header */}
       <Box sx={{ 
         display: 'flex', 
@@ -394,16 +394,31 @@ const RouterManagement = () => {
         alignItems: 'center', 
         mb: 3,
         flexWrap: 'wrap',
-        gap: 2
+        gap: 2,
+        pb: 2,
+        borderBottom: '1px solid #EEEEEE',
       }}>
-        <Box>
-          <Typography variant="h4" sx={{ fontWeight: 700, color: 'text.primary' }}>
-          Router Management
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-            Manage MikroTik routers and network infrastructure
-        </Typography>
-      </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Avatar
+            sx={{
+              width: 56,
+              height: 56,
+              bgcolor: '#F2C94C', // Gold
+              color: '#0A0A0A', // Black
+              boxShadow: '0 4px 12px rgba(242, 201, 76, 0.3)',
+            }}
+          >
+            <RouterIcon />
+          </Avatar>
+          <Box>
+            <Typography variant="h4" sx={{ fontWeight: 700, color: '#0A0A0A', fontSize: { xs: '24px', md: '28px' }, mb: 0.5 }}>
+              Router Management
+            </Typography>
+            <Typography variant="body2" sx={{ color: '#666666', fontSize: '14px' }}>
+              Module D: Manage routers, hotspot/PPPoE provisioning, and integration scripts
+            </Typography>
+          </Box>
+        </Box>
 
         {canManageRouters && (
           <Button
@@ -411,14 +426,13 @@ const RouterManagement = () => {
             startIcon={<AddIcon />}
             onClick={() => handleOpenDialog()}
             sx={{
-              background: 'linear-gradient(45deg, #F5B700 30%, #FFCB00 90%)',
-              color: '#000000',
-              fontWeight: 700,
-              boxShadow: '0 4px 16px rgba(245, 183, 0, 0.3)',
+              backgroundColor: '#F2C94C', // Gold
+              color: '#0A0A0A', // Black
+              fontWeight: 600,
               '&:hover': {
-                background: 'linear-gradient(45deg, #FFCB00 30%, #F5B700 90%)',
-                boxShadow: '0 6px 20px rgba(245, 183, 0, 0.4)',
-              }
+                backgroundColor: '#E0B335', // Gold Strong
+                boxShadow: '0 4px 12px rgba(242, 201, 76, 0.3)',
+              },
             }}
           >
             Add Router
@@ -426,6 +440,39 @@ const RouterManagement = () => {
         )}
       </Box>
 
+      {/* Module Tabs for Sub-modules */}
+      <Card sx={{ mb: 3 }}>
+        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+          <Tabs 
+            value={activeTab} 
+            onChange={(e, newValue) => setActiveTab(newValue)}
+            sx={{
+              '& .MuiTab-root': {
+                textTransform: 'none',
+                fontWeight: 600,
+                fontSize: '14px',
+                minHeight: 48,
+                '&.Mui-selected': {
+                  color: '#F2C94C', // Gold
+                },
+              },
+              '& .MuiTabs-indicator': {
+                backgroundColor: '#F2C94C', // Gold indicator
+                height: 3,
+              },
+            }}
+          >
+            <Tab label="Router List" icon={<RouterIcon />} iconPosition="start" />
+            <Tab label="Hotspot Management" icon={<WifiIcon />} iconPosition="start" />
+            <Tab label="PPPoE Management" icon={<NetworkCheckIcon />} iconPosition="start" />
+            <Tab label="Router Sync" icon={<CloudUploadIcon />} iconPosition="start" />
+          </Tabs>
+        </Box>
+      </Card>
+
+      {/* Tab Content */}
+      {activeTab === 0 && (
+        <>
       {/* Statistics Cards */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={6} md={3}>
@@ -435,20 +482,34 @@ const RouterManagement = () => {
             transition={{ duration: 0.5 }}
           >
             <Card sx={{ 
-              background: 'linear-gradient(135deg, #F5B70015, #FFCB0005)',
-              border: '1px solid #F5B70020',
+              backgroundColor: '#FFFFFF',
+              borderRadius: '16px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+              border: '1px solid #EEEEEE',
+              position: 'relative',
+              overflow: 'hidden',
             }}>
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: 4,
+                  backgroundColor: '#F2C94C', // Gold
+                }}
+              />
             <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
-                    <Typography variant="h4" sx={{ fontWeight: 700, color: '#F5B700' }}>
+                    <Typography variant="h4" sx={{ fontWeight: 700, color: '#0A0A0A' }}>
                       {routersList.length}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{ color: '#666666' }}>
                       Total Routers
               </Typography>
                   </Box>
-                  <Avatar sx={{ bgcolor: '#F5B700', color: '#000000' }}>
+                  <Avatar sx={{ bgcolor: 'rgba(242, 201, 76, 0.1)', color: '#F2C94C' }}>
                     <RouterIcon />
                   </Avatar>
                 </Box>
@@ -464,20 +525,34 @@ const RouterManagement = () => {
             transition={{ duration: 0.5, delay: 0.1 }}
           >
             <Card sx={{ 
-              background: 'linear-gradient(135deg, #4CAF5015, #4CAF5005)',
-              border: '1px solid #4CAF5020',
+              backgroundColor: '#FFFFFF',
+              borderRadius: '16px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+              border: '1px solid #EEEEEE',
+              position: 'relative',
+              overflow: 'hidden',
             }}>
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: 4,
+                  backgroundColor: '#10B981', // Success Green
+                }}
+              />
             <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
-                    <Typography variant="h4" sx={{ fontWeight: 700, color: '#4CAF50' }}>
+                    <Typography variant="h4" sx={{ fontWeight: 700, color: '#0A0A0A' }}>
                       {routersList.filter(r => r.isActive).length}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{ color: '#666666' }}>
                       Active Routers
               </Typography>
                   </Box>
-                  <Avatar sx={{ bgcolor: '#4CAF50', color: '#FFFFFF' }}>
+                  <Avatar sx={{ bgcolor: '#ECFDF5', color: '#10B981' }}>
                     <CheckIcon />
                   </Avatar>
                 </Box>
@@ -493,20 +568,34 @@ const RouterManagement = () => {
             transition={{ duration: 0.5, delay: 0.2 }}
           >
             <Card sx={{ 
-              background: 'linear-gradient(135deg, #2196F315, #2196F305)',
-              border: '1px solid #2196F320',
+              backgroundColor: '#FFFFFF',
+              borderRadius: '16px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+              border: '1px solid #EEEEEE',
+              position: 'relative',
+              overflow: 'hidden',
             }}>
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: 4,
+                  backgroundColor: '#3A8DFF', // Info Blue
+                }}
+              />
             <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
-                    <Typography variant="h4" sx={{ fontWeight: 700, color: '#2196F3' }}>
+                    <Typography variant="h4" sx={{ fontWeight: 700, color: '#0A0A0A' }}>
                       {routersList.reduce((sum, r) => sum + (r.connectedUsers || 0), 0)}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{ color: '#666666' }}>
                       Connected Users
               </Typography>
                   </Box>
-                  <Avatar sx={{ bgcolor: '#2196F3', color: '#FFFFFF' }}>
+                  <Avatar sx={{ bgcolor: '#EAF4FF', color: '#3A8DFF' }}>
                     <WifiIcon />
                   </Avatar>
                 </Box>
@@ -522,20 +611,34 @@ const RouterManagement = () => {
             transition={{ duration: 0.5, delay: 0.3 }}
           >
             <Card sx={{ 
-              background: 'linear-gradient(135deg, #FF980015, #FF980005)',
-              border: '1px solid #FF980020',
+              backgroundColor: '#FFFFFF',
+              borderRadius: '16px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+              border: '1px solid #EEEEEE',
+              position: 'relative',
+              overflow: 'hidden',
             }}>
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: 4,
+                  backgroundColor: '#FF8A3D', // Warning Orange
+                }}
+              />
             <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
-                    <Typography variant="h4" sx={{ fontWeight: 700, color: '#FF9800' }}>
+                    <Typography variant="h4" sx={{ fontWeight: 700, color: '#0A0A0A' }}>
                       {routersList.filter(r => r.cpuUsage > 80).length}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{ color: '#666666' }}>
                       High CPU Usage
               </Typography>
                   </Box>
-                  <Avatar sx={{ bgcolor: '#FF9800', color: '#FFFFFF' }}>
+                  <Avatar sx={{ bgcolor: '#FFF3E6', color: '#FF8A3D' }}>
                     <WarningIcon />
                   </Avatar>
                 </Box>
@@ -694,9 +797,10 @@ const RouterManagement = () => {
                         <Chip
                           label={router.isActive ? 'Active' : 'Inactive'}
                           icon={getStatusIcon(router.isActive)}
-        sx={{
-                            bgcolor: getStatusColor(router.isActive),
-                            color: 'white',
+                          sx={{
+                            bgcolor: router.isActive ? '#ECFDF5' : '#FFEBEE',
+                            color: router.isActive ? '#10B981' : '#F44336',
+                            border: `1px solid ${router.isActive ? '#10B981' : '#F44336'}`,
                             fontWeight: 600,
                           }}
                         />
@@ -795,6 +899,117 @@ const RouterManagement = () => {
           />
         </CardContent>
       </Card>
+        </>
+      )}
+
+      {/* Hotspot Management Tab (D.5) */}
+      {activeTab === 1 && (
+        <Card>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              Hotspot Management
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              Configure hotspot server profiles, DNS names, HTML redirect rules, whitelisted domains, rate limits, MAC filtering, and universal login redirect rules.
+            </Typography>
+            <Alert severity="info" sx={{ mb: 2 }}>
+              Hotspot configuration is managed per router. Select a router from the Router List and configure hotspot settings in the router detail view.
+            </Alert>
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+              <Typography variant="body2" color="text.secondary">
+                Hotspot management features are available in individual router configuration.
+              </Typography>
+            </Box>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* PPPoE Management Tab (D.6) */}
+      {activeTab === 2 && (
+        <Card>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              PPPoE Management
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              Manage PPPoE profiles, IP pools, RADIUS accounting, auto-disconnect expired users, and service maps per router.
+            </Typography>
+            <Alert severity="info" sx={{ mb: 2 }}>
+              PPPoE configuration is managed per router. Select a router from the Router List and configure PPPoE settings in the router detail view.
+            </Alert>
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+              <Typography variant="body2" color="text.secondary">
+                PPPoE management features are available in individual router configuration.
+              </Typography>
+            </Box>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Router Sync Tab (D.4) */}
+      {activeTab === 3 && (
+        <Card>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              Router Sync
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              Manual sync, auto-sync every 10 minutes, sync logs, API test connection, and RADIUS test.
+            </Typography>
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={6}>
+                <Card>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>
+                      Manual Sync
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      Manually sync router configurations and status.
+                    </Typography>
+                    <Button
+                      variant="contained"
+                      startIcon={<CloudUploadIcon />}
+                      onClick={() => {
+                        enqueueSnackbar('Router sync feature - Select a router to sync', { variant: 'info' });
+                      }}
+                      sx={{
+                        backgroundColor: '#F2C94C',
+                        color: '#0A0A0A',
+                        '&:hover': {
+                          backgroundColor: '#E0B335',
+                        },
+                      }}
+                    >
+                      Sync All Routers
+                    </Button>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <Card>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>
+                      Auto Sync Status
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      Auto-sync runs every 10 minutes to keep router configurations up to date.
+                    </Typography>
+                    <Chip
+                      label="Active"
+                      sx={{
+                        bgcolor: '#ECFDF5',
+                        color: '#10B981',
+                        border: '1px solid #10B981',
+                        fontWeight: 600,
+                      }}
+                    />
+                  </CardContent>
+                </Card>
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Router Dialog */}
       <Dialog 
@@ -941,12 +1156,13 @@ const RouterManagement = () => {
           variant="contained"
               disabled={createRouterMutation.isPending || updateRouterMutation.isPending}
           sx={{
-                background: 'linear-gradient(45deg, #F5B700 30%, #FFCB00 90%)',
-                color: '#000000',
-                fontWeight: 700,
-            '&:hover': {
-                  background: 'linear-gradient(45deg, #FFCB00 30%, #F5B700 90%)',
-                }
+              backgroundColor: '#F2C94C', // Gold
+              color: '#0A0A0A', // Black
+              fontWeight: 600,
+              '&:hover': {
+                backgroundColor: '#E0B335', // Gold Strong
+                boxShadow: '0 4px 12px rgba(242, 201, 76, 0.3)',
+              }
               }}
             >
               {(createRouterMutation.isPending || updateRouterMutation.isPending) ? (
@@ -1178,9 +1394,13 @@ const RouterManagement = () => {
                         variant="contained"
                         startIcon={<CloudUploadIcon />}
                         sx={{
-                          background: 'linear-gradient(45deg, #F5B700 30%, #FFCB00 90%)',
-                          color: '#000000',
-                          fontWeight: 700,
+                          backgroundColor: '#F2C94C', // Gold
+                          color: '#0A0A0A', // Black
+                          fontWeight: 600,
+                          '&:hover': {
+                            backgroundColor: '#E0B335', // Gold Strong
+                            boxShadow: '0 4px 12px rgba(242, 201, 76, 0.3)',
+                          },
                         }}
                       >
                         Download Script

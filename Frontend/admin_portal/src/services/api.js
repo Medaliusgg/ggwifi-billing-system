@@ -93,12 +93,19 @@ apiClient.interceptors.response.use(
 
 // Authentication API
 export const authAPI = {
+  adminLogin: (credentials) => apiClient.post('/auth/admin-login', credentials),
+  staffLogin: (credentials) => apiClient.post('/auth/staff-login', credentials),
   login: (credentials) => apiClient.post('/auth/login', credentials),
+  logout: () => apiClient.post('/auth/logout'),
+  refreshToken: (refreshToken) => apiClient.post('/auth/refresh', { refreshToken }),
+  revokeToken: (token) => apiClient.post('/auth/revoke-token', { token }),
+  requestPasswordReset: (email) => apiClient.post('/auth/request-password-reset', { email }),
+  resetPassword: (token, newPassword) => apiClient.post('/auth/reset-password', { token, newPassword }),
+  changePassword: (oldPassword, newPassword) => apiClient.post('/auth/change-password', { oldPassword, newPassword }),
   generateOtp: (phoneNumber) => apiClient.post('/auth/otp/generate', { phoneNumber }),
   validateOtp: (data) => apiClient.post('/auth/otp/validate', data),
   resendOtp: (phoneNumber) => apiClient.post('/auth/otp/resend', { phoneNumber }),
   register: (userData) => apiClient.post('/auth/register', userData),
-  refreshToken: (token) => apiClient.post('/auth/refresh', { token }),
 };
 
 // User Management API
@@ -134,22 +141,37 @@ export const voucherAPI = {
 
 // Router Management API
 export const routerAPI = {
-  getAllRouters: () => apiClient.get('/admin/routers'),
+  getAllRouters: (params = {}) => apiClient.get('/admin/routers', { params }),
+  getRouterById: (routerId) => apiClient.get(`/admin/routers/${routerId}`),
   getRouterStatus: () => apiClient.get('/admin/routers/status'),
-  // Configure via technician controller route available in backend
-  configureRouter: (routerId) => apiClient.post(`/technician/routers/${routerId}/configure`),
   createRouter: (routerData) => apiClient.post('/admin/routers', routerData),
   updateRouter: (routerId, routerData) => apiClient.put(`/admin/routers/${routerId}`, routerData),
   deleteRouter: (routerId) => apiClient.delete(`/admin/routers/${routerId}`),
   testConnection: (routerId) => apiClient.post(`/admin/routers/${routerId}/test-connection`),
+  syncRouter: (routerId) => apiClient.post(`/admin/routers/${routerId}/sync`),
+  generateIntegrationScript: (routerId) => apiClient.get(`/admin/routers/${routerId}/integration-script`),
+  getRouterHealth: (routerId) => apiClient.get(`/admin/routers/${routerId}/health`),
+  // Technician routes
+  configureRouter: (routerId) => apiClient.post(`/technician/routers/${routerId}/configure`),
+};
+
+// Session Management API
+export const sessionAPI = {
+  getActiveSessions: () => apiClient.get('/sessions/active'),
+  terminateSession: (sessionId, reason) => apiClient.post(`/sessions/${sessionId}/terminate`, null, { params: { reason } }),
+  terminateBulkSessions: (sessionIds, reason) => apiClient.post('/sessions/terminate-bulk', { sessionIds, reason }),
+  extendSession: (sessionId, additionalMinutes) => apiClient.put(`/sessions/${sessionId}/extend`, null, { params: { additionalMinutes } }),
+  getSessionById: (sessionId) => apiClient.get(`/sessions/${sessionId}`),
+  getSessionStatistics: () => apiClient.get('/sessions/statistics'),
+  getSessionHistory: (params = {}) => apiClient.get('/sessions/history', { params }),
 };
 
 // RADIUS Management API
 export const radiusAPI = {
   getHealth: () => apiClient.get('/radius/health'),
-  getActiveSessions: () => apiClient.get('/sessions/active'),
-  terminateSession: (sessionId) => apiClient.post(`/sessions/${sessionId}/terminate`),
-  getSessionStatistics: () => apiClient.get('/radius/statistics'),
+  getStatistics: () => apiClient.get('/radius/statistics'),
+  getActiveUsers: () => apiClient.get('/radius/users/active'),
+  disconnectUser: (username, nasIp) => apiClient.post('/radius/disconnect', { username, nasIp }),
 };
 
 // Payment Management API
@@ -236,6 +258,7 @@ export const loyaltyAPI = {
 
 // Dashboard API
 export const dashboardAPI = {
+  getDashboardMetrics: () => apiClient.get('/dashboard/metrics'),
   getSystemDashboard: () => apiClient.get('/admin/dashboard'),
   getDashboardStats: () => apiClient.get('/admin/dashboard/stats'),
   getTechnicianDashboard: () => apiClient.get('/admin/dashboard/technician'),
@@ -267,11 +290,15 @@ export const financeAPI = {
 
 // Marketing Management API
 export const marketingAPI = {
-  // Campaigns
+  // Admin Marketing Campaigns (CRUD)
+  getAllCampaigns: () => apiClient.get('/admin/marketing/campaigns'),
+  createCampaign: (campaignData) => apiClient.post('/admin/marketing/campaigns', campaignData),
+  updateCampaign: (campaignId, campaignData) => apiClient.put(`/admin/marketing/campaigns/${campaignId}`, campaignData),
+  deleteCampaign: (campaignId) => apiClient.delete(`/admin/marketing/campaigns/${campaignId}`),
+  getCampaignById: (campaignId) => apiClient.get(`/admin/marketing/campaigns/${campaignId}`),
+  
+  // Marketing Automation (SMS, Segments, Templates)
   getCampaigns: () => apiClient.get('/marketing/campaigns'),
-  createCampaign: (campaignData) => apiClient.post('/marketing/campaigns', campaignData),
-  updateCampaign: (campaignId, campaignData) => apiClient.put(`/marketing/campaigns/${campaignId}`, campaignData),
-  deleteCampaign: (campaignId) => apiClient.delete(`/marketing/campaigns/${campaignId}`),
   sendCampaign: (campaignId) => apiClient.post(`/marketing/campaigns/${campaignId}/send`),
   processScheduledCampaigns: () => apiClient.post('/marketing/campaigns/process-scheduled'),
   getLogs: (campaignId) => apiClient.get('/marketing/logs', {
@@ -325,6 +352,92 @@ export const locationAPI = {
   deleteLocation: (locationId) => apiClient.delete(`/admin/locations/${locationId}`),
   getLocationsByCity: (city) => apiClient.get(`/admin/locations/city/${city}`),
   checkCoverageAvailability: (locationData) => apiClient.post('/admin/locations/check-coverage', locationData),
+};
+
+// VPN Management API (Module J)
+export const vpnAPI = {
+  // VPN Peers
+  getAllPeers: (params = {}) => apiClient.get('/admin/vpn/peers', { params }),
+  getPeerDetails: (peerId) => apiClient.get(`/admin/vpn/peers/${peerId}`),
+  createPeer: (peerData) => apiClient.post('/admin/vpn/peers', peerData),
+  updatePeer: (peerId, peerData) => apiClient.put(`/admin/vpn/peers/${peerId}`, peerData),
+  deletePeer: (peerId) => apiClient.delete(`/admin/vpn/peers/${peerId}`),
+  revokePeer: (peerId) => apiClient.post(`/admin/vpn/peers/${peerId}/revoke`),
+  
+  // VPN Servers
+  getAllServers: () => apiClient.get('/admin/vpn/servers'),
+  getServerDetails: (serverId) => apiClient.get(`/admin/vpn/servers/${serverId}`),
+  createServer: (serverData) => apiClient.post('/admin/vpn/servers', serverData),
+  updateServer: (serverId, serverData) => apiClient.put(`/admin/vpn/servers/${serverId}`, serverData),
+  updateServerStatus: (serverId, status) => apiClient.put(`/admin/vpn/servers/${serverId}/status`, null, { params: { status } }),
+  deleteServer: (serverId) => apiClient.delete(`/admin/vpn/servers/${serverId}`),
+  
+  // VPN Statistics
+  getStatistics: () => apiClient.get('/admin/vpn/statistics'),
+  getPeerStatistics: (peerId) => apiClient.get(`/admin/vpn/peers/${peerId}/statistics`),
+};
+
+// VPN Provision API
+export const vpnProvisionAPI = {
+  generatePeerForRouter: (routerId) => apiClient.post(`/vpn/routers/${routerId}/generate-peer`),
+  provisionRouter: (routerId) => apiClient.post(`/vpn/routers/${routerId}/provision`),
+  getJobStatus: (jobId) => apiClient.get(`/vpn/jobs/${jobId}`),
+};
+
+// Audit Logs API
+export const auditLogAPI = {
+  getAuditLogs: (params = {}) => apiClient.get('/admin/audit-logs', { params }),
+  getSecurityEvents: (hours = 24) => apiClient.get('/admin/audit-logs/security-events', { params: { hours } }),
+  getAuditStatistics: (params = {}) => apiClient.get('/admin/audit-logs/statistics', { params }),
+};
+
+// System Logs API
+export const systemLogAPI = {
+  getApiLogs: (params = {}) => apiClient.get('/admin/system/logs/api', { params }),
+  getRouterLogs: (params = {}) => apiClient.get('/admin/system/logs/router', { params }),
+  getRadiusLogs: (params = {}) => apiClient.get('/admin/system/logs/radius', { params }),
+  getLoginLogs: (params = {}) => apiClient.get('/admin/system/logs/login', { params }),
+  getEmailSmsLogs: (params = {}) => apiClient.get('/admin/system/logs/email-sms', { params }),
+  getErrorLogs: (params = {}) => apiClient.get('/admin/system/logs/error', { params }),
+};
+
+// Cache Management API
+export const cacheAPI = {
+  getCacheStatistics: () => apiClient.get('/admin/cache/statistics'),
+  evictCache: (cacheName) => apiClient.delete(`/admin/cache/${cacheName}`),
+  evictAllCaches: () => apiClient.delete('/admin/cache'),
+  getCacheNames: () => apiClient.get('/admin/cache/names'),
+};
+
+// Two-Factor Authentication API
+export const twoFactorAPI = {
+  setup2FA: () => apiClient.post('/auth/2fa/setup'),
+  enable2FA: (code) => apiClient.post('/auth/2fa/enable', { code }),
+  verify2FA: (code) => apiClient.post('/auth/2fa/verify', { code }),
+  disable2FA: (code) => apiClient.post('/auth/2fa/disable', { code }),
+  get2FAStatus: () => apiClient.get('/auth/2fa/status'),
+  generateBackupCodes: () => apiClient.post('/auth/2fa/backup-codes'),
+};
+
+// Voucher Batch API
+export const voucherBatchAPI = {
+  getAllBatches: (params = {}) => apiClient.get('/admin/voucher-batches', { params }),
+  getBatchById: (batchId) => apiClient.get(`/admin/voucher-batches/${batchId}`),
+  createBatch: (batchData) => apiClient.post('/admin/voucher-batches', batchData),
+  updateBatch: (batchId, batchData) => apiClient.put(`/admin/voucher-batches/${batchId}`, batchData),
+  deleteBatch: (batchId) => apiClient.delete(`/admin/voucher-batches/${batchId}`),
+  generateVouchers: (batchId) => apiClient.post(`/admin/voucher-batches/${batchId}/generate`),
+  getBatchStatistics: (batchId) => apiClient.get(`/admin/voucher-batches/${batchId}/statistics`),
+};
+
+// Product Management API (Loyalty Products)
+export const productAPI = {
+  getAllProducts: (params = {}) => apiClient.get('/admin/loyalty/products', { params }),
+  getProductById: (productId) => apiClient.get(`/admin/loyalty/products/${productId}`),
+  createProduct: (productData) => apiClient.post('/admin/loyalty/products', productData),
+  updateProduct: (productId, productData) => apiClient.put(`/admin/loyalty/products/${productId}`, productData),
+  deleteProduct: (productId) => apiClient.delete(`/admin/loyalty/products/${productId}`),
+  updateProductStock: (productId, stock) => apiClient.put(`/admin/loyalty/products/${productId}/stock`, null, { params: { stock } }),
 };
 
 // Utility functions

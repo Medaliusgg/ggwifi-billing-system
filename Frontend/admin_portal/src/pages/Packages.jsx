@@ -330,7 +330,7 @@ const InternetPackageManagement = () => {
   }
 
   return (
-    <Box sx={{ p: isMobile ? 2 : 3 }}>
+    <Box sx={{ p: isMobile ? 2 : 3, backgroundColor: '#FFFFFF', minHeight: '100vh' }}>
       {/* Header */}
       <Box sx={{ 
         display: 'flex', 
@@ -338,16 +338,31 @@ const InternetPackageManagement = () => {
         alignItems: 'center', 
         mb: 3,
         flexWrap: 'wrap',
-        gap: 2
+        gap: 2,
+        pb: 2,
+        borderBottom: '1px solid #EEEEEE',
       }}>
-        <Box>
-          <Typography variant="h4" sx={{ fontWeight: 700, color: 'text.primary' }}>
-            Internet Package Management
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Manage internet packages for hotspot and PPPoE services
-        </Typography>
-      </Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Avatar
+            sx={{
+              width: 56,
+              height: 56,
+              bgcolor: '#F2C94C', // Gold
+              color: '#0A0A0A', // Black
+              boxShadow: '0 4px 12px rgba(242, 201, 76, 0.3)',
+            }}
+          >
+            <SpeedIcon />
+          </Avatar>
+          <Box>
+            <Typography variant="h4" sx={{ fontWeight: 700, color: '#0A0A0A', fontSize: { xs: '24px', md: '28px' }, mb: 0.5 }}>
+              Package Management
+            </Typography>
+            <Typography variant="body2" sx={{ color: '#666666', fontSize: '14px' }}>
+              Module C: Create and manage Universal & Offer packages with router sync
+            </Typography>
+          </Box>
+        </Box>
 
         {canManagePackages && (
           <Button
@@ -355,14 +370,13 @@ const InternetPackageManagement = () => {
             startIcon={<AddIcon />}
             onClick={() => handleOpenDialog()}
             sx={{
-              background: 'linear-gradient(45deg, #F5B700 30%, #FFCB00 90%)',
-              color: '#000000',
-              fontWeight: 700,
-              boxShadow: '0 4px 16px rgba(245, 183, 0, 0.3)',
+              backgroundColor: '#F2C94C', // Gold
+              color: '#0A0A0A', // Black
+              fontWeight: 600,
               '&:hover': {
-                background: 'linear-gradient(45deg, #FFCB00 30%, #F5B700 90%)',
-                boxShadow: '0 6px 20px rgba(245, 183, 0, 0.4)',
-              }
+                backgroundColor: '#E0B335', // Gold Strong
+                boxShadow: '0 4px 12px rgba(242, 201, 76, 0.3)',
+              },
             }}
           >
             Add Package
@@ -370,6 +384,39 @@ const InternetPackageManagement = () => {
         )}
       </Box>
 
+      {/* Module Tabs for Sub-modules */}
+      <Card sx={{ mb: 3 }}>
+        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+          <Tabs 
+            value={activeTab} 
+            onChange={(e, newValue) => setActiveTab(newValue)}
+            sx={{
+              '& .MuiTab-root': {
+                textTransform: 'none',
+                fontWeight: 600,
+                fontSize: '14px',
+                minHeight: 48,
+                '&.Mui-selected': {
+                  color: '#F2C94C', // Gold
+                },
+              },
+              '& .MuiTabs-indicator': {
+                backgroundColor: '#F2C94C', // Gold indicator
+                height: 3,
+              },
+            }}
+          >
+            <Tab label="Package List" icon={<SpeedIcon />} iconPosition="start" />
+            <Tab label="Universal Packages" icon={<WifiIcon />} iconPosition="start" />
+            <Tab label="Offer Packages" icon={<MoneyIcon />} iconPosition="start" />
+            <Tab label="Router Sync" icon={<RouterIcon />} iconPosition="start" />
+          </Tabs>
+        </Box>
+      </Card>
+
+      {/* Tab Content */}
+      {activeTab === 0 && (
+        <>
       {/* Statistics Cards */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={6} md={3}>
@@ -379,20 +426,34 @@ const InternetPackageManagement = () => {
             transition={{ duration: 0.5 }}
           >
             <Card sx={{ 
-              background: 'linear-gradient(135deg, #F5B70015, #FFCB0005)',
-              border: '1px solid #F5B70020',
+              backgroundColor: '#FFFFFF',
+              borderRadius: '16px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
+              border: '1px solid #EEEEEE',
+              position: 'relative',
+              overflow: 'hidden',
             }}>
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: 4,
+                  backgroundColor: '#F2C94C', // Gold
+                }}
+              />
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Box>
-                    <Typography variant="h4" sx={{ fontWeight: 700, color: '#F5B700' }}>
+                    <Typography variant="h4" sx={{ fontWeight: 700, color: '#0A0A0A' }}>
                       {packagesData?.packages?.length || 0}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" sx={{ color: '#666666' }}>
                       Total Packages
                     </Typography>
                   </Box>
-                  <Avatar sx={{ bgcolor: '#F5B700', color: '#000000' }}>
+                  <Avatar sx={{ bgcolor: 'rgba(242, 201, 76, 0.1)', color: '#F2C94C' }}>
                     <SpeedIcon />
                   </Avatar>
                 </Box>
@@ -646,9 +707,10 @@ const InternetPackageManagement = () => {
                       <TableCell>
                         <Chip
                           label={pkg.isActive ? 'Active' : 'Inactive'}
-        sx={{
-                            bgcolor: getStatusColor(pkg.isActive),
-                            color: 'white',
+                          sx={{
+                            bgcolor: pkg.isActive ? '#ECFDF5' : '#FFEBEE',
+                            color: pkg.isActive ? '#10B981' : '#F44336',
+                            border: `1px solid ${pkg.isActive ? '#10B981' : '#F44336'}`,
                             fontWeight: 600,
                           }}
                         />
@@ -829,17 +891,18 @@ const InternetPackageManagement = () => {
             <Button onClick={handleCloseDialog}>
               Cancel
             </Button>
-          <Button
+            <Button
               type="submit"
-            variant="contained"
+              variant="contained"
               disabled={createPackageMutation.isPending || updatePackageMutation.isPending}
-            sx={{
-                background: 'linear-gradient(45deg, #F5B700 30%, #FFCB00 90%)',
-                color: '#000000',
-                fontWeight: 700,
-              '&:hover': {
-                  background: 'linear-gradient(45deg, #FFCB00 30%, #F5B700 90%)',
-                }
+              sx={{
+                backgroundColor: '#F2C94C', // Gold
+                color: '#0A0A0A', // Black
+                fontWeight: 600,
+                '&:hover': {
+                  backgroundColor: '#E0B335', // Gold Strong
+                  boxShadow: '0 4px 12px rgba(242, 201, 76, 0.3)',
+                },
               }}
             >
               {(createPackageMutation.isPending || updatePackageMutation.isPending) ? (

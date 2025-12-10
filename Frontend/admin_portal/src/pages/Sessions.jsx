@@ -88,7 +88,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSnackbar } from 'notistack';
 import useAuthStore from '/src/store/authStore.js';
-import { radiusAPI } from '/src/services/api.js';
+import { sessionAPI, radiusAPI } from '/src/services/api.js';
 
 const SessionManagement = () => {
   console.log('🔍 Sessions component rendered');
@@ -128,15 +128,25 @@ const SessionManagement = () => {
     calledStationId: '',
   });
 
-  // Fetch sessions with React Query
+  // Fetch sessions with React Query using new sessionAPI
   const { data: sessionsResponse, isLoading, error, refetch } = useQuery({
     queryKey: ['sessions'],
     queryFn: async () => {
-      const response = await radiusAPI.getActiveSessions();
-      // Active sessions endpoint returns a flat array
-      if (Array.isArray(response.data)) return response.data;
-      if (Array.isArray(response.data?.data)) return response.data.data;
-      return [];
+      try {
+        const response = await sessionAPI.getActiveSessions();
+        // Active sessions endpoint returns { status, sessions, count }
+        if (response?.data?.sessions) return response.data.sessions;
+        if (Array.isArray(response?.data)) return response.data;
+        if (Array.isArray(response?.data?.data)) return response.data.data;
+        return [];
+      } catch (err) {
+        console.error('Failed to fetch sessions:', err);
+        // Fallback to radiusAPI if sessionAPI fails
+        const fallback = await radiusAPI.getActiveSessions();
+        if (Array.isArray(fallback?.data)) return fallback.data;
+        if (Array.isArray(fallback?.data?.data)) return fallback.data.data;
+        return [];
+      }
     },
     staleTime: 30 * 1000, // 30 seconds
     refetchInterval: 30 * 1000, // Auto-refresh every 30 seconds
@@ -146,18 +156,25 @@ const SessionManagement = () => {
   const { data: sessionStats } = useQuery({
     queryKey: ['session-stats'],
     queryFn: async () => {
-      const response = await radiusAPI.getSessionStatistics();
-      return response.data;
+      try {
+        const response = await sessionAPI.getSessionStatistics();
+        return response?.data || response;
+      } catch (err) {
+        console.error('Failed to fetch session stats:', err);
+        // Fallback to radiusAPI
+        const fallback = await radiusAPI.getStatistics();
+        return fallback?.data || fallback;
+      }
     },
     staleTime: 30 * 1000,
     refetchInterval: 30 * 1000,
   });
 
-  // Terminate session mutation
+  // Terminate session mutation using new sessionAPI
   const terminateSessionMutation = useMutation({
-    mutationFn: async (sessionId) => {
-      const response = await radiusAPI.terminateSession(sessionId);
-      return response.data;
+    mutationFn: async ({ sessionId, reason }) => {
+      const response = await sessionAPI.terminateSession(sessionId, reason);
+      return response?.data || response;
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['sessions']);
@@ -251,7 +268,10 @@ const SessionManagement = () => {
 
   const handleTerminateSession = (sessionId) => {
     if (window.confirm('Are you sure you want to terminate this session?')) {
-      terminateSessionMutation.mutate(sessionId);
+      terminateSessionMutation.mutate({ 
+        sessionId, 
+        reason: 'Admin-Terminated' 
+      });
     }
   };
 

@@ -21,6 +21,7 @@ import TransactionManagement from './pages/Transactions';
 import InvoiceManagement from './pages/Invoices';
 import MarketingManagement from './pages/Marketing';
 import LoyaltyManagement from './pages/Loyalty';
+import VpnManagement from './pages/VpnManagement';
 
 // Placeholder pages for other routes
 const Finance = () => (
@@ -253,6 +254,17 @@ function App() {
         }
       >
         <Route index element={<MarketingManagement />} />
+      </Route>
+
+      <Route
+        path="/vpn"
+        element={
+          <ProtectedRoute>
+            <MainLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<VpnManagement />} />
       </Route>
 
       {/* Error Routes */}

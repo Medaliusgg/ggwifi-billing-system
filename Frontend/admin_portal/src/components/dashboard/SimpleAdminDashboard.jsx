@@ -29,6 +29,19 @@ import useAuthStore from '/src/store/authStore.js';
 import ggwifiTheme from '/src/theme/ggwifiTheme.js';
 import { dashboardAPI } from '/src/services/api.js';
 
+// Fetch dashboard metrics using the new endpoint
+const useDashboardMetrics = () => {
+  return useQuery({
+    queryKey: ['dashboard-metrics'],
+    queryFn: async () => {
+      const response = await dashboardAPI.getDashboardMetrics();
+      return response?.data || response;
+    },
+    refetchInterval: 30000, // Refetch every 30 seconds
+    staleTime: 10000, // Consider data stale after 10 seconds
+  });
+};
+
 // GG Wi-Fi Branded KPI Card Component
 const KPICard = ({ 
   title, 
@@ -309,12 +322,19 @@ const SimpleAdminDashboard = () => {
 
   console.log('🔍 SimpleAdminDashboard rendered:', { user });
 
-  // Fetch dashboard data from backend
-  const { data: dashboardResponse, isLoading, error, refetch } = useQuery({
-    queryKey: ['admin-dashboard-stats'],
+  // Fetch dashboard metrics from backend using new endpoint
+  const { data: dashboardMetrics, isLoading, error, refetch } = useQuery({
+    queryKey: ['dashboard-metrics'],
     queryFn: async () => {
-      const response = await dashboardAPI.getDashboardStats();
-      return response.data || response;
+      try {
+        const response = await dashboardAPI.getDashboardMetrics();
+        return response?.data || response;
+      } catch (err) {
+        console.error('Dashboard metrics error:', err);
+        // Fallback to old endpoint if new one fails
+        const fallback = await dashboardAPI.getDashboardStats();
+        return fallback?.data || fallback;
+      }
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchInterval: 2 * 60 * 1000, // Refetch every 2 minutes
