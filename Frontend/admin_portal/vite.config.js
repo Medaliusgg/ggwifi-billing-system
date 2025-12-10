@@ -1,25 +1,40 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import path from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
-  },
   server: {
-    port: 5173,
+    port: 3001,
+    open: true,
     host: true,
-    strictPort: false, // Allow Vite to use next available port if 5173 is taken
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        secure: false
+      }
+    }
   },
   build: {
     outDir: 'dist',
-    sourcemap: true,
+    sourcemap: true
+  },
+  define: {
+    global: 'globalThis',
+    'process.env': {}
   },
   optimizeDeps: {
-    include: ['react', 'react-dom'],
+    include: ['react', 'react-dom', '@mui/material', '@mui/icons-material', 'framer-motion'],
+    esbuildOptions: {
+      loader: {
+        '.js': 'jsx',
+      },
+    },
   },
+  esbuild: {
+    loader: 'jsx',
+    include: /src\/.*\.[jt]sx?$/,
+    exclude: []
+  }
 })
