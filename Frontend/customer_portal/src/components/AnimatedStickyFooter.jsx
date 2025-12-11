@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Container, Typography, Button } from '@mui/material';
-import { motion, useScroll, useMotionValueEvent } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useMotionValueEvent } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { VpnKey as VoucherIcon, Home as HomeIcon } from '@mui/icons-material';
 import GlobalButton from './ui/GlobalButton';

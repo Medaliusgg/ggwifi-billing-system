@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box } from '@mui/material';
+import { Box, Container } from '@mui/material';
 import GlobalHeader from '../components/GlobalHeader';
 import AnimatedStickyFooter from '../components/AnimatedStickyFooter';
 import HeroSection from '../components/homepage/HeroSection';
@@ -41,9 +41,11 @@ const LandingPage = () => {
       <HeroSection />
 
       {/* Section 2: Marketing Campaign Section */}
-      <Box sx={{ py: 4, px: { xs: 2, md: 0 } }}>
-        <EnhancedMarketingCarousel campaigns={campaigns} />
-      </Box>
+      <Container maxWidth="lg">
+        <Box sx={{ py: 4, px: { xs: 2, md: 0 } }}>
+          <EnhancedMarketingCarousel campaigns={campaigns} />
+        </Box>
+      </Container>
 
       {/* Section 3: Package List Section */}
       <HomePackageList />
