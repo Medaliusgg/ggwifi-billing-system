@@ -56,8 +56,8 @@ const Footer = () => {
               onClick={() => navigate('/plans')}
               fullWidth={false}
               sx={{
-                backgroundColor: colors.info,
-                color: theme.palette.background.paper,
+                backgroundColor: theme.palette.text.primary, // Deep Black
+                color: theme.palette.background.paper, // Clean White
                 fontWeight: 600,
                 px: { xs: 3, md: 4 },
                 py: 1.5,
@@ -66,8 +66,8 @@ const Footer = () => {
                 minWidth: { xs: 'auto', sm: '200px' },
                 flex: { xs: '1 1 auto', sm: '0 0 auto' },
                 '&:hover': {
-                  backgroundColor: colors.infoDark,
-                  boxShadow: '0 4px 12px rgba(72, 199, 242, 0.3)',
+                  backgroundColor: '#1A1A1A', // Darker black
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
                 },
               }}
             >
