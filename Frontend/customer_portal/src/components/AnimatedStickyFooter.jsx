@@ -35,14 +35,15 @@ const AnimatedStickyFooter = () => {
 
   return (
     <>
-      {/* Normal Footer (always at bottom) */}
+      {/* Normal Footer (always at bottom) - Yellow background */}
       <Box
         component="footer"
         sx={{
-          backgroundColor: '#FFFFFF',
-          borderTop: '1px solid #E5E7EB',
+          backgroundColor: '#FFCC00', // Golden Yellow
+          borderTop: '2px solid #E6B800',
           py: 4,
           mt: 'auto',
+          boxShadow: '0 -2px 10px rgba(0,0,0,0.1)',
         }}
       >
         <Container maxWidth="lg">
@@ -54,7 +55,7 @@ const AnimatedStickyFooter = () => {
               gap: 2,
             }}
           >
-            <Typography variant="body2" sx={{ color: '#666666' }}>
+            <Typography variant="body2" sx={{ color: '#000000', fontWeight: 600 }}>
               © 2025 GG Wi-Fi. All rights reserved.
             </Typography>
             <Box sx={{ display: 'flex', gap: 2 }}>
@@ -114,21 +115,23 @@ const AnimatedStickyFooter = () => {
                   </Typography>
                   <Box sx={{ display: 'flex', gap: 2 }}>
                     {!isHomePage && (
-                      <GlobalButton
-                        icon={<ShoppingBagIcon />}
-                        variant="outlined"
-                        onClick={() => navigate('/packages')}
-                        sx={{
-                          borderColor: '#000000',
-                          color: '#000000',
-                          '&:hover': {
-                            borderColor: '#000000',
-                            backgroundColor: 'rgba(0, 0, 0, 0.1)',
-                          },
-                        }}
-                      >
-                        View Packages
-                      </GlobalButton>
+                    <GlobalButton
+                      icon={<ShoppingBagIcon />}
+                      variant="contained"
+                      onClick={() => navigate('/packages')}
+                      sx={{
+                        backgroundColor: '#000000',
+                        color: '#FFFFFF',
+                        '&:hover': {
+                          backgroundColor: '#1A1A1A',
+                          transform: 'scale(1.05)',
+                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+                        },
+                        transition: 'all 0.2s ease',
+                      }}
+                    >
+                      View Packages
+                    </GlobalButton>
                     )}
                     <GlobalButton
                       icon={<VoucherIcon />}
@@ -139,7 +142,10 @@ const AnimatedStickyFooter = () => {
                         color: '#FFFFFF',
                         '&:hover': {
                           backgroundColor: '#1A1A1A',
+                          transform: 'scale(1.05)',
+                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
                         },
+                        transition: 'all 0.2s ease',
                       }}
                     >
                       Voucher Login

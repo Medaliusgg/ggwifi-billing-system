@@ -76,23 +76,19 @@ const GlobalHeader = ({ isAuthenticated, user, onLogout }) => {
     handleAccountMenuClose();
   };
 
-  // Determine background color based on scroll and page
-  const backgroundColor = isHomePage && !scrolled 
-    ? 'transparent' 
-    : theme.palette.background.paper;
-  
-  const boxShadow = isHomePage && !scrolled 
-    ? 'none' 
-    : '0 2px 8px rgba(0,0,0,0.1)';
+  // Always yellow background, but adjust opacity/shadow on scroll
+  const boxShadow = scrolled 
+    ? '0 2px 8px rgba(0,0,0,0.15)' 
+    : '0 1px 4px rgba(0,0,0,0.1)';
 
   return (
     <AppBar
       position="sticky"
       sx={{
-        backgroundColor: backgroundColor,
-        color: theme.palette.text.primary,
+        backgroundColor: theme.palette.primary.main, // Always Golden Yellow #FFCC00
+        color: theme.palette.text.primary, // Black text on yellow
         boxShadow: boxShadow,
-        borderBottom: scrolled ? `1px solid ${theme.palette.divider}` : 'none',
+        borderBottom: `2px solid ${theme.palette.primary.dark}`,
         zIndex: theme.zIndex.drawer + 1,
         transition: 'all 0.3s ease',
       }}
@@ -131,8 +127,9 @@ const GlobalHeader = ({ isAuthenticated, user, onLogout }) => {
             variant="h6"
             sx={{
               fontWeight: 700,
-              color: theme.palette.text.primary,
+              color: theme.palette.text.primary, // Black on yellow
               fontSize: { xs: '18px', md: '24px' },
+              textShadow: '0 1px 2px rgba(0,0,0,0.1)',
             }}
           >
             GG Wi-Fi
@@ -145,8 +142,12 @@ const GlobalHeader = ({ isAuthenticated, user, onLogout }) => {
           <IconButton
             onClick={handleWhatsApp}
             sx={{
-              color: theme.palette.text.primary,
-              '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.1)' },
+              color: theme.palette.text.primary, // Black on yellow
+              '&:hover': { 
+                backgroundColor: 'rgba(0, 0, 0, 0.1)',
+                transform: 'scale(1.1)',
+              },
+              transition: 'all 0.2s ease',
             }}
             size={isMobile ? 'small' : 'medium'}
           >
@@ -157,8 +158,12 @@ const GlobalHeader = ({ isAuthenticated, user, onLogout }) => {
           <IconButton
             onClick={handlePhoneCall}
             sx={{
-              color: theme.palette.text.primary,
-              '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.1)' },
+              color: theme.palette.text.primary, // Black on yellow
+              '&:hover': { 
+                backgroundColor: 'rgba(0, 0, 0, 0.1)',
+                transform: 'scale(1.1)',
+              },
+              transition: 'all 0.2s ease',
             }}
             size={isMobile ? 'small' : 'medium'}
           >
@@ -188,8 +193,12 @@ const GlobalHeader = ({ isAuthenticated, user, onLogout }) => {
           <IconButton
             onClick={isAuthenticated ? handleAccountMenuOpen : handleLogin}
             sx={{
-              color: theme.palette.text.primary,
-              '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.1)' },
+              color: theme.palette.text.primary, // Black on yellow
+              '&:hover': { 
+                backgroundColor: 'rgba(0, 0, 0, 0.1)',
+                transform: 'scale(1.1)',
+              },
+              transition: 'all 0.2s ease',
             }}
             size={isMobile ? 'small' : 'medium'}
           >

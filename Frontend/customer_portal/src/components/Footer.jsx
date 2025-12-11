@@ -27,11 +27,11 @@ const Footer = () => {
         bottom: 0,
         left: 0,
         right: 0,
-        backgroundColor: theme.palette.primary.main, // Main Golden Yellow #FFCC00
-        borderTop: `1px solid ${theme.palette.primary.dark}`,
-        boxShadow: '0 -2px 10px rgba(0,0,0,0.1)',
+        backgroundColor: theme.palette.primary.main, // Always Golden Yellow #FFCC00
+        borderTop: `2px solid ${theme.palette.primary.dark}`,
+        boxShadow: '0 -4px 20px rgba(0,0,0,0.15)',
         zIndex: theme.zIndex.appBar,
-        py: 2,
+        py: 2.5,
       }}
     >
       <Container maxWidth="lg">
@@ -58,16 +58,18 @@ const Footer = () => {
               sx={{
                 backgroundColor: theme.palette.text.primary, // Deep Black
                 color: theme.palette.background.paper, // Clean White
-                fontWeight: 600,
+                fontWeight: 700,
                 px: { xs: 3, md: 4 },
                 py: 1.5,
                 borderRadius: '12px',
                 fontSize: { xs: '14px', md: '16px' },
                 minWidth: { xs: 'auto', sm: '200px' },
                 flex: { xs: '1 1 auto', sm: '0 0 auto' },
+                transition: 'all 0.2s ease',
                 '&:hover': {
-                  backgroundColor: '#1A1A1A', // Darker black
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+                  backgroundColor: '#1A1A1A', // Darker black on hover
+                  transform: 'scale(1.05)',
+                  boxShadow: '0 6px 16px rgba(0, 0, 0, 0.4)',
                 },
               }}
             >
@@ -88,16 +90,18 @@ const Footer = () => {
               sx={{
                 backgroundColor: theme.palette.text.primary, // Deep Black
                 color: theme.palette.background.paper, // Clean White
-                fontWeight: 600,
+                fontWeight: 700,
                 px: { xs: 3, md: 4 },
                 py: 1.5,
                 borderRadius: '12px',
                 fontSize: { xs: '14px', md: '16px' },
                 minWidth: { xs: 'auto', sm: '200px' },
                 flex: { xs: '1 1 auto', sm: '0 0 auto' },
+                transition: 'all 0.2s ease',
                 '&:hover': {
-                  backgroundColor: '#1A1A1A', // Darker black
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+                  backgroundColor: '#1A1A1A', // Darker black on hover
+                  transform: 'scale(1.05)',
+                  boxShadow: '0 6px 16px rgba(0, 0, 0, 0.4)',
                 },
               }}
             >
