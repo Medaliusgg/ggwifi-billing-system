@@ -32,6 +32,16 @@ const ConnectionsPage = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const token = localStorage.getItem('token');
+  const colors = {
+    background: theme.palette.background.default,
+    textPrimary: theme.palette.text.primary,
+    textSecondary: theme.palette.text.secondary,
+    info: theme.palette.info.main,
+    success: theme.palette.success.main,
+    successLight: theme.palette.success.light,
+    error: theme.palette.error.main,
+    errorLight: theme.palette.error.light,
+  };
 
   // Fetch active sessions
   const { data: activeSessions = [] } = useQuery(
@@ -54,7 +64,7 @@ const ConnectionsPage = () => {
   );
 
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: '#F5F9FC', pb: { xs: 8, md: 0 } }}>
+    <Box sx={{ minHeight: '100vh', backgroundColor: colors.background, pb: { xs: 8, md: 0 } }}>
       <GlobalHeader isAuthenticated={!!token} />
 
       <Container maxWidth="lg" sx={{ py: { xs: 3, md: 4 } }}>
@@ -63,7 +73,7 @@ const ConnectionsPage = () => {
           sx={{
             fontWeight: 700,
             mb: 3,
-            color: '#0A0A0A',
+            color: colors.textPrimary,
           }}
         >
           Connections
@@ -131,8 +141,8 @@ const ConnectionsPage = () => {
                               icon={<ActiveIcon />}
                               label="Active"
                               sx={{
-                                bgcolor: '#ECFDF5',
-                                color: '#10B981',
+                                bgcolor: colors.successLight,
+                                color: colors.success,
                                 fontWeight: 600,
                               }}
                             />
@@ -168,7 +178,7 @@ const ConnectionsPage = () => {
           >
             <CardContent sx={{ p: 3 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-                <HistoryIcon sx={{ color: '#48C7F2' }} />
+                <HistoryIcon sx={{ color: colors.info }} />
                 <Typography variant="h6" sx={{ fontWeight: 700 }}>
                   Session History
                 </Typography>
@@ -216,8 +226,8 @@ const ConnectionsPage = () => {
                               icon={<InactiveIcon />}
                               label="Completed"
                               sx={{
-                                bgcolor: '#FFEBEE',
-                                color: '#F44336',
+                                bgcolor: colors.errorLight,
+                                color: colors.error,
                                 fontWeight: 600,
                               }}
                             />

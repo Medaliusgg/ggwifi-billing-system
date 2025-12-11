@@ -20,6 +20,14 @@ const SignupVerifyPage = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const navigate = useNavigate();
+  const colors = {
+    background: theme.palette.background.default,
+    textPrimary: theme.palette.text.primary,
+    textSecondary: theme.palette.text.secondary,
+    info: theme.palette.info.main,
+    warning: theme.palette.warning.main,
+    warningDark: theme.palette.warning.dark,
+  };
   const [otp, setOtp] = useState(['', '', '', '']);
   const inputRefs = useRef([]);
   const [error, setError] = useState('');
@@ -79,7 +87,7 @@ const SignupVerifyPage = () => {
   const isOtpComplete = otp.every((digit) => digit !== '');
 
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: '#F5F9FC' }}>
+    <Box sx={{ minHeight: '100vh', backgroundColor: colors.background }}>
       <GlobalHeader isAuthenticated={false} />
 
       <Container maxWidth="sm" sx={{ py: { xs: 4, md: 6 } }}>
@@ -103,7 +111,7 @@ const SignupVerifyPage = () => {
                   fontWeight: 700,
                   textAlign: 'center',
                   mb: 1,
-                  color: '#0A0A0A',
+                  color: colors.textPrimary,
                 }}
               >
                 Verify OTP
@@ -113,7 +121,7 @@ const SignupVerifyPage = () => {
                 sx={{
                   textAlign: 'center',
                   mb: 4,
-                  color: '#666666',
+                  color: colors.textSecondary,
                 }}
               >
                 Step 2 of 3: Enter the 4-digit OTP sent to {phone}
@@ -154,12 +162,12 @@ const SignupVerifyPage = () => {
                         borderRadius: '12px',
                         backgroundColor: '#FFFFFF',
                         border: '2px solid',
-                        borderColor: digit ? '#48C7F2' : '#EEEEEE',
+                        borderColor: digit ? colors.info : theme.palette.divider,
                         '&:hover': {
-                          borderColor: '#48C7F2',
+                          borderColor: colors.info,
                         },
                         '&.Mui-focused': {
-                          borderColor: '#48C7F2',
+                          borderColor: colors.info,
                         },
                       },
                     }}

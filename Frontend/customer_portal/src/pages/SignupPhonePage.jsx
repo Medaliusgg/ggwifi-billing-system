@@ -20,6 +20,13 @@ const SignupPhonePage = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const navigate = useNavigate();
+  const colors = {
+    background: theme.palette.background.default,
+    textPrimary: theme.palette.text.primary,
+    textSecondary: theme.palette.text.secondary,
+    warning: theme.palette.warning.main,
+    warningDark: theme.palette.warning.dark,
+  };
   const [phone, setPhone] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -49,7 +56,7 @@ const SignupPhonePage = () => {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: '#F5F9FC' }}>
+    <Box sx={{ minHeight: '100vh', backgroundColor: colors.background }}>
       <GlobalHeader isAuthenticated={false} />
 
       <Container maxWidth="sm" sx={{ py: { xs: 4, md: 6 } }}>
@@ -73,7 +80,7 @@ const SignupPhonePage = () => {
                   fontWeight: 700,
                   textAlign: 'center',
                   mb: 1,
-                  color: '#0A0A0A',
+                  color: colors.textPrimary,
                 }}
               >
                 Create Account
@@ -83,7 +90,7 @@ const SignupPhonePage = () => {
                 sx={{
                   textAlign: 'center',
                   mb: 4,
-                  color: '#666666',
+                  color: colors.textSecondary,
                 }}
               >
                 Step 1 of 3: Enter your phone number
@@ -113,14 +120,14 @@ const SignupPhonePage = () => {
                   size="large"
                   disabled={loading}
                   sx={{
-                    backgroundColor: '#F48C06', // Orange
-                    color: '#FFFFFF',
-                    fontWeight: 600,
-                    py: 1.5,
-                    borderRadius: '12px',
-                    fontSize: '18px',
-                    '&:hover': {
-                      backgroundColor: '#D97706',
+                backgroundColor: colors.warning,
+                color: theme.palette.background.paper,
+                fontWeight: 600,
+                py: 1.5,
+                borderRadius: '12px',
+                fontSize: '18px',
+                '&:hover': {
+                  backgroundColor: colors.warningDark,
                       boxShadow: '0 4px 12px rgba(244, 140, 6, 0.3)',
                     },
                   }}

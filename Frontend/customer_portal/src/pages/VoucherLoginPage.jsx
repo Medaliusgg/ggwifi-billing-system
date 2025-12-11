@@ -18,6 +18,14 @@ const VoucherLoginPage = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const navigate = useNavigate();
+  const colors = {
+    background: theme.palette.background.default,
+    textPrimary: theme.palette.text.primary,
+    textSecondary: theme.palette.text.secondary,
+    info: theme.palette.info.main,
+    success: theme.palette.success.main,
+    successDark: theme.palette.success.dark,
+  };
   const [voucherCode, setVoucherCode] = useState(['', '', '', '', '', '']);
   const inputRefs = useRef([]);
 
@@ -64,7 +72,7 @@ const VoucherLoginPage = () => {
   const isCodeComplete = voucherCode.every((char) => char !== '');
 
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: '#F5F9FC' }}>
+    <Box sx={{ minHeight: '100vh', backgroundColor: colors.background }}>
       <GlobalHeader isAuthenticated={false} />
 
       <Container maxWidth="sm" sx={{ py: { xs: 4, md: 6 } }}>
@@ -88,7 +96,7 @@ const VoucherLoginPage = () => {
                   fontWeight: 700,
                   textAlign: 'center',
                   mb: 1,
-                  color: '#0A0A0A',
+                  color: colors.textPrimary,
                 }}
               >
                 Enter Voucher Code
@@ -98,7 +106,7 @@ const VoucherLoginPage = () => {
                 sx={{
                   textAlign: 'center',
                   mb: 4,
-                  color: '#666666',
+                  color: colors.textSecondary,
                 }}
               >
                 Enter your 6-digit voucher code to connect
@@ -136,12 +144,12 @@ const VoucherLoginPage = () => {
                         borderRadius: '12px',
                         backgroundColor: '#FFFFFF',
                         border: '2px solid',
-                        borderColor: char ? '#48C7F2' : '#EEEEEE',
+                        borderColor: char ? colors.info : theme.palette.divider,
                         '&:hover': {
-                          borderColor: '#48C7F2',
+                          borderColor: colors.info,
                         },
                         '&.Mui-focused': {
-                          borderColor: '#48C7F2',
+                          borderColor: colors.info,
                         },
                       },
                     }}
@@ -157,15 +165,15 @@ const VoucherLoginPage = () => {
                 onClick={handleConnect}
                 disabled={!isCodeComplete}
                 sx={{
-                  backgroundColor: isCodeComplete ? '#48BB78' : '#CCCCCC',
-                  color: '#FFFFFF',
+                backgroundColor: isCodeComplete ? colors.success : theme.palette.text.disabled,
+                color: theme.palette.background.paper,
                   fontWeight: 600,
                   py: 1.5,
                   borderRadius: '12px',
                   fontSize: '18px',
                   mb: 3,
                   '&:hover': {
-                    backgroundColor: isCodeComplete ? '#38A169' : '#CCCCCC',
+                    backgroundColor: isCodeComplete ? colors.successDark : theme.palette.text.disabled,
                   },
                 }}
               >
@@ -188,15 +196,15 @@ const VoucherLoginPage = () => {
             variant="outlined"
             onClick={() => navigate('/plans')}
             sx={{
-              borderColor: '#007BFF',
-              color: '#007BFF',
+            borderColor: colors.info,
+            color: colors.info,
               fontWeight: 600,
               px: 3,
               py: 1,
               borderRadius: '12px',
               '&:hover': {
-                borderColor: '#0056B3',
-                backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                borderColor: theme.palette.info.dark,
+                backgroundColor: theme.palette.info.light,
               },
             }}
           >
@@ -206,15 +214,15 @@ const VoucherLoginPage = () => {
             variant="outlined"
             onClick={() => navigate('/home')}
             sx={{
-              borderColor: '#48C7F2',
-              color: '#48C7F2',
+            borderColor: colors.info,
+            color: colors.info,
               fontWeight: 600,
               px: 3,
               py: 1,
               borderRadius: '12px',
               '&:hover': {
-                borderColor: '#38B2D0',
-                backgroundColor: 'rgba(72, 199, 242, 0.1)',
+                borderColor: theme.palette.info.dark,
+                backgroundColor: theme.palette.info.light,
               },
             }}
           >

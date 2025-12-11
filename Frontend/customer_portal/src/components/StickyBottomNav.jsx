@@ -68,9 +68,9 @@ const StickyBottomNav = () => {
             '& .MuiBottomNavigationAction-root': {
               minWidth: 'auto',
               padding: '8px 4px',
-              color: '#666666',
+              color: theme.palette.text.secondary,
               '&.Mui-selected': {
-                color: '#F48C06', // Orange
+                color: theme.palette.warning.main, // Orange from theme
                 '& .MuiBottomNavigationAction-label': {
                   fontSize: '0.7rem',
                   fontWeight: 600,

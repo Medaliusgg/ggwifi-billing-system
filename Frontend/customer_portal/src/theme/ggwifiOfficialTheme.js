@@ -24,16 +24,19 @@ export const ggwifiOfficialTheme = createTheme({
       paper: "#FFFFFF",       // --gg-white
     },
     success: {
-      main: "#10B981",        // --sec-green
+      main: "#48BB78",        // Green - GG highlight color
       light: "#ECFDF5",       // --sec-green-light
+      dark: "#38A169",        // Darker green
     },
     warning: {
-      main: "#FF8A3D",        // --sec-orange
+      main: "#F48C06",        // Orange - GG button color
       light: "#FFF3E6",       // --sec-orange-light
+      dark: "#D97706",        // Darker orange
     },
     info: {
-      main: "#3A8DFF",        // --sec-blue
+      main: "#48C7F2",        // Sky Blue - GG header color
       light: "#EAF4FF",       // --sec-blue-light
+      dark: "#38B2D0",        // Darker sky blue
     },
     error: {
       main: "#F44336",

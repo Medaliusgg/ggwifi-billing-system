@@ -21,6 +21,14 @@ const LoginPage = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const navigate = useNavigate();
+  const colors = {
+    background: theme.palette.background.default,
+    textPrimary: theme.palette.text.primary,
+    textSecondary: theme.palette.text.secondary,
+    info: theme.palette.info.main,
+    warning: theme.palette.warning.main,
+    warningDark: theme.palette.warning.dark,
+  };
   const [formData, setFormData] = useState({
     phone: '',
     password: '',
@@ -60,7 +68,7 @@ const LoginPage = () => {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: '#F5F9FC' }}>
+    <Box sx={{ minHeight: '100vh', backgroundColor: colors.background }}>
       <GlobalHeader isAuthenticated={false} />
 
       <Container maxWidth="sm" sx={{ py: { xs: 4, md: 6 } }}>
@@ -84,7 +92,7 @@ const LoginPage = () => {
                   fontWeight: 700,
                   textAlign: 'center',
                   mb: 1,
-                  color: '#0A0A0A',
+                  color: colors.textPrimary,
                 }}
               >
                 Login
@@ -94,7 +102,7 @@ const LoginPage = () => {
                 sx={{
                   textAlign: 'center',
                   mb: 4,
-                  color: '#666666',
+                  color: colors.textSecondary,
                 }}
               >
                 Enter your credentials to access your account
@@ -137,7 +145,7 @@ const LoginPage = () => {
                     display: 'block',
                     textAlign: 'center',
                     mb: 3,
-                    color: '#48C7F2',
+                    color: colors.info,
                     textDecoration: 'none',
                     fontSize: '14px',
                     '&:hover': {
@@ -155,15 +163,15 @@ const LoginPage = () => {
                   size="large"
                   disabled={loading}
                   sx={{
-                    backgroundColor: '#F48C06', // Orange
-                    color: '#FFFFFF',
-                    fontWeight: 600,
-                    py: 1.5,
-                    borderRadius: '12px',
-                    fontSize: '18px',
-                    mb: 2,
-                    '&:hover': {
-                      backgroundColor: '#D97706',
+                backgroundColor: colors.warning,
+                color: theme.palette.background.paper,
+                fontWeight: 600,
+                py: 1.5,
+                borderRadius: '12px',
+                fontSize: '18px',
+                mb: 2,
+                '&:hover': {
+                  backgroundColor: colors.warningDark,
                       boxShadow: '0 4px 12px rgba(244, 140, 6, 0.3)',
                     },
                   }}
@@ -176,15 +184,15 @@ const LoginPage = () => {
                   variant="outlined"
                   onClick={() => navigate('/signup/phone')}
                   sx={{
-                    borderColor: '#007BFF',
-                    color: '#007BFF',
-                    fontWeight: 600,
-                    py: 1.5,
-                    borderRadius: '12px',
-                    fontSize: '18px',
-                    '&:hover': {
-                      borderColor: '#0056B3',
-                      backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                borderColor: colors.info,
+                color: colors.info,
+                fontWeight: 600,
+                py: 1.5,
+                borderRadius: '12px',
+                fontSize: '18px',
+                '&:hover': {
+                  borderColor: theme.palette.info.dark,
+                  backgroundColor: theme.palette.info.light,
                     },
                   }}
                 >

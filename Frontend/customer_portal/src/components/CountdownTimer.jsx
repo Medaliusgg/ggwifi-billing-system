@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, useTheme } from '@mui/material';
 
 const CountdownTimer = ({ targetTime, onExpire }) => {
+  const theme = useTheme();
   const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
   const [expired, setExpired] = useState(false);
 
@@ -42,7 +43,7 @@ const CountdownTimer = ({ targetTime, onExpire }) => {
       <Typography
         variant="h6"
         sx={{
-          color: '#F44336',
+          color: theme.palette.error.main,
           fontWeight: 600,
           textAlign: 'center',
         }}
@@ -63,8 +64,8 @@ const CountdownTimer = ({ targetTime, onExpire }) => {
     >
       <Box
         sx={{
-          backgroundColor: '#48C7F2',
-          color: '#FFFFFF',
+          backgroundColor: theme.palette.info.main,
+          color: theme.palette.background.paper,
           borderRadius: '8px',
           padding: '8px 12px',
           minWidth: 60,
@@ -78,13 +79,13 @@ const CountdownTimer = ({ targetTime, onExpire }) => {
           HRS
         </Typography>
       </Box>
-      <Typography variant="h5" sx={{ color: '#48C7F2', fontWeight: 700 }}>
+      <Typography variant="h5" sx={{ color: theme.palette.info.main, fontWeight: 700 }}>
         :
       </Typography>
       <Box
         sx={{
-          backgroundColor: '#48C7F2',
-          color: '#FFFFFF',
+          backgroundColor: theme.palette.info.main,
+          color: theme.palette.background.paper,
           borderRadius: '8px',
           padding: '8px 12px',
           minWidth: 60,
@@ -98,13 +99,13 @@ const CountdownTimer = ({ targetTime, onExpire }) => {
           MIN
         </Typography>
       </Box>
-      <Typography variant="h5" sx={{ color: '#48C7F2', fontWeight: 700 }}>
+      <Typography variant="h5" sx={{ color: theme.palette.info.main, fontWeight: 700 }}>
         :
       </Typography>
       <Box
         sx={{
-          backgroundColor: '#48C7F2',
-          color: '#FFFFFF',
+          backgroundColor: theme.palette.info.main,
+          color: theme.palette.background.paper,
           borderRadius: '8px',
           padding: '8px 12px',
           minWidth: 60,

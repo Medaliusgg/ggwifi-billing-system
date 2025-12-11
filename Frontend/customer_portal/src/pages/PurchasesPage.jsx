@@ -30,6 +30,18 @@ const PurchasesPage = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
+  const colors = {
+    background: theme.palette.background.default,
+    textPrimary: theme.palette.text.primary,
+    textSecondary: theme.palette.text.secondary,
+    info: theme.palette.info.main,
+    infoDark: theme.palette.info.dark,
+    infoLight: theme.palette.info.light,
+    warning: theme.palette.warning.main,
+    success: theme.palette.success.main,
+    successLight: theme.palette.success.light,
+    warningLight: theme.palette.warning.light,
+  };
 
   // Fetch purchase history
   const { data: purchases = [], isLoading } = useQuery(
@@ -46,20 +58,20 @@ const PurchasesPage = () => {
       PAID: {
         icon: <PaidIcon />,
         label: 'Paid',
-        color: '#10B981',
-        bgcolor: '#ECFDF5',
+        color: colors.success,
+        bgcolor: colors.successLight,
       },
       PENDING: {
         icon: <PendingIcon />,
         label: 'Pending',
-        color: '#FF8A3D',
-        bgcolor: '#FFF3E6',
+        color: colors.warning,
+        bgcolor: colors.warningLight,
       },
       FAILED: {
         icon: <FailedIcon />,
         label: 'Failed',
-        color: '#F44336',
-        bgcolor: '#FFEBEE',
+        color: theme.palette.error.main,
+        bgcolor: theme.palette.error.light,
       },
     };
 
@@ -79,17 +91,17 @@ const PurchasesPage = () => {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: '#F5F9FC', pb: { xs: 8, md: 0 } }}>
+    <Box sx={{ minHeight: '100vh', backgroundColor: colors.background, pb: { xs: 8, md: 0 } }}>
       <GlobalHeader isAuthenticated={!!token} />
 
       <Container maxWidth="lg" sx={{ py: { xs: 3, md: 4 } }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-          <ShoppingBagIcon sx={{ color: '#48C7F2', fontSize: 32 }} />
+          <ShoppingBagIcon sx={{ color: colors.info, fontSize: 32 }} />
           <Typography
             variant="h4"
             sx={{
               fontWeight: 700,
-              color: '#0A0A0A',
+              color: colors.textPrimary,
             }}
           >
             Purchases
@@ -151,7 +163,7 @@ const PurchasesPage = () => {
                         <Typography variant="body2" sx={{ color: '#666666', mb: 0.5 }}>
                           Amount
                         </Typography>
-                        <Typography variant="h6" sx={{ fontWeight: 700, color: '#48C7F2' }}>
+                        <Typography variant="h6" sx={{ fontWeight: 700, color: colors.info }}>
                           TZS {purchase.amount?.toLocaleString() || '0'}
                         </Typography>
                       </Box>
@@ -166,7 +178,7 @@ const PurchasesPage = () => {
                             sx={{
                               fontFamily: 'monospace',
                               fontWeight: 600,
-                              color: '#48C7F2',
+                              color: colors.info,
                             }}
                           >
                             {purchase.voucherCode}
@@ -180,7 +192,7 @@ const PurchasesPage = () => {
                         endIcon={<ArrowIcon />}
                         sx={{
                           borderColor: '#48C7F2',
-                          color: '#48C7F2',
+                          color: colors.info,
                           fontWeight: 600,
                           mt: 2,
                           '&:hover': {
@@ -199,7 +211,7 @@ const PurchasesPage = () => {
           </Grid>
         ) : (
           <Box sx={{ textAlign: 'center', py: 8 }}>
-            <ShoppingBagIcon sx={{ fontSize: 64, color: '#CCCCCC', mb: 2 }} />
+            <ShoppingBagIcon sx={{ fontSize: 64, color: theme.palette.text.disabled, mb: 2 }} />
             <Typography variant="h6" sx={{ color: '#666666', mb: 1 }}>
               No purchases yet
             </Typography>
@@ -207,12 +219,12 @@ const PurchasesPage = () => {
               variant="contained"
               onClick={() => navigate('/plans')}
               sx={{
-                backgroundColor: '#F48C06',
-                color: '#FFFFFF',
+                backgroundColor: colors.warning,
+                color: theme.palette.background.paper,
                 fontWeight: 600,
                 mt: 2,
                 '&:hover': {
-                  backgroundColor: '#D97706',
+                  backgroundColor: theme.palette.warning.dark,
                 },
               }}
             >

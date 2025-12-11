@@ -34,6 +34,18 @@ const RewardsPage = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(0);
   const token = localStorage.getItem('token');
+  const colors = {
+    background: theme.palette.background.default,
+    textPrimary: theme.palette.text.primary,
+    textSecondary: theme.palette.text.secondary,
+    info: theme.palette.info.main,
+    infoDark: theme.palette.info.dark,
+    warning: theme.palette.warning.main,
+    warningDark: theme.palette.warning.dark,
+    success: theme.palette.success.main,
+    successLight: theme.palette.success.light,
+    warningLight: theme.palette.warning.light,
+  };
 
   // Fetch loyalty account (points, tier)
   const { data: loyaltyAccount } = useQuery(
@@ -81,17 +93,17 @@ const RewardsPage = () => {
   const tierInfo = tierColors[currentTier] || tierColors.BRONZE;
 
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: '#F5F9FC', pb: { xs: 8, md: 0 } }}>
+    <Box sx={{ minHeight: '100vh', backgroundColor: colors.background, pb: { xs: 8, md: 0 } }}>
       <GlobalHeader isAuthenticated={!!token} />
 
       <Container maxWidth="lg" sx={{ py: { xs: 3, md: 4 } }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-          <GiftIcon sx={{ color: '#48C7F2', fontSize: 32 }} />
+          <GiftIcon sx={{ color: colors.info, fontSize: 32 }} />
           <Typography
             variant="h4"
             sx={{
               fontWeight: 700,
-              color: '#0A0A0A',
+              color: colors.textPrimary,
             }}
           >
             Rewards
@@ -115,7 +127,7 @@ const RewardsPage = () => {
             <CardContent sx={{ p: 3 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                 <Box>
-                  <Typography variant="h3" sx={{ fontWeight: 700, color: '#48C7F2', mb: 0.5 }}>
+                  <Typography variant="h3" sx={{ fontWeight: 700, color: colors.info, mb: 0.5 }}>
                     {points.toLocaleString()}
                   </Typography>
                   <Typography variant="body2" sx={{ color: '#666666' }}>
@@ -150,9 +162,9 @@ const RewardsPage = () => {
                   sx={{
                     height: 8,
                     borderRadius: '4px',
-                    backgroundColor: '#EEEEEE',
+                    backgroundColor: theme.palette.divider,
                     '& .MuiLinearProgress-bar': {
-                      backgroundColor: '#48C7F2',
+                      backgroundColor: colors.info,
                     },
                   }}
                 />
@@ -172,11 +184,11 @@ const RewardsPage = () => {
                 fontWeight: 600,
                 fontSize: '16px',
                 '&.Mui-selected': {
-                  color: '#48C7F2',
+                  color: colors.info,
                 },
               },
               '& .MuiTabs-indicator': {
-                backgroundColor: '#48C7F2',
+                backgroundColor: colors.info,
               },
             }}
           >
@@ -263,7 +275,7 @@ const RewardsPage = () => {
             ) : (
               <Grid item xs={12}>
                 <Box sx={{ textAlign: 'center', py: 8 }}>
-                  <GiftIcon sx={{ fontSize: 64, color: '#CCCCCC', mb: 2 }} />
+                  <GiftIcon sx={{ fontSize: 64, color: theme.palette.text.disabled, mb: 2 }} />
                   <Typography variant="body1" sx={{ color: '#666666' }}>
                     No products available
                   </Typography>
@@ -296,8 +308,8 @@ const RewardsPage = () => {
                       <Chip
                         label={order.status}
                         sx={{
-                          bgcolor: order.status === 'FULFILLED' ? '#ECFDF5' : '#FFF3E6',
-                          color: order.status === 'FULFILLED' ? '#10B981' : '#FF8A3D',
+                          bgcolor: order.status === 'FULFILLED' ? colors.successLight : colors.warningLight,
+                          color: order.status === 'FULFILLED' ? colors.success : colors.warning,
                           fontWeight: 600,
                           mb: 2,
                         }}
@@ -314,7 +326,7 @@ const RewardsPage = () => {
             ) : (
               <Grid item xs={12}>
                 <Box sx={{ textAlign: 'center', py: 8 }}>
-                  <ShoppingBagIcon sx={{ fontSize: 64, color: '#CCCCCC', mb: 2 }} />
+                  <ShoppingBagIcon sx={{ fontSize: 64, color: theme.palette.text.disabled, mb: 2 }} />
                   <Typography variant="body1" sx={{ color: '#666666' }}>
                     No orders yet
                   </Typography>

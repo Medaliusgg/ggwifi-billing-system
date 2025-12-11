@@ -37,6 +37,18 @@ const DashboardPage = () => {
   const location = useLocation();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const token = localStorage.getItem('token');
+  const colors = {
+    background: theme.palette.background.default,
+    textPrimary: theme.palette.text.primary,
+    textSecondary: theme.palette.text.secondary,
+    info: theme.palette.info.main,
+    infoDark: theme.palette.info.dark,
+    warning: theme.palette.warning.main,
+    warningDark: theme.palette.warning.dark,
+    success: theme.palette.success.main,
+    successLight: theme.palette.success.light,
+    infoLight: theme.palette.info.light,
+  };
 
   // Check if user is authenticated
   useEffect(() => {
@@ -81,7 +93,7 @@ const DashboardPage = () => {
   const rewards = location.state?.rewards;
 
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: '#F5F9FC', pb: { xs: 8, md: 0 } }}>
+    <Box sx={{ minHeight: '100vh', backgroundColor: colors.background, pb: { xs: 8, md: 0 } }}>
       <GlobalHeader isAuthenticated={!!token} user={user} />
 
       <Container maxWidth="lg" sx={{ py: { xs: 3, md: 4 } }}>
@@ -92,8 +104,8 @@ const DashboardPage = () => {
             sx={{
               mb: 3,
               borderRadius: '12px',
-              backgroundColor: '#ECFDF5',
-              color: '#10B981',
+              backgroundColor: colors.successLight,
+              color: colors.success,
             }}
           >
             <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
@@ -123,8 +135,8 @@ const DashboardPage = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <Avatar
                   sx={{
-                    bgcolor: '#FFFFFF',
-                    color: '#48C7F2',
+                    bgcolor: theme.palette.background.paper,
+                    color: colors.info,
                     width: 56,
                     height: 56,
                     fontSize: '24px',
@@ -159,14 +171,14 @@ const DashboardPage = () => {
                 variant="contained"
                 onClick={() => navigate('/voucher-login')}
                 sx={{
-                  backgroundColor: '#F48C06', // Orange
-                  color: '#FFFFFF',
-                  fontWeight: 600,
-                  py: 2,
-                  borderRadius: '12px',
-                  fontSize: '16px',
-                  '&:hover': {
-                    backgroundColor: '#D97706',
+                backgroundColor: colors.warning,
+                color: theme.palette.background.paper,
+                fontWeight: 600,
+                py: 2,
+                borderRadius: '12px',
+                fontSize: '16px',
+                '&:hover': {
+                  backgroundColor: colors.warningDark,
                     boxShadow: '0 4px 12px rgba(244, 140, 6, 0.3)',
                   },
                 }}
@@ -181,14 +193,14 @@ const DashboardPage = () => {
                 variant="contained"
                 onClick={() => navigate('/voucher-login')}
                 sx={{
-                  backgroundColor: '#007BFF', // Blue
-                  color: '#FFFFFF',
-                  fontWeight: 600,
-                  py: 2,
-                  borderRadius: '12px',
-                  fontSize: '16px',
-                  '&:hover': {
-                    backgroundColor: '#0056B3',
+                backgroundColor: colors.info,
+                color: theme.palette.background.paper,
+                fontWeight: 600,
+                py: 2,
+                borderRadius: '12px',
+                fontSize: '16px',
+                '&:hover': {
+                  backgroundColor: colors.infoDark,
                     boxShadow: '0 4px 12px rgba(0, 123, 255, 0.3)',
                   },
                 }}
@@ -224,8 +236,8 @@ const DashboardPage = () => {
                     <Chip
                       label={activeSession.sessionType || 'Hotspot'}
                       sx={{
-                        bgcolor: '#48BB78',
-                        color: '#FFFFFF',
+                        bgcolor: colors.success,
+                        color: theme.palette.background.paper,
                         fontWeight: 600,
                       }}
                     />
@@ -234,7 +246,7 @@ const DashboardPage = () => {
                     size="small"
                     onClick={handleDisconnect}
                     sx={{
-                      color: '#F44336',
+                      color: theme.palette.error.main,
                       minWidth: 'auto',
                     }}
                   >
@@ -260,11 +272,11 @@ const DashboardPage = () => {
                         alignItems: 'center',
                         gap: 1,
                         p: 2,
-                        backgroundColor: '#EAF4FF',
+                        backgroundColor: colors.infoLight,
                         borderRadius: '8px',
                       }}
                     >
-                      <DownloadIcon sx={{ color: '#007BFF' }} />
+                      <DownloadIcon sx={{ color: colors.info }} />
                       <Box>
                         <Typography variant="caption" sx={{ color: '#666666', display: 'block' }}>
                           Download
@@ -282,11 +294,11 @@ const DashboardPage = () => {
                         alignItems: 'center',
                         gap: 1,
                         p: 2,
-                        backgroundColor: '#ECFDF5',
+                        backgroundColor: colors.successLight,
                         borderRadius: '8px',
                       }}
                     >
-                      <UploadIcon sx={{ color: '#48BB78' }} />
+                      <UploadIcon sx={{ color: colors.success }} />
                       <Box>
                         <Typography variant="caption" sx={{ color: '#666666', display: 'block' }}>
                           Upload
@@ -317,7 +329,7 @@ const DashboardPage = () => {
               <Button
                 onClick={() => navigate('/plans')}
                 sx={{
-                  color: '#48C7F2',
+                  color: colors.info,
                   fontWeight: 600,
                   textTransform: 'none',
                 }}

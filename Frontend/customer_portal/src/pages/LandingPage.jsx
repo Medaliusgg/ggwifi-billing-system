@@ -32,6 +32,17 @@ const LandingPage = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const navigate = useNavigate();
+  
+  // GG Color Theme - Use theme colors only
+  const colors = {
+    background: theme.palette.background.default,
+    textPrimary: theme.palette.text.primary,
+    textSecondary: theme.palette.text.secondary,
+    info: theme.palette.info.main,
+    warning: theme.palette.warning.main,
+    success: theme.palette.success.main,
+    primary: theme.palette.primary.main,
+  };
 
   // Fetch marketing campaigns
   const { data: campaigns = [] } = useQuery(
@@ -67,7 +78,7 @@ const LandingPage = () => {
   ];
 
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: '#F5F9FC' }}>
+    <Box sx={{ minHeight: '100vh', backgroundColor: colors.background }}>
       <GlobalHeader isAuthenticated={false} />
 
       <Container maxWidth="lg" sx={{ py: { xs: 3, md: 5 } }}>
@@ -82,7 +93,7 @@ const LandingPage = () => {
               variant="h3"
               sx={{
                 fontWeight: 700,
-                color: '#0A0A0A',
+                color: colors.textPrimary,
                 mb: 2,
                 fontSize: { xs: '28px', md: '40px' },
               }}
@@ -92,7 +103,7 @@ const LandingPage = () => {
             <Typography
               variant="h6"
               sx={{
-                color: '#666666',
+                color: colors.textSecondary,
                 mb: 1,
                 fontSize: { xs: '16px', md: '20px' },
               }}
@@ -102,7 +113,7 @@ const LandingPage = () => {
             <Typography
               variant="body1"
               sx={{
-                color: '#48C7F2',
+                color: colors.info,
                 fontWeight: 600,
                 fontSize: { xs: '14px', md: '18px' },
               }}
@@ -158,8 +169,8 @@ const LandingPage = () => {
                 >
                   <Avatar
                     sx={{
-                      bgcolor: '#48C7F2',
-                      color: '#FFFFFF',
+                      bgcolor: colors.info,
+                      color: theme.palette.background.paper,
                       width: 48,
                       height: 48,
                       mx: 'auto',
@@ -219,7 +230,7 @@ const LandingPage = () => {
                 }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                  <Avatar sx={{ bgcolor: '#48C7F2', mr: 1 }}>
+                  <Avatar sx={{ bgcolor: colors.info, mr: 1 }}>
                     {testimonial.name[0]}
                   </Avatar>
                   <Box>
@@ -261,15 +272,15 @@ const LandingPage = () => {
               size="large"
               onClick={() => navigate('/plans')}
               sx={{
-                backgroundColor: '#007BFF', // Blue
-                color: '#FFFFFF',
+                backgroundColor: colors.info,
+                color: theme.palette.background.paper,
                 fontWeight: 600,
                 px: 4,
                 py: 1.5,
                 borderRadius: '12px',
                 fontSize: { xs: '16px', md: '18px' },
                 '&:hover': {
-                  backgroundColor: '#0056B3',
+                  backgroundColor: theme.palette.info.dark,
                   boxShadow: '0 4px 12px rgba(0, 123, 255, 0.3)',
                 },
               }}
@@ -281,15 +292,15 @@ const LandingPage = () => {
               size="large"
               onClick={() => navigate('/voucher-login')}
               sx={{
-                backgroundColor: '#F48C06', // Orange
-                color: '#FFFFFF',
+                backgroundColor: colors.warning,
+                color: theme.palette.background.paper,
                 fontWeight: 600,
                 px: 4,
                 py: 1.5,
                 borderRadius: '12px',
                 fontSize: { xs: '16px', md: '18px' },
                 '&:hover': {
-                  backgroundColor: '#D97706',
+                  backgroundColor: theme.palette.warning.dark,
                   boxShadow: '0 4px 12px rgba(244, 140, 6, 0.3)',
                 },
               }}

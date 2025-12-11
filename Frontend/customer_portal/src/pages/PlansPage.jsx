@@ -31,6 +31,14 @@ const PlansPage = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(0);
   const token = localStorage.getItem('token');
+  const colors = {
+    background: theme.palette.background.default,
+    textPrimary: theme.palette.text.primary,
+    textSecondary: theme.palette.text.secondary,
+    info: theme.palette.info.main,
+    warning: theme.palette.warning.main,
+    warningDark: theme.palette.warning.dark,
+  };
 
   // Fetch packages
   const { data: packagesData, isLoading } = useQuery(
@@ -80,8 +88,8 @@ const PlansPage = () => {
             position: 'absolute',
             top: -12,
             right: 16,
-            bgcolor: '#F48C06',
-            color: '#FFFFFF',
+            bgcolor: cardColors.warning,
+            color: theme.palette.background.paper,
             fontWeight: 700,
             fontSize: '10px',
             height: 24,
@@ -93,7 +101,7 @@ const PlansPage = () => {
           variant="h4"
           sx={{
             fontWeight: 700,
-            color: '#0A0A0A',
+            color: cardColors.textPrimary,
             mb: 1,
           }}
         >
@@ -103,7 +111,7 @@ const PlansPage = () => {
           variant="h6"
           sx={{
             fontWeight: 600,
-            color: '#0A0A0A',
+            color: cardColors.textPrimary,
             mb: 2,
           }}
         >
@@ -112,7 +120,7 @@ const PlansPage = () => {
         <Typography
           variant="body2"
           sx={{
-            color: '#666666',
+            color: cardColors.textSecondary,
             mb: 3,
             minHeight: 40,
           }}
@@ -122,23 +130,23 @@ const PlansPage = () => {
 
         <Box sx={{ mb: 3 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-            <SpeedIcon sx={{ fontSize: 18, color: '#48C7F2' }} />
-            <Typography variant="body2" sx={{ color: '#666666' }}>
+            <SpeedIcon sx={{ fontSize: 18, color: cardColors.info }} />
+            <Typography variant="body2" sx={{ color: cardColors.textSecondary }}>
               Duration: {pkg.duration || pkg.durationDays + ' days' || 'N/A'}
             </Typography>
           </Box>
           {pkg.speed && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-              <SpeedIcon sx={{ fontSize: 18, color: '#48C7F2' }} />
-              <Typography variant="body2" sx={{ color: '#666666' }}>
+              <SpeedIcon sx={{ fontSize: 18, color: cardColors.info }} />
+              <Typography variant="body2" sx={{ color: cardColors.textSecondary }}>
                 Speed: {pkg.speed}
               </Typography>
             </Box>
           )}
           {pkg.dataLimit && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <DataIcon sx={{ fontSize: 18, color: '#48C7F2' }} />
-              <Typography variant="body2" sx={{ color: '#666666' }}>
+              <DataIcon sx={{ fontSize: 18, color: cardColors.info }} />
+              <Typography variant="body2" sx={{ color: cardColors.textSecondary }}>
                 Data: {pkg.dataLimit}
               </Typography>
             </Box>
@@ -150,13 +158,13 @@ const PlansPage = () => {
           variant="contained"
           onClick={() => handleBuyPackage(pkg)}
           sx={{
-            backgroundColor: isOffer ? '#F48C06' : '#007BFF',
-            color: '#FFFFFF',
+            backgroundColor: isOffer ? cardColors.warning : cardColors.info,
+            color: theme.palette.background.paper,
             fontWeight: 600,
             py: 1.5,
             borderRadius: '12px',
             '&:hover': {
-              backgroundColor: isOffer ? '#D97706' : '#0056B3',
+              backgroundColor: isOffer ? cardColors.warningDark : cardColors.infoDark,
               boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
             },
           }}
@@ -168,7 +176,7 @@ const PlansPage = () => {
   );
 
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: '#F5F9FC', pb: { xs: 8, md: 0 } }}>
+    <Box sx={{ minHeight: '100vh', backgroundColor: colors.background, pb: { xs: 8, md: 0 } }}>
       <GlobalHeader isAuthenticated={!!token} />
 
       <Container maxWidth="lg" sx={{ py: { xs: 3, md: 4 } }}>
@@ -177,7 +185,7 @@ const PlansPage = () => {
           sx={{
             fontWeight: 700,
             mb: 3,
-            color: '#0A0A0A',
+            color: cardColors.textPrimary,
           }}
         >
           Wi-Fi Plans
@@ -193,11 +201,11 @@ const PlansPage = () => {
                 fontWeight: 600,
                 fontSize: '16px',
                 '&.Mui-selected': {
-                  color: '#48C7F2',
+                  color: colors.info,
                 },
               },
               '& .MuiTabs-indicator': {
-                backgroundColor: '#48C7F2',
+                backgroundColor: colors.info,
               },
             }}
           >
@@ -231,7 +239,7 @@ const PlansPage = () => {
                 ) : (
                   <Grid item xs={12}>
                     <Box sx={{ textAlign: 'center', py: 8 }}>
-                      <Typography variant="body1" sx={{ color: '#666666' }}>
+                      <Typography variant="body1" sx={{ color: colors.textSecondary }}>
                         No universal packages available
                       </Typography>
                     </Box>
@@ -257,7 +265,7 @@ const PlansPage = () => {
                 ) : (
                   <Grid item xs={12}>
                     <Box sx={{ textAlign: 'center', py: 8 }}>
-                      <Typography variant="body1" sx={{ color: '#666666' }}>
+                      <Typography variant="body1" sx={{ color: colors.textSecondary }}>
                         No offer packages available
                       </Typography>
                     </Box>

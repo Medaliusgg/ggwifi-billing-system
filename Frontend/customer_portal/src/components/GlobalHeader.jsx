@@ -63,7 +63,7 @@ const GlobalHeader = ({ isAuthenticated, user, onLogout }) => {
     <AppBar
       position="sticky"
       sx={{
-        backgroundColor: '#48C7F2', // Sky Blue header
+        backgroundColor: theme.palette.info.main, // Use theme info color (Blue)
         boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
         zIndex: theme.zIndex.drawer + 1,
       }}
@@ -129,8 +129,8 @@ const GlobalHeader = ({ isAuthenticated, user, onLogout }) => {
                 sx={{
                   width: 32,
                   height: 32,
-                  bgcolor: '#FFFFFF',
-                  color: '#48C7F2',
+                  bgcolor: theme.palette.background.paper,
+                  color: theme.palette.info.main,
                   fontSize: '14px',
                 }}
               >
