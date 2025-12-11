@@ -59,7 +59,7 @@ public class SignupService {
      * Request OTP for signup
      * Checks if phone number already exists
      */
-    @Transactional
+    @Transactional(noRollbackFor = {org.springframework.dao.DataIntegrityViolationException.class})
     public Map<String, Object> requestSignupOTP(String phoneNumber, String ipAddress, String userAgent) {
         Map<String, Object> response = new HashMap<>();
 
@@ -91,16 +91,27 @@ public class SignupService {
             otp.setExpiresAt(LocalDateTime.now().plusMinutes(5));
             otp.setIpAddress(ipAddress);
             otp.setUserAgent(userAgent);
-            customerOTPRepository.save(otp);
+            
+            // Save OTP - retry if there's a constraint violation (e.g., duplicate OTP code)
+            try {
+                customerOTPRepository.save(otp);
+            } catch (org.springframework.dao.DataIntegrityViolationException e) {
+                // Handle database constraint violations - retry with new OTP
+                System.err.println("⚠️ Database constraint violation while saving OTP, retrying with new code: " + e.getMessage());
+                otpCode = generateOTP();
+                otpHash = passwordEncoder.encode(otpCode);
+                otp.setOtpCode(otpCode);
+                otp.setOtpHash(otpHash);
+                customerOTPRepository.save(otp);
+            }
 
-            // Send SMS (handle failures gracefully)
+            // Send SMS (handle failures gracefully - don't rollback transaction)
             try {
                 String smsMessage = String.format("GGWiFi: Your signup code is %s. Valid for 5 minutes.", otpCode);
                 smsService.sendSms(phoneNumber, smsMessage);
             } catch (Exception smsException) {
                 // Log SMS failure but don't fail the OTP request
                 System.err.println("⚠️ Warning: Failed to send SMS for signup OTP: " + smsException.getMessage());
-                // In development/testing, you might want to log the OTP code
                 System.err.println("⚠️ OTP Code for " + phoneNumber + ": " + otpCode);
             }
 
@@ -110,11 +121,18 @@ public class SignupService {
 
             return response;
 
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            // Handle database constraint violations gracefully
+            System.err.println("❌ Database constraint violation in requestSignupOTP: " + e.getMessage());
+            e.printStackTrace();
+            response.put("status", "error");
+            response.put("message", "Unable to process request. Please try again.");
+            return response;
         } catch (Exception e) {
             System.err.println("❌ Error requesting signup OTP: " + e.getMessage());
             e.printStackTrace();
             response.put("status", "error");
-            response.put("message", "Failed to send OTP: " + e.getMessage());
+            response.put("message", "Failed to send OTP. Please try again.");
             return response;
         }
     }

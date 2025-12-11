@@ -45,6 +45,31 @@ public class SignupController {
             } else {
                 return ResponseEntity.badRequest().body(response);
             }
+        } catch (org.springframework.transaction.TransactionSystemException e) {
+            // Handle transaction rollback errors
+            System.err.println("❌ SignupController Transaction error in requestSignupOTP: " + e.getMessage());
+            if (e.getRootCause() != null) {
+                System.err.println("Root cause: " + e.getRootCause().getMessage());
+            }
+            e.printStackTrace();
+            
+            return ResponseEntity.status(500)
+                .body(Map.of(
+                    "status", "error",
+                    "message", "Unable to process request. Please try again.",
+                    "error", "Transaction error"
+                ));
+        } catch (RuntimeException e) {
+            // Handle runtime exceptions from service layer
+            System.err.println("❌ SignupController Runtime error in requestSignupOTP: " + e.getMessage());
+            e.printStackTrace();
+            
+            return ResponseEntity.status(500)
+                .body(Map.of(
+                    "status", "error",
+                    "message", "Unable to process request. Please try again.",
+                    "error", e.getMessage()
+                ));
         } catch (Exception e) {
             // Log the exception for debugging
             System.err.println("❌ SignupController Error in requestSignupOTP: " + e.getMessage());
