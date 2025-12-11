@@ -79,6 +79,7 @@ const SignupDetailsPage = () => {
       });
 
       if (response?.data?.status === 'success' && response?.data?.token) {
+        // Auto-login after signup
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('user', JSON.stringify(response.data.user || {}));
         // Clear signup flow data
@@ -86,13 +87,13 @@ const SignupDetailsPage = () => {
         localStorage.removeItem('signup_verified');
         localStorage.removeItem('signup_token');
         
-        // Show welcome message with rewards
+        // Show welcome message with rewards and auto-redirect to dashboard
         navigate('/dashboard', {
           state: {
             welcome: true,
             rewards: {
-              voucher: 'Free 20-minute GG Offer voucher',
-              points: 50,
+              voucher: response.data.voucher || 'Free 20-minute GG Offer voucher',
+              points: response.data.points || 50,
             },
           },
         });

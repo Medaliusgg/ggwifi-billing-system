@@ -96,6 +96,34 @@ const RewardsPage = () => {
 
   const tierInfo = tierColors[currentTier] || tierColors.BRONZE;
 
+  const handleRedeemWithPoints = async (product) => {
+    if (points < product.pointsCost) {
+      alert('Insufficient points');
+      return;
+    }
+    try {
+      const response = await customerPortalAPI.redeemProduct(product.id, {
+        pointsCost: product.pointsCost,
+      });
+      if (response?.data?.status === 'success') {
+        // Refresh data
+        window.location.reload();
+      }
+    } catch (err) {
+      alert(err?.response?.data?.message || 'Failed to redeem product');
+    }
+  };
+
+  const handleBuyNow = (product) => {
+    // Navigate to payment page with product details
+    navigate('/purchases/new', {
+      state: {
+        product: product,
+        type: 'reward',
+      },
+    });
+  };
+
   return (
     <Box sx={{ minHeight: '100vh', backgroundColor: colors.background, pb: { xs: 8, md: 0 } }}>
       <GlobalHeader isAuthenticated={!!token} />
@@ -243,34 +271,74 @@ const RewardsPage = () => {
                         >
                           {product.description}
                         </Typography>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                          <Box>
+                        <Box sx={{ mb: 2 }}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                             {product.pointsCost > 0 && (
-                              <Typography variant="body2" sx={{ color: colors.info, fontWeight: 600 }}>
-                                {product.pointsCost} Points
-                              </Typography>
+                              <Box>
+                                <Typography variant="h6" sx={{ color: colors.primary, fontWeight: 700 }}>
+                                  {product.pointsCost} Points
+                                </Typography>
+                                <Typography variant="caption" sx={{ color: colors.textSecondary }}>
+                                  Points Cost
+                                </Typography>
+                              </Box>
                             )}
                             {product.cashPrice > 0 && (
-                              <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-                                + TZS {product.cashPrice?.toLocaleString()}
-                              </Typography>
+                              <Box sx={{ textAlign: 'right' }}>
+                                <Typography variant="h6" sx={{ color: colors.textPrimary, fontWeight: 700 }}>
+                                  TZS {product.cashPrice?.toLocaleString()}
+                                </Typography>
+                                <Typography variant="caption" sx={{ color: colors.textSecondary }}>
+                                  Money Price
+                                </Typography>
+                              </Box>
                             )}
                           </Box>
                         </Box>
-                        <Button
-                          fullWidth
-                          variant="contained"
-                          sx={{
-                            backgroundColor: colors.warning,
-                            color: theme.palette.background.paper,
-                            fontWeight: 600,
-                            '&:hover': {
-                              backgroundColor: colors.warningDark,
-                            },
-                          }}
-                        >
-                          {product.pointsCost > 0 ? 'Redeem' : 'Buy'}
-                        </Button>
+                        <Box sx={{ display: 'flex', gap: 1 }}>
+                          {product.pointsCost > 0 && points >= product.pointsCost && (
+                            <Button
+                              variant="contained"
+                              fullWidth
+                              startIcon={<GiftIcon />}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRedeemWithPoints(product);
+                              }}
+                              sx={{
+                                backgroundColor: colors.primary,
+                                color: colors.textPrimary,
+                                fontWeight: 600,
+                                '&:hover': {
+                                  backgroundColor: colors.primaryDark,
+                                },
+                              }}
+                            >
+                              Redeem with Points
+                            </Button>
+                          )}
+                          {product.cashPrice > 0 && (
+                            <Button
+                              variant="contained"
+                              fullWidth
+                              startIcon={<ShoppingBagIcon />}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleBuyNow(product);
+                              }}
+                              sx={{
+                                backgroundColor: colors.info,
+                                color: theme.palette.background.paper,
+                                fontWeight: 600,
+                                '&:hover': {
+                                  backgroundColor: colors.infoDark,
+                                },
+                              }}
+                            >
+                              Buy Now (Zenopay)
+                            </Button>
+                          )}
+                        </Box>
                       </CardContent>
                     </Card>
                   </motion.div>

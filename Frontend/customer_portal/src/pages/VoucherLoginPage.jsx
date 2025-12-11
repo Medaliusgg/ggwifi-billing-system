@@ -15,7 +15,6 @@ import { useNavigate } from 'react-router-dom';
 import { Home as HomeIcon, ShoppingBag as ShoppingBagIcon } from '@mui/icons-material';
 import GlobalHeader from '../components/GlobalHeader';
 import GlobalButton from '../components/ui/GlobalButton';
-import { Container } from '@mui/material';
 
 const VoucherLoginPage = () => {
   const theme = useTheme();
