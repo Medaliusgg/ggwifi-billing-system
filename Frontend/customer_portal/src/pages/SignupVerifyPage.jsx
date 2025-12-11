@@ -160,7 +160,7 @@ const SignupVerifyPage = () => {
                       width: 60,
                       '& .MuiOutlinedInput-root': {
                         borderRadius: '12px',
-                        backgroundColor: '#FFFFFF',
+                        backgroundColor: theme.palette.background.paper,
                         border: '2px solid',
                         borderColor: digit ? colors.info : theme.palette.divider,
                         '&:hover': {
@@ -182,14 +182,14 @@ const SignupVerifyPage = () => {
                 onClick={handleSubmit}
                 disabled={!isOtpComplete || loading}
                 sx={{
-                  backgroundColor: isOtpComplete ? '#F48C06' : '#CCCCCC',
-                  color: '#FFFFFF',
-                  fontWeight: 600,
-                  py: 1.5,
-                  borderRadius: '12px',
-                  fontSize: '18px',
-                  '&:hover': {
-                    backgroundColor: isOtpComplete ? '#D97706' : '#CCCCCC',
+                backgroundColor: isOtpComplete ? colors.warning : theme.palette.text.disabled,
+                color: theme.palette.background.paper,
+                fontWeight: 600,
+                py: 1.5,
+                borderRadius: '12px',
+                fontSize: '18px',
+                '&:hover': {
+                  backgroundColor: isOtpComplete ? colors.warningDark : theme.palette.text.disabled,
                   },
                 }}
               >

@@ -235,19 +235,19 @@ const RewardsPage = () => {
                         </Typography>
                         <Typography
                           variant="body2"
-                          sx={{ color: '#666666', mb: 2, minHeight: 40 }}
+                          sx={{ color: colors.textSecondary, mb: 2, minHeight: 40 }}
                         >
                           {product.description}
                         </Typography>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                           <Box>
                             {product.pointsCost > 0 && (
-                              <Typography variant="body2" sx={{ color: '#48C7F2', fontWeight: 600 }}>
+                              <Typography variant="body2" sx={{ color: colors.info, fontWeight: 600 }}>
                                 {product.pointsCost} Points
                               </Typography>
                             )}
                             {product.cashPrice > 0 && (
-                              <Typography variant="body2" sx={{ color: '#666666' }}>
+                              <Typography variant="body2" sx={{ color: colors.textSecondary }}>
                                 + TZS {product.cashPrice?.toLocaleString()}
                               </Typography>
                             )}
@@ -302,7 +302,7 @@ const RewardsPage = () => {
                       <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
                         {order.productName}
                       </Typography>
-                      <Typography variant="body2" sx={{ color: '#666666', mb: 2 }}>
+                      <Typography variant="body2" sx={{ color: colors.textSecondary, mb: 2 }}>
                         Order #{order.id}
                       </Typography>
                       <Chip
