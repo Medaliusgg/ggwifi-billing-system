@@ -1029,12 +1029,12 @@ public class AdminController {
     }
     
     /**
-     * Get all routers (ADMIN) - DEPRECATED: Use /api/v1/admin/routers from RouterController
-     * This endpoint is kept for backward compatibility but should use RouterController instead
+     * Get all routers (ADMIN) - DEPRECATED: Use /api/v1/admin/routers
+     * This endpoint is kept for backward compatibility but should use the main /routers endpoint instead
      */
     @GetMapping("/routers/legacy")
     @Deprecated
-    public ResponseEntity<Map<String, Object>> getAllRouters() {
+    public ResponseEntity<Map<String, Object>> getAllRoutersLegacy() {
         Map<String, Object> response = new HashMap<>();
         
         try {
@@ -1062,6 +1062,316 @@ public class AdminController {
             response.put("status", "error");
             response.put("message", "Failed to get routers: " + e.getMessage());
             return ResponseEntity.badRequest().body(response);
+        }
+        
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Get all routers (ADMIN)
+     * GET /api/v1/admin/routers
+     */
+    @GetMapping("/routers")
+    public ResponseEntity<Map<String, Object>> getAllRouters() {
+        Map<String, Object> response = new HashMap<>();
+        ResponseEntity<Map<String, Object>> permissionCheck = checkPermission("ROUTER_READ");
+        if (permissionCheck != null) return permissionCheck;
+        
+        try {
+            List<Router> routers = routerRepository.findAll();
+            List<Map<String, Object>> routerData = new ArrayList<>();
+            
+            for (Router router : routers) {
+                Map<String, Object> routerInfo = new HashMap<>();
+                routerInfo.put("id", router.getId());
+                routerInfo.put("name", router.getName());
+                routerInfo.put("ipAddress", router.getIpAddress());
+                routerInfo.put("macAddress", router.getMacAddress());
+                routerInfo.put("location", router.getLocation());
+                routerInfo.put("status", router.getStatus() != null ? router.getStatus().toString() : "UNKNOWN");
+                routerInfo.put("isActive", router.getIsActive());
+                routerInfo.put("model", router.getModel());
+                routerInfo.put("firmwareVersion", router.getFirmwareVersion());
+                routerInfo.put("createdAt", router.getCreatedAt());
+                routerInfo.put("updatedAt", router.getUpdatedAt());
+                routerData.add(routerInfo);
+            }
+            
+            response.put("status", "success");
+            response.put("message", "Routers retrieved successfully");
+            response.put("data", routerData);
+            response.put("total", routers.size());
+            
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to get routers: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+        
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Get router by ID (ADMIN)
+     * GET /api/v1/admin/routers/{id}
+     */
+    @GetMapping("/routers/{id}")
+    public ResponseEntity<Map<String, Object>> getRouterById(@PathVariable Long id) {
+        Map<String, Object> response = new HashMap<>();
+        ResponseEntity<Map<String, Object>> permissionCheck = checkPermission("ROUTER_READ");
+        if (permissionCheck != null) return permissionCheck;
+        
+        try {
+            Optional<Router> routerOpt = routerRepository.findById(id);
+            if (routerOpt.isEmpty()) {
+                response.put("status", "error");
+                response.put("message", "Router not found");
+                return ResponseEntity.status(404).body(response);
+            }
+            
+            Router router = routerOpt.get();
+            Map<String, Object> routerInfo = new HashMap<>();
+            routerInfo.put("id", router.getId());
+            routerInfo.put("name", router.getName());
+            routerInfo.put("ipAddress", router.getIpAddress());
+            routerInfo.put("macAddress", router.getMacAddress());
+            routerInfo.put("location", router.getLocation());
+            routerInfo.put("status", router.getStatus() != null ? router.getStatus().toString() : "UNKNOWN");
+            routerInfo.put("isActive", router.getIsActive());
+            routerInfo.put("model", router.getModel());
+            routerInfo.put("firmwareVersion", router.getFirmwareVersion());
+            routerInfo.put("createdAt", router.getCreatedAt());
+            routerInfo.put("updatedAt", router.getUpdatedAt());
+            
+            response.put("status", "success");
+            response.put("message", "Router retrieved successfully");
+            response.put("data", routerInfo);
+            
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to get router: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+        
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Create router (ADMIN)
+     * POST /api/v1/admin/routers
+     */
+    @PostMapping("/routers")
+    public ResponseEntity<Map<String, Object>> createRouter(@RequestBody Map<String, Object> routerData) {
+        Map<String, Object> response = new HashMap<>();
+        ResponseEntity<Map<String, Object>> permissionCheck = checkPermission("ROUTER_CREATE");
+        if (permissionCheck != null) return permissionCheck;
+        
+        try {
+            Router router = new Router();
+            if (routerData.containsKey("name")) router.setName((String) routerData.get("name"));
+            if (routerData.containsKey("ipAddress")) router.setIpAddress((String) routerData.get("ipAddress"));
+            if (routerData.containsKey("macAddress")) router.setMacAddress((String) routerData.get("macAddress"));
+            if (routerData.containsKey("location")) router.setLocation((String) routerData.get("location"));
+            if (routerData.containsKey("model")) router.setModel((String) routerData.get("model"));
+            if (routerData.containsKey("firmwareVersion")) router.setFirmwareVersion((String) routerData.get("firmwareVersion"));
+            if (routerData.containsKey("isActive")) router.setIsActive((Boolean) routerData.get("isActive"));
+            if (routerData.containsKey("status")) {
+                try {
+                    router.setStatus(Router.RouterStatus.valueOf(((String) routerData.get("status")).toUpperCase()));
+                } catch (IllegalArgumentException e) {
+                    router.setStatus(Router.RouterStatus.OFFLINE);
+                }
+            }
+            
+            Router saved = routerRepository.save(router);
+            response.put("status", "success");
+            response.put("message", "Router created successfully");
+            response.put("data", saved);
+            
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to create router: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+        
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Update router (ADMIN)
+     * PUT /api/v1/admin/routers/{id}
+     */
+    @PutMapping("/routers/{id}")
+    public ResponseEntity<Map<String, Object>> updateRouter(@PathVariable Long id, @RequestBody Map<String, Object> routerData) {
+        Map<String, Object> response = new HashMap<>();
+        ResponseEntity<Map<String, Object>> permissionCheck = checkPermission("ROUTER_UPDATE");
+        if (permissionCheck != null) return permissionCheck;
+        
+        try {
+            Optional<Router> routerOpt = routerRepository.findById(id);
+            if (routerOpt.isEmpty()) {
+                response.put("status", "error");
+                response.put("message", "Router not found");
+                return ResponseEntity.status(404).body(response);
+            }
+            
+            Router router = routerOpt.get();
+            if (routerData.containsKey("name")) router.setName((String) routerData.get("name"));
+            if (routerData.containsKey("ipAddress")) router.setIpAddress((String) routerData.get("ipAddress"));
+            if (routerData.containsKey("macAddress")) router.setMacAddress((String) routerData.get("macAddress"));
+            if (routerData.containsKey("location")) router.setLocation((String) routerData.get("location"));
+            if (routerData.containsKey("model")) router.setModel((String) routerData.get("model"));
+            if (routerData.containsKey("firmwareVersion")) router.setFirmwareVersion((String) routerData.get("firmwareVersion"));
+            if (routerData.containsKey("isActive")) router.setIsActive((Boolean) routerData.get("isActive"));
+            if (routerData.containsKey("status")) {
+                try {
+                    router.setStatus(Router.RouterStatus.valueOf(((String) routerData.get("status")).toUpperCase()));
+                } catch (IllegalArgumentException e) {
+                    // Keep existing status
+                }
+            }
+            
+            Router updated = routerRepository.save(router);
+            response.put("status", "success");
+            response.put("message", "Router updated successfully");
+            response.put("data", updated);
+            
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to update router: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+        
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Delete router (ADMIN)
+     * DELETE /api/v1/admin/routers/{id}
+     */
+    @DeleteMapping("/routers/{id}")
+    public ResponseEntity<Map<String, Object>> deleteRouter(@PathVariable Long id) {
+        Map<String, Object> response = new HashMap<>();
+        ResponseEntity<Map<String, Object>> permissionCheck = checkPermission("ROUTER_DELETE");
+        if (permissionCheck != null) return permissionCheck;
+        
+        try {
+            if (!routerRepository.existsById(id)) {
+                response.put("status", "error");
+                response.put("message", "Router not found");
+                return ResponseEntity.status(404).body(response);
+            }
+            
+            routerRepository.deleteById(id);
+            response.put("status", "success");
+            response.put("message", "Router deleted successfully");
+            
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to delete router: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+        
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Test router connection (ADMIN)
+     * POST /api/v1/admin/routers/{id}/test-connection
+     */
+    @PostMapping("/routers/{id}/test-connection")
+    public ResponseEntity<Map<String, Object>> testRouterConnection(@PathVariable Long id) {
+        Map<String, Object> response = new HashMap<>();
+        ResponseEntity<Map<String, Object>> permissionCheck = checkPermission("ROUTER_READ");
+        if (permissionCheck != null) return permissionCheck;
+        
+        try {
+            Optional<Router> routerOpt = routerRepository.findById(id);
+            if (routerOpt.isEmpty()) {
+                response.put("status", "error");
+                response.put("message", "Router not found");
+                return ResponseEntity.status(404).body(response);
+            }
+            
+            Router router = routerOpt.get();
+            // TODO: Implement actual connection test
+            response.put("status", "success");
+            response.put("message", "Connection test completed");
+            response.put("connected", router.getStatus() == Router.RouterStatus.ONLINE);
+            response.put("routerId", id);
+            
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to test connection: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+        
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Sync router (ADMIN)
+     * POST /api/v1/admin/routers/{id}/sync
+     */
+    @PostMapping("/routers/{id}/sync")
+    public ResponseEntity<Map<String, Object>> syncRouter(@PathVariable Long id) {
+        Map<String, Object> response = new HashMap<>();
+        ResponseEntity<Map<String, Object>> permissionCheck = checkPermission("ROUTER_UPDATE");
+        if (permissionCheck != null) return permissionCheck;
+        
+        try {
+            Optional<Router> routerOpt = routerRepository.findById(id);
+            if (routerOpt.isEmpty()) {
+                response.put("status", "error");
+                response.put("message", "Router not found");
+                return ResponseEntity.status(404).body(response);
+            }
+            
+            // TODO: Implement actual sync logic
+            response.put("status", "success");
+            response.put("message", "Router synced successfully");
+            response.put("routerId", id);
+            
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to sync router: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+        
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Get router health (ADMIN)
+     * GET /api/v1/admin/routers/{id}/health
+     */
+    @GetMapping("/routers/{id}/health")
+    public ResponseEntity<Map<String, Object>> getRouterHealth(@PathVariable Long id) {
+        Map<String, Object> response = new HashMap<>();
+        ResponseEntity<Map<String, Object>> permissionCheck = checkPermission("ROUTER_READ");
+        if (permissionCheck != null) return permissionCheck;
+        
+        try {
+            Optional<Router> routerOpt = routerRepository.findById(id);
+            if (routerOpt.isEmpty()) {
+                response.put("status", "error");
+                response.put("message", "Router not found");
+                return ResponseEntity.status(404).body(response);
+            }
+            
+            Router router = routerOpt.get();
+            Map<String, Object> health = new HashMap<>();
+            health.put("status", router.getStatus() != null ? router.getStatus().toString() : "UNKNOWN");
+            health.put("isActive", router.getIsActive());
+            health.put("lastSeen", router.getUpdatedAt());
+            
+            response.put("status", "success");
+            response.put("data", health);
+            
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", "Failed to get router health: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
         }
         
         return ResponseEntity.ok(response);

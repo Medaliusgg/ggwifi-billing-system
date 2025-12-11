@@ -33,14 +33,16 @@ public class CustomCorsFilter implements Filter {
         "http://139.84.241.182:8080",
         "http://139.84.241.182",
         "https://139.84.241.182",
-        "https://admin.ggwifi.co.tz",
+        "https://admin.ggwifi.co.tz",    // Admin portal
+        "https://portal.ggwifi.co.tz",    // Customer portal
         "https://connect.ggwifi.co.tz",
-        "https://hotspot.ggwifi.co.tz", // Customer portal
+        "https://hotspot.ggwifi.co.tz",   // Customer portal alternative
         "https://www.ggwifi.co.tz",
-        "https://api.ggwifi.co.tz",     // API domain
+        "https://api.ggwifi.co.tz",       // API domain
         "http://admin.ggwifi.co.tz",
+        "http://portal.ggwifi.co.tz",     // Customer portal HTTP
         "http://connect.ggwifi.co.tz",
-        "http://hotspot.ggwifi.co.tz",  // Customer portal HTTP
+        "http://hotspot.ggwifi.co.tz",    // Customer portal HTTP
         "http://www.ggwifi.co.tz"
     );
     
@@ -84,22 +86,22 @@ public class CustomCorsFilter implements Filter {
             }
         }
 
-        // Always set CORS headers if origin is present (even if not in list, for debugging)
+        // Always set CORS headers if origin is present
         if (origin != null) {
-            if (isAllowedOrigin) {
+            // Allow all ggwifi.co.tz subdomains and common origins
+            if (isAllowedOrigin || origin.contains("ggwifi.co.tz") || origin.contains("localhost") || origin.contains("127.0.0.1")) {
                 response.setHeader("Access-Control-Allow-Origin", origin);
+                response.setHeader("Access-Control-Allow-Credentials", "true");
+                response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD");
+                // CRITICAL: Cannot use "*" when allowCredentials is true - must explicitly list headers
+                response.setHeader("Access-Control-Allow-Headers", ALLOWED_HEADERS);
+                response.setHeader("Access-Control-Expose-Headers", 
+                    "Access-Control-Allow-Origin, Access-Control-Allow-Credentials, Content-Type, Authorization, X-Requested-With");
+                response.setHeader("Access-Control-Max-Age", "3600");
             } else {
-                // For debugging: allow but log
-                System.out.println("⚠️ CORS: Allowing origin not in list: " + origin);
-                response.setHeader("Access-Control-Allow-Origin", origin);
+                // Log blocked origin for debugging
+                System.out.println("⚠️ CORS: Blocked origin: " + origin);
             }
-            response.setHeader("Access-Control-Allow-Credentials", "true");
-            response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD");
-            // CRITICAL: Cannot use "*" when allowCredentials is true - must explicitly list headers
-            response.setHeader("Access-Control-Allow-Headers", ALLOWED_HEADERS);
-            response.setHeader("Access-Control-Expose-Headers", 
-                "Access-Control-Allow-Origin, Access-Control-Allow-Credentials, Content-Type, Authorization, X-Requested-With");
-            response.setHeader("Access-Control-Max-Age", "3600");
         }
 
         // Handle preflight OPTIONS request - MUST return before chain.doFilter

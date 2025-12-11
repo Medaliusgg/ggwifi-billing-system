@@ -26,17 +26,19 @@ public class CorsConfig {
             "https://139.84.241.182:*",   // HTTPS production IP
             "http://139.84.241.182",      // Production IP without port
             "https://139.84.241.182",     // HTTPS production IP without port
-            "https://admin.ggwifi.co.tz",
+            "https://admin.ggwifi.co.tz",  // Admin portal
+            "https://portal.ggwifi.co.tz", // Customer portal
             "https://connect.ggwifi.co.tz",
-            "https://hotspot.ggwifi.co.tz", // Customer portal
+            "https://hotspot.ggwifi.co.tz", // Customer portal alternative
             "https://www.ggwifi.co.tz",
             "https://api.ggwifi.co.tz",   // API domain
             "http://admin.ggwifi.co.tz",
+            "http://portal.ggwifi.co.tz",  // Customer portal HTTP
             "http://connect.ggwifi.co.tz",
             "http://hotspot.ggwifi.co.tz", // Customer portal HTTP
             "http://www.ggwifi.co.tz",
-            "https://*.ggwifi.co.tz",     // All ggwifi subdomains
-            "http://*.ggwifi.co.tz",      // All ggwifi subdomains HTTP
+            "https://*.ggwifi.co.tz",     // All ggwifi subdomains (wildcard)
+            "http://*.ggwifi.co.tz",      // All ggwifi subdomains HTTP (wildcard)
             "https://*.pages.dev",        // Cloudflare Pages
             "https://*.cloudflarepages.app", // Cloudflare Pages alternative
             "https://zenoapi.com",        // ZenoPay API servers (for webhook)

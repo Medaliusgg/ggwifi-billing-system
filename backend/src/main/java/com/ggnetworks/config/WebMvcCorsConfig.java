@@ -19,15 +19,18 @@ public class WebMvcCorsConfig implements WebMvcConfigurer {
                     "http://127.0.0.1:*",
                     "http://139.84.241.182:*",
                     "https://139.84.241.182:*",
-                    "https://admin.ggwifi.co.tz",
+                    "https://admin.ggwifi.co.tz",    // Admin portal
+                    "https://portal.ggwifi.co.tz",    // Customer portal
                     "https://connect.ggwifi.co.tz",
-                    "https://hotspot.ggwifi.co.tz", // Customer portal
+                    "https://hotspot.ggwifi.co.tz",   // Customer portal alternative
                     "https://www.ggwifi.co.tz",
-                    "https://api.ggwifi.co.tz",     // API domain
-                    "https://*.ggwifi.co.tz",       // All ggwifi subdomains
-                    "http://*.ggwifi.co.tz",         // All ggwifi subdomains HTTP
-                    "https://*.pages.dev",
-                    "https://*.cloudflarepages.app"
+                    "https://api.ggwifi.co.tz",       // API domain
+                    "http://admin.ggwifi.co.tz",
+                    "http://portal.ggwifi.co.tz",     // Customer portal HTTP
+                    "https://*.ggwifi.co.tz",         // All ggwifi subdomains (wildcard)
+                    "http://*.ggwifi.co.tz",          // All ggwifi subdomains HTTP (wildcard)
+                    "https://*.pages.dev",            // Cloudflare Pages
+                    "https://*.cloudflarepages.app"   // Cloudflare Pages alternative
                 )
                 // DO NOT use allowedOrigins when using allowedOriginPatterns with allowCredentials(true)
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD")
