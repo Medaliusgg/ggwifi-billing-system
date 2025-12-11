@@ -16,7 +16,7 @@ public interface MediaCampaignRepository extends JpaRepository<MediaCampaign, Lo
 
     @Query("""
             SELECT mc FROM MediaCampaign mc
-            WHERE mc.active = true
+            WHERE mc.isActive = true
             AND (mc.startDate IS NULL OR mc.startDate <= :now)
             AND (mc.endDate IS NULL OR mc.endDate >= :now)
             ORDER BY mc.priority DESC, mc.updatedAt DESC
