@@ -190,13 +190,15 @@ const SignupDetailsPage = () => {
 
                 <TextField
                   fullWidth
-                  label="Password"
+                  label="PIN (4 digits)"
                   name="password"
                   type="password"
                   value={formData.password}
                   onChange={handleChange}
                   required
+                  inputProps={{ maxLength: 4, pattern: '[0-9]*' }}
                   sx={{ mb: 2 }}
+                  helperText="Create a 4-digit PIN for login"
                 />
 
                 <TextField
