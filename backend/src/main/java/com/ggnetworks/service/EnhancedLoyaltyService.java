@@ -1,6 +1,8 @@
 package com.ggnetworks.service;
 
 import com.ggnetworks.entity.*;
+import com.ggnetworks.entity.Customer;
+import com.ggnetworks.entity.InternetPackage;
 import com.ggnetworks.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
