@@ -125,6 +125,7 @@ const LoginPage = () => {
                   value={formData.phone}
                   onChange={handleChange}
                   required
+                  autoComplete="tel"
                   sx={{ mb: 3 }}
                   placeholder="+255 742 844 024"
                 />
@@ -137,6 +138,7 @@ const LoginPage = () => {
                   value={formData.password}
                   onChange={handleChange}
                   required
+                  autoComplete="current-password"
                   inputProps={{ maxLength: 4, pattern: '[0-9]*' }}
                   sx={{ mb: 2 }}
                   helperText="Enter your 4-digit PIN"

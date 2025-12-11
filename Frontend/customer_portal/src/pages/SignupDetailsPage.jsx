@@ -196,6 +196,7 @@ const SignupDetailsPage = () => {
                   value={formData.password}
                   onChange={handleChange}
                   required
+                  autoComplete="new-password"
                   inputProps={{ maxLength: 4, pattern: '[0-9]*' }}
                   sx={{ mb: 2 }}
                   helperText="Create a 4-digit PIN for login"
@@ -209,6 +210,7 @@ const SignupDetailsPage = () => {
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   required
+                  autoComplete="new-password"
                   inputProps={{ maxLength: 4, pattern: '[0-9]*' }}
                   sx={{ mb: 3 }}
                 />

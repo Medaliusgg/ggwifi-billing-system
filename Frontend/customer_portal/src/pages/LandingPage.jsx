@@ -21,7 +21,6 @@ import {
   ArrowForward as ArrowForwardIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
 import { useQuery } from 'react-query';
 import GlobalHeader from '../components/GlobalHeader';
 import Footer from '../components/Footer';

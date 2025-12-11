@@ -31,11 +31,33 @@ const SignupPhonePage = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Normalize phone number before sending
+  const normalizePhone = (phoneNumber) => {
+    if (!phoneNumber) return '';
+    // Remove all non-digit characters except +
+    let normalized = phoneNumber.trim().replace(/[^\d+]/g, '');
+    
+    // If starts with +, keep it
+    if (normalized.startsWith('+')) {
+      return normalized;
+    }
+    // If starts with 255, add +
+    if (normalized.startsWith('255')) {
+      return '+' + normalized;
+    }
+    // If starts with 0, replace with +255
+    if (normalized.startsWith('0')) {
+      return '+255' + normalized.substring(1);
+    }
+    // Otherwise, add +255
+    return '+255' + normalized;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     
-    if (!phone || phone.length < 9) {
+    if (!phone || phone.trim().length < 9) {
       setError('Please enter a valid phone number');
       return;
     }
@@ -43,19 +65,32 @@ const SignupPhonePage = () => {
     setLoading(true);
 
     try {
-      const response = await customerPortalAPI.signupRequestOTP(phone);
+      // Normalize phone number before sending
+      const normalizedPhone = normalizePhone(phone);
+      const response = await customerPortalAPI.signupRequestOTP(normalizedPhone);
+      
       if (response?.data?.status === 'success') {
-        localStorage.setItem('signup_phone', phone);
+        // Store normalized phone number
+        localStorage.setItem('signup_phone', normalizedPhone);
         // Store signup token if provided
         if (response?.data?.signupToken) {
           localStorage.setItem('signup_token', response.data.signupToken);
         }
         navigate('/signup/verify');
       } else {
-        setError(response?.data?.message || 'Failed to send OTP. Please try again.');
+        const errorMessage = response?.data?.message || 'Failed to send OTP. Please try again.';
+        // Handle account exists error
+        if (response?.data?.error_code === 'ACCOUNT_EXISTS') {
+          setError(errorMessage + ' Redirecting to login...');
+          setTimeout(() => navigate('/login'), 2000);
+        } else {
+          setError(errorMessage);
+        }
       }
     } catch (err) {
-      setError(err?.response?.data?.message || 'Failed to send OTP. Please try again.');
+      const errorMessage = err?.response?.data?.message || 'Failed to send OTP. Please check your phone number and try again.';
+      setError(errorMessage);
+      console.error('Signup OTP Error:', err);
     } finally {
       setLoading(false);
     }
@@ -115,6 +150,7 @@ const SignupPhonePage = () => {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   required
+                  autoComplete="tel"
                   placeholder="+255 742 844 024"
                   sx={{ mb: 3 }}
                 />
