@@ -92,7 +92,14 @@ const SignupPhonePage = () => {
       // Handle different error scenarios
       let errorMessage = 'Failed to send OTP. Please try again.';
       
-      if (err?.response?.status === 500) {
+      // Handle network/CORS errors
+      if (err?.isNetworkError || err?.isBackendError || err?.code === 'ERR_NETWORK') {
+        errorMessage = 'Unable to connect to the server. Please check your internet connection and try again.';
+        console.error('Network Error:', err);
+      } else if (err?.response?.status === 502) {
+        errorMessage = 'The server is temporarily unavailable. Please try again in a few moments.';
+        console.error('Backend Error (502):', err);
+      } else if (err?.response?.status === 500) {
         errorMessage = 'Server error occurred. Please contact support or try again later.';
         console.error('Signup OTP 500 Error:', err?.response?.data || err);
       } else if (err?.response?.data?.message) {

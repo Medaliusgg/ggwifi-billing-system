@@ -16,8 +16,26 @@ const HomePackageList = () => {
   const { data: packagesData, isLoading } = useQuery(
     ['packages'],
     async () => {
-      const res = await customerPortalAPI.getPackages();
-      return res?.data || {};
+      try {
+        const res = await customerPortalAPI.getPackages();
+        // Handle network errors gracefully
+        if (res?.isNetworkError || res?.isBackendError) {
+          return { packages: [] };
+        }
+        return res?.data || { packages: [] };
+      } catch (error) {
+        // Silently handle network/CORS errors
+        if (error?.isNetworkError || error?.isBackendError || error?.code === 'ERR_NETWORK') {
+          return { packages: [] };
+        }
+        console.error('Error fetching packages:', error);
+        return { packages: [] };
+      }
+    },
+    {
+      retry: false,
+      refetchOnWindowFocus: false,
+      retryOnMount: false,
     }
   );
 

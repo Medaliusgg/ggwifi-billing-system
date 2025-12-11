@@ -11,14 +11,23 @@ import { useQuery } from 'react-query';
 import { customerPortalAPI } from '../services/customerPortalApi';
 
 const LandingPage = () => {
-  // Fetch marketing campaigns
+  // Fetch marketing campaigns with graceful error handling
   const { data: campaigns = [] } = useQuery(
     ['marketing-campaigns'],
     async () => {
       try {
         const res = await customerPortalAPI.getCampaigns();
+        // Handle network errors gracefully
+        if (res?.isNetworkError || res?.isBackendError) {
+          return [];
+        }
         return res?.data?.campaigns || [];
       } catch (error) {
+        // Silently handle network/CORS errors - don't show to user
+        if (error?.isNetworkError || error?.isBackendError || error?.code === 'ERR_NETWORK') {
+          return [];
+        }
+        // Only log non-404 errors
         if (error?.response?.status !== 404) {
           console.error('Error fetching campaigns:', error);
         }
@@ -30,6 +39,8 @@ const LandingPage = () => {
       retry: false,
       refetchOnWindowFocus: false,
       onError: () => {},
+      // Don't show error state for network issues
+      retryOnMount: false,
     }
   );
 

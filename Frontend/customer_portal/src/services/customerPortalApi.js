@@ -28,12 +28,82 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+    // Handle network errors (CORS, connection issues)
+    if (!error.response) {
+      // Network error (CORS, timeout, connection refused)
+      if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+        console.error('Network Error:', {
+          message: 'Unable to connect to the server. Please check your internet connection or try again later.',
+          code: error.code,
+          config: error.config?.url,
+        });
+        
+        // Don't redirect on network errors for public routes
+        const isPublicRoute = ['/customer-portal/packages', '/customer-portal/marketing/campaigns'].some(
+          route => error.config?.url?.includes(route)
+        );
+        
+        if (!isPublicRoute && error.config?.url?.includes('/customer-auth/login')) {
+          // Only show error for login attempts
+          return Promise.reject({
+            ...error,
+            isNetworkError: true,
+            message: 'Unable to connect to the server. Please check your internet connection.',
+          });
+        }
+        
+        // For public routes, return empty data instead of error
+        if (isPublicRoute) {
+          return Promise.resolve({ data: null, isNetworkError: true });
+        }
+      }
+      
+      // Timeout error
+      if (error.code === 'ECONNABORTED') {
+        return Promise.reject({
+          ...error,
+          isTimeoutError: true,
+          message: 'Request timed out. Please try again.',
+        });
+      }
     }
+    
+    // Handle HTTP errors
+    if (error.response) {
+      // 401 Unauthorized - clear auth and redirect
+      if (error.response.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('user');
+        // Only redirect if not already on login page
+        if (!window.location.pathname.includes('/login')) {
+          window.location.href = '/login';
+        }
+      }
+      
+      // 502 Bad Gateway - backend might be down
+      if (error.response.status === 502) {
+        console.error('Backend Error (502):', {
+          message: 'The server is temporarily unavailable. Please try again later.',
+          url: error.config?.url,
+        });
+        return Promise.reject({
+          ...error,
+          isBackendError: true,
+          message: 'The server is temporarily unavailable. Please try again later.',
+        });
+      }
+      
+      // 503 Service Unavailable
+      if (error.response.status === 503) {
+        return Promise.reject({
+          ...error,
+          isServiceUnavailable: true,
+          message: 'Service is temporarily unavailable. Please try again later.',
+        });
+      }
+    }
+    
     return Promise.reject(error);
   }
 );
