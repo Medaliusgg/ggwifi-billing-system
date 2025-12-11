@@ -12,7 +12,10 @@ import {
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { Home as HomeIcon, ShoppingBag as ShoppingBagIcon } from '@mui/icons-material';
 import GlobalHeader from '../components/GlobalHeader';
+import GlobalButton from '../components/ui/GlobalButton';
+import { Container } from '@mui/material';
 
 const VoucherLoginPage = () => {
   const theme = useTheme();
@@ -186,51 +189,57 @@ const VoucherLoginPage = () => {
           </Card>
         </motion.div>
 
-        {/* Footer Buttons */}
+        {/* Footer Buttons - Large buttons as per requirements */}
         <Box
           sx={{
-            display: 'flex',
-            gap: 2,
-            mt: 4,
-            justifyContent: 'center',
+            position: 'fixed',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            backgroundColor: '#FFFFFF',
+            borderTop: '1px solid #E5E7EB',
+            py: 3,
+            px: 2,
+            zIndex: 1000,
+            boxShadow: '0 -2px 10px rgba(0,0,0,0.1)',
           }}
         >
-          <Button
-            variant="outlined"
-            onClick={() => navigate('/plans')}
-            sx={{
-            borderColor: colors.info, // Blue - secondary accent for footer buttons
-            color: colors.info,
-              fontWeight: 600,
-              px: 3,
-              py: 1,
-              borderRadius: '12px',
-              '&:hover': {
-                borderColor: theme.palette.info.dark,
-                backgroundColor: theme.palette.info.light,
-              },
-            }}
-          >
-            BUY PACKAGES
-          </Button>
-          <Button
-            variant="outlined"
-            onClick={() => navigate('/home')}
-            sx={{
-            borderColor: colors.info, // Blue - secondary accent for footer buttons
-            color: colors.info,
-              fontWeight: 600,
-              px: 3,
-              py: 1,
-              borderRadius: '12px',
-              '&:hover': {
-                borderColor: theme.palette.info.dark,
-                backgroundColor: theme.palette.info.light,
-              },
-            }}
-          >
-            HOME
-          </Button>
+          <Container maxWidth="sm">
+            <Box
+              sx={{
+                display: 'flex',
+                gap: 2,
+                justifyContent: 'center',
+              }}
+            >
+              <GlobalButton
+                icon={<HomeIcon />}
+                variant="contained"
+                color="primary"
+                onClick={() => navigate('/home')}
+                sx={{
+                  flex: 1,
+                  py: 2,
+                  fontSize: '16px',
+                }}
+              >
+                Home
+              </GlobalButton>
+              <GlobalButton
+                icon={<ShoppingBagIcon />}
+                variant="contained"
+                color="primary"
+                onClick={() => navigate('/packages')}
+                sx={{
+                  flex: 1,
+                  py: 2,
+                  fontSize: '16px',
+                }}
+              >
+                Buy Packages
+              </GlobalButton>
+            </Box>
+          </Container>
         </Box>
       </Container>
     </Box>

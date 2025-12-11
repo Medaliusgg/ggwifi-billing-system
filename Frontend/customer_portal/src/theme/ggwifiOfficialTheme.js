@@ -7,9 +7,9 @@ export const ggwifiOfficialTheme = createTheme({
   palette: {
     // ✅ GG Wi-Fi HYBRID GOLDEN YELLOW THEME
     primary: {
-      main: "#F2C94C",        // Main Golden Yellow - GG Wi-Fi brand color
-      dark: "#E0B335",        // Stronger/Darker Golden Yellow for hover
-      light: "#F8D97A",       // Lighter golden yellow
+      main: "#FFCC00",        // Main Golden Yellow - GG Wi-Fi brand color
+      dark: "#E6B800",        // Stronger/Darker Golden Yellow for hover
+      light: "#FFD633",       // Lighter golden yellow
       contrastText: "#000000", // Deep Black Text
     },
     secondary: {
@@ -116,10 +116,10 @@ export const ggwifiOfficialTheme = createTheme({
           },
         },
         containedPrimary: {
-          backgroundColor: "#F2C94C", // Main Golden Yellow
+          backgroundColor: "#FFCC00", // Main Golden Yellow
           color: "#000000", // Deep Black Text
           "&:hover": {
-            backgroundColor: "#E0B335", // Stronger Golden Yellow
+            backgroundColor: "#E6B800", // Stronger Golden Yellow
           },
         },
         containedSecondary: {
@@ -130,11 +130,11 @@ export const ggwifiOfficialTheme = createTheme({
           },
         },
         outlinedPrimary: {
-          borderColor: "#F2C94C", // Main Golden Yellow
+          borderColor: "#FFCC00", // Main Golden Yellow
           color: "#000000", // Deep Black Text
           "&:hover": {
-            borderColor: "#E0B335", // Stronger Golden Yellow
-            backgroundColor: "rgba(242, 201, 76, 0.1)",
+            borderColor: "#E6B800", // Stronger Golden Yellow
+            backgroundColor: "rgba(255, 204, 0, 0.1)",
           },
         },
       },
@@ -189,14 +189,14 @@ export const ggwifiOfficialTheme = createTheme({
             borderColor: "#E5E7EB",
           },
           "&:hover .MuiOutlinedInput-notchedOutline": {
-            borderColor: "#F2C94C", // Main Golden Yellow
+            borderColor: "#FFCC00", // Main Golden Yellow
           },
           "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-            borderColor: "#F2C94C", // Main Golden Yellow
+            borderColor: "#FFCC00", // Main Golden Yellow
             borderWidth: "2px",
           },
           "&.Mui-focused": {
-            boxShadow: "0 0 0 3px rgba(242, 201, 76, 0.35)",
+            boxShadow: "0 0 0 3px rgba(255, 204, 0, 0.35)",
           },
         },
         input: {
@@ -216,7 +216,7 @@ export const ggwifiOfficialTheme = createTheme({
             color: "#333333", // Dark Gray Text
           },
           "& .MuiInputLabel-root.Mui-focused": {
-            color: "#F2C94C", // Main Golden Yellow
+            color: "#FFCC00", // Main Golden Yellow
           },
         },
       },

@@ -51,11 +51,17 @@ function App() {
             <Route path="/voucher-login" element={<VoucherLoginPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/otp-login" element={<OTPLoginPage />} />
+            <Route path="/forgot-password" element={<OTPLoginPage />} /> {/* Reuse OTP login for forgot password */}
+            <Route path="/verify-otp" element={<SignupVerifyPage />} />
             
             {/* Signup Flow */}
+            <Route path="/signup" element={<Navigate to="/signup/phone" replace />} />
             <Route path="/signup/phone" element={<SignupPhonePage />} />
             <Route path="/signup/verify" element={<SignupVerifyPage />} />
             <Route path="/signup/details" element={<SignupDetailsPage />} />
+            
+            {/* Public Package Page (can buy without login) */}
+            <Route path="/packages" element={<PlansPage />} />
 
             {/* Protected Routes (After Login) */}
             <Route
@@ -74,6 +80,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            {/* /packages is public (no protection) - see above */}
             <Route
               path="/connections"
               element={

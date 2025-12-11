@@ -8,8 +8,8 @@
      ============================================ */
   --gg-white: #FFFFFF;
   --gg-black: #0A0A0A;
-  --gg-gold: #F2C94C;          /* Main brand yellow */
-  --gg-gold-strong: #E0B335;   /* Hover / active yellow */
+  --gg-gold: #FFCC00;          /* Main brand yellow */
+  --gg-gold-strong: #E6B800;   /* Hover / active yellow */
 
   /* ============================================
      SECONDARY UI COLORS (Packages, Analytics, Highlights Only)
@@ -59,7 +59,7 @@
   /* ============================================
      FOCUS RING
      ============================================ */
-  --focus-gold: 0 0 0 3px rgba(242, 201, 76, 0.35);
+  --focus-gold: 0 0 0 3px rgba(255, 204, 0, 0.35);
 }
 
 /* ============================================

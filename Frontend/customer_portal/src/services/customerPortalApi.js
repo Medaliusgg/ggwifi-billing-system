@@ -176,6 +176,12 @@ export const customerPortalAPI = {
     const response = await apiClient.post('/customer-portal/voucher-login', { voucherCode });
     return response;
   },
+
+  // Phone Verification (for buying packages without login)
+  checkPhone: async (phoneNumber) => {
+    const response = await apiClient.post('/customer/check-phone', { phoneNumber });
+    return response;
+  },
 };
 
 export default customerPortalAPI;

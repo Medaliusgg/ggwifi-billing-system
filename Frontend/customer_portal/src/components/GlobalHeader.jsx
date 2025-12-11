@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   AppBar,
   Toolbar,
@@ -10,6 +10,7 @@ import {
   Typography,
   useTheme,
   useMediaQuery,
+  Button,
 } from '@mui/material';
 import {
   WhatsApp as WhatsAppIcon,
@@ -18,14 +19,28 @@ import {
   Login as LoginIcon,
   Logout as LogoutIcon,
 } from '@mui/icons-material';
-import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { motion, useScroll, useTransform } from 'framer-motion';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const GlobalHeader = ({ isAuthenticated, user, onLogout }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const navigate = useNavigate();
-  const [accountMenuAnchor, setAccountMenuAnchor] = React.useState(null);
+  const location = useLocation();
+  const [accountMenuAnchor, setAccountMenuAnchor] = useState(null);
+  const [scrolled, setScrolled] = useState(false);
+  const { scrollY } = useScroll();
+
+  const isHomePage = location.pathname === '/' || location.pathname === '/home';
+
+  // Track scroll position
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 50);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handleWhatsApp = () => {
     window.open('https://wa.me/255742844024', '_blank');
@@ -50,6 +65,8 @@ const GlobalHeader = ({ isAuthenticated, user, onLogout }) => {
 
   const handleLogout = () => {
     if (onLogout) onLogout();
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
     handleAccountMenuClose();
     navigate('/home');
   };
@@ -59,15 +76,25 @@ const GlobalHeader = ({ isAuthenticated, user, onLogout }) => {
     handleAccountMenuClose();
   };
 
+  // Determine background color based on scroll and page
+  const backgroundColor = isHomePage && !scrolled 
+    ? 'transparent' 
+    : theme.palette.background.paper;
+  
+  const boxShadow = isHomePage && !scrolled 
+    ? 'none' 
+    : '0 2px 8px rgba(0,0,0,0.1)';
+
   return (
     <AppBar
       position="sticky"
       sx={{
-        backgroundColor: theme.palette.primary.main, // Main Golden Yellow #F2C94C
-        color: theme.palette.text.primary, // Deep Black Text
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-        borderBottom: `1px solid ${theme.palette.primary.dark}`,
+        backgroundColor: backgroundColor,
+        color: theme.palette.text.primary,
+        boxShadow: boxShadow,
+        borderBottom: scrolled ? `1px solid ${theme.palette.divider}` : 'none',
         zIndex: theme.zIndex.drawer + 1,
+        transition: 'all 0.3s ease',
       }}
     >
       <Toolbar sx={{ justifyContent: 'space-between', px: { xs: 1, md: 3 } }}>
@@ -77,13 +104,34 @@ const GlobalHeader = ({ isAuthenticated, user, onLogout }) => {
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           onClick={() => navigate('/home')}
-          sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 1 }}
+          sx={{ 
+            cursor: 'pointer', 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 1.5 
+          }}
         >
+          {/* Logo Image - Using transparent PNG if available */}
+          <Box
+            component="img"
+            src="/logo.png"
+            alt="GG Wi-Fi Logo"
+            onError={(e) => {
+              // Fallback if logo not found
+              e.target.style.display = 'none';
+            }}
+            sx={{
+              width: { xs: 40, md: 48 },
+              height: { xs: 40, md: 48 },
+              borderRadius: '50%',
+              objectFit: 'cover',
+            }}
+          />
           <Typography
             variant="h6"
             sx={{
               fontWeight: 700,
-              color: theme.palette.text.primary, // Deep Black (on yellow background)
+              color: theme.palette.text.primary,
               fontSize: { xs: '18px', md: '24px' },
             }}
           >
@@ -97,8 +145,8 @@ const GlobalHeader = ({ isAuthenticated, user, onLogout }) => {
           <IconButton
             onClick={handleWhatsApp}
             sx={{
-              color: theme.palette.text.primary, // Deep Black
-              '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.1)' }, // Dark hover on yellow
+              color: theme.palette.text.primary,
+              '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.1)' },
             }}
             size={isMobile ? 'small' : 'medium'}
           >
@@ -109,20 +157,39 @@ const GlobalHeader = ({ isAuthenticated, user, onLogout }) => {
           <IconButton
             onClick={handlePhoneCall}
             sx={{
-              color: theme.palette.text.primary, // Deep Black
-              '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.1)' }, // Dark hover on yellow
+              color: theme.palette.text.primary,
+              '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.1)' },
             }}
             size={isMobile ? 'small' : 'medium'}
           >
             <PhoneIcon />
           </IconButton>
 
-          {/* Account/Login */}
+          {/* Login Button (if not authenticated) */}
+          {!isAuthenticated && (
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<LoginIcon />}
+              onClick={handleLogin}
+              sx={{
+                display: { xs: 'none', sm: 'flex' },
+                borderRadius: '12px',
+                fontWeight: 600,
+                textTransform: 'none',
+                px: 2,
+              }}
+            >
+              Login
+            </Button>
+          )}
+
+          {/* Account/Login Icon */}
           <IconButton
-            onClick={handleAccountMenuOpen}
+            onClick={isAuthenticated ? handleAccountMenuOpen : handleLogin}
             sx={{
-              color: theme.palette.text.primary, // Deep Black
-              '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.1)' }, // Dark hover on yellow
+              color: theme.palette.text.primary,
+              '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.1)' },
             }}
             size={isMobile ? 'small' : 'medium'}
           >
@@ -131,8 +198,8 @@ const GlobalHeader = ({ isAuthenticated, user, onLogout }) => {
                 sx={{
                   width: 32,
                   height: 32,
-                  bgcolor: theme.palette.text.primary, // Deep Black
-                  color: theme.palette.primary.main, // Golden Yellow
+                  bgcolor: theme.palette.text.primary,
+                  color: theme.palette.primary.main,
                   fontSize: '14px',
                 }}
               >
