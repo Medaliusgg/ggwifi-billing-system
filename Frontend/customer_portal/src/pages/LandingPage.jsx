@@ -3,7 +3,6 @@ import {
   Box,
   Container,
   Typography,
-  Button,
   Card,
   CardContent,
   Grid,
@@ -25,13 +24,13 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from 'react-query';
 import GlobalHeader from '../components/GlobalHeader';
+import Footer from '../components/Footer';
 import MarketingCarousel from '../components/MarketingCarousel';
 import { customerPortalAPI } from '../services/customerPortalApi';
 
 const LandingPage = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const navigate = useNavigate();
   
   // GG Color Theme - Use theme colors only
   const colors = {
@@ -78,7 +77,7 @@ const LandingPage = () => {
   ];
 
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: colors.background }}>
+    <Box sx={{ minHeight: '100vh', backgroundColor: colors.background, pb: { xs: 12, md: 10 } }}>
       <GlobalHeader isAuthenticated={false} />
 
       <Container maxWidth="lg" sx={{ py: { xs: 3, md: 5 } }}>
@@ -252,64 +251,10 @@ const LandingPage = () => {
           </Box>
         </motion.div>
 
-        {/* Action Buttons */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.5 }}
-        >
-          <Box
-            sx={{
-              display: 'flex',
-              flexDirection: { xs: 'column', md: 'row' },
-              gap: 2,
-              justifyContent: 'center',
-              mb: 5,
-            }}
-          >
-            <Button
-              variant="contained"
-              size="large"
-              onClick={() => navigate('/plans')}
-              sx={{
-                backgroundColor: colors.info,
-                color: theme.palette.background.paper,
-                fontWeight: 600,
-                px: 4,
-                py: 1.5,
-                borderRadius: '12px',
-                fontSize: { xs: '16px', md: '18px' },
-                '&:hover': {
-                  backgroundColor: theme.palette.info.dark,
-                  boxShadow: '0 4px 12px rgba(0, 123, 255, 0.3)',
-                },
-              }}
-            >
-              BUY PACKAGE
-            </Button>
-            <Button
-              variant="contained"
-              size="large"
-              onClick={() => navigate('/voucher-login')}
-              sx={{
-                backgroundColor: colors.warning,
-                color: theme.palette.background.paper,
-                fontWeight: 600,
-                px: 4,
-                py: 1.5,
-                borderRadius: '12px',
-                fontSize: { xs: '16px', md: '18px' },
-                '&:hover': {
-                  backgroundColor: theme.palette.warning.dark,
-                  boxShadow: '0 4px 12px rgba(244, 140, 6, 0.3)',
-                },
-              }}
-            >
-              ENTER VOUCHER
-            </Button>
-          </Box>
-        </motion.div>
       </Container>
+      
+      {/* Footer with Action Buttons */}
+      <Footer />
     </Box>
   );
 };
