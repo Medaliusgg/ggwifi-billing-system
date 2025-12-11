@@ -93,9 +93,16 @@ public class SignupService {
             otp.setUserAgent(userAgent);
             customerOTPRepository.save(otp);
 
-            // Send SMS
-            String smsMessage = String.format("GGWiFi: Your signup code is %s. Valid for 5 minutes.", otpCode);
-            smsService.sendSms(phoneNumber, smsMessage);
+            // Send SMS (handle failures gracefully)
+            try {
+                String smsMessage = String.format("GGWiFi: Your signup code is %s. Valid for 5 minutes.", otpCode);
+                smsService.sendSms(phoneNumber, smsMessage);
+            } catch (Exception smsException) {
+                // Log SMS failure but don't fail the OTP request
+                System.err.println("⚠️ Warning: Failed to send SMS for signup OTP: " + smsException.getMessage());
+                // In development/testing, you might want to log the OTP code
+                System.err.println("⚠️ OTP Code for " + phoneNumber + ": " + otpCode);
+            }
 
             response.put("status", "success");
             response.put("message", "OTP sent to your phone number");
