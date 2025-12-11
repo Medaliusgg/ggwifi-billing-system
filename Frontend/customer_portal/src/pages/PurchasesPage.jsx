@@ -110,7 +110,7 @@ const PurchasesPage = () => {
 
         {isLoading ? (
           <Box sx={{ textAlign: 'center', py: 8 }}>
-            <Typography variant="body1" sx={{ color: '#666666' }}>
+            <Typography variant="body1" sx={{ color: colors.textSecondary }}>
               Loading purchases...
             </Typography>
           </Box>

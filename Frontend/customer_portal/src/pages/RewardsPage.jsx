@@ -118,8 +118,8 @@ const RewardsPage = () => {
         >
           <Card
             sx={{
-              background: 'linear-gradient(135deg, #FFFFFF 0%, #F5F9FC 100%)',
-              border: '1px solid #EEEEEE',
+              background: `linear-gradient(135deg, ${theme.palette.background.paper} 0%, ${colors.background} 100%)`,
+              border: `1px solid ${theme.palette.divider}`,
               borderRadius: '16px',
               mb: 3,
             }}
