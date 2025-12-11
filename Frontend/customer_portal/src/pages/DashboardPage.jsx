@@ -304,7 +304,7 @@ const DashboardPage = () => {
                     >
                       <UploadIcon sx={{ color: colors.success }} /> {/* Green - secondary accent */}
                       <Box>
-                        <Typography variant="caption" sx={{ color: '#666666', display: 'block' }}>
+                        <Typography variant="caption" sx={{ color: colors.textSecondary, display: 'block' }}>
                           Upload
                         </Typography>
                         <Typography variant="body2" sx={{ fontWeight: 600 }}>
@@ -364,7 +364,7 @@ const DashboardPage = () => {
                       <Typography variant="body2" sx={{ color: '#666666', mb: 1 }}>
                         {pkg.name}
                       </Typography>
-                      <Typography variant="caption" sx={{ color: '#48C7F2' }}>
+                      <Typography variant="caption" sx={{ color: colors.info }}> {/* Blue - secondary accent */}
                         {pkg.duration || 'N/A'}
                       </Typography>
                     </CardContent>

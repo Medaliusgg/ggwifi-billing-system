@@ -280,7 +280,7 @@ const RewardsPage = () => {
               <Grid item xs={12}>
                 <Box sx={{ textAlign: 'center', py: 8 }}>
                   <GiftIcon sx={{ fontSize: 64, color: theme.palette.text.disabled, mb: 2 }} />
-                  <Typography variant="body1" sx={{ color: '#666666' }}>
+                  <Typography variant="body1" sx={{ color: colors.textSecondary }}>
                     No products available
                   </Typography>
                 </Box>
@@ -331,7 +331,7 @@ const RewardsPage = () => {
               <Grid item xs={12}>
                 <Box sx={{ textAlign: 'center', py: 8 }}>
                   <ShoppingBagIcon sx={{ fontSize: 64, color: theme.palette.text.disabled, mb: 2 }} />
-                  <Typography variant="body1" sx={{ color: '#666666' }}>
+                  <Typography variant="body1" sx={{ color: colors.textSecondary }}>
                     No orders yet
                   </Typography>
                 </Box>
