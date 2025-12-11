@@ -98,6 +98,10 @@ function App() {
               }
             />
             <Route
+              path="/purchases/new"
+              element={<PurchasesPage />} // Public route - phone verification handles auth
+            />
+            <Route
               path="/purchases/:orderId"
               element={
                 <ProtectedRoute>

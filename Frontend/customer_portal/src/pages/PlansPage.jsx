@@ -46,14 +46,14 @@ const PlansPage = () => {
     purple: '#8B5CF6', // Purple - Premium plans
   };
 
-  // Fetch packages
+  // Fetch packages (public endpoint - no token required)
   const { data: packagesData, isLoading } = useQuery(
     ['packages'],
     async () => {
       const res = await customerPortalAPI.getPackages();
       return res?.data || {};
     },
-    { enabled: !!token }
+    { enabled: true } // Always enabled since packages are public
   );
 
   const universalPackages = (packagesData?.packages || []).filter(
@@ -75,7 +75,7 @@ const PlansPage = () => {
         background: isOffer
           ? `linear-gradient(135deg, ${theme.palette.warning.light} 0%, ${theme.palette.background.paper} 100%)`
           : `linear-gradient(135deg, ${theme.palette.background.paper} 0%, ${colors.background} 100%)`,
-        border: isOffer ? `2px solid ${cardColors.warning}` : `1px solid ${theme.palette.divider}`,
+        border: isOffer ? `2px solid ${colors.warning}` : `1px solid ${theme.palette.divider}`,
         borderRadius: '16px',
         position: 'relative',
         overflow: 'visible',
@@ -94,7 +94,7 @@ const PlansPage = () => {
             position: 'absolute',
             top: -12,
             right: 16,
-            bgcolor: cardColors.warning,
+            bgcolor: colors.warning,
             color: theme.palette.background.paper,
             fontWeight: 700,
             fontSize: '10px',
@@ -107,7 +107,7 @@ const PlansPage = () => {
           variant="h4"
           sx={{
             fontWeight: 700,
-            color: cardColors.textPrimary,
+            color: colors.textPrimary,
             mb: 1,
           }}
         >
@@ -117,7 +117,7 @@ const PlansPage = () => {
           variant="h6"
           sx={{
             fontWeight: 600,
-            color: cardColors.textPrimary,
+            color: colors.textPrimary,
             mb: 2,
           }}
         >
@@ -126,7 +126,7 @@ const PlansPage = () => {
         <Typography
           variant="body2"
           sx={{
-            color: cardColors.textSecondary,
+            color: colors.textSecondary,
             mb: 3,
             minHeight: 40,
           }}
@@ -136,14 +136,14 @@ const PlansPage = () => {
 
         <Box sx={{ mb: 3 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-            <SpeedIcon sx={{ fontSize: 18, color: cardColors.info }} /> {/* Blue - secondary accent */}
+            <SpeedIcon sx={{ fontSize: 18, color: colors.info }} /> {/* Blue - secondary accent */}
             <Typography variant="body2" sx={{ color: cardColors.textSecondary }}>
               Duration: {pkg.duration || pkg.durationDays + ' days' || 'N/A'}
             </Typography>
           </Box>
           {pkg.speed && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-              <SpeedIcon sx={{ fontSize: 18, color: cardColors.info }} /> {/* Blue - secondary accent */}
+              <SpeedIcon sx={{ fontSize: 18, color: colors.info }} /> {/* Blue - secondary accent */}
               <Typography variant="body2" sx={{ color: cardColors.textSecondary }}>
                 Speed: {pkg.speed}
               </Typography>
@@ -151,7 +151,7 @@ const PlansPage = () => {
           )}
           {pkg.dataLimit && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <DataIcon sx={{ fontSize: 18, color: cardColors.info }} />
+              <DataIcon sx={{ fontSize: 18, color: colors.info }} />
               <Typography variant="body2" sx={{ color: cardColors.textSecondary }}>
                 Data: {pkg.dataLimit}
               </Typography>
@@ -164,13 +164,13 @@ const PlansPage = () => {
           variant="contained"
           onClick={() => handleBuyPackage(pkg)}
           sx={{
-            backgroundColor: isOffer ? cardColors.warning : cardColors.info, // Orange for offers, Blue for universal
+            backgroundColor: isOffer ? colors.warning : colors.info, // Orange for offers, Blue for universal
             color: theme.palette.background.paper, // Clean White
             fontWeight: 600,
             py: 1.5,
             borderRadius: '12px',
             '&:hover': {
-              backgroundColor: isOffer ? cardColors.warningDark : cardColors.infoDark,
+              backgroundColor: isOffer ? colors.warningDark : colors.infoDark,
               boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
             },
           }}
@@ -191,7 +191,7 @@ const PlansPage = () => {
           sx={{
             fontWeight: 700,
             mb: 3,
-            color: cardColors.textPrimary,
+            color: colors.textPrimary,
           }}
         >
           Wi-Fi Plans

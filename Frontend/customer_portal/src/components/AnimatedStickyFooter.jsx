@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Container, Typography, Button } from '@mui/material';
 import { motion, AnimatePresence, useScroll, useMotionValueEvent } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import { VpnKey as VoucherIcon, Home as HomeIcon } from '@mui/icons-material';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { VpnKey as VoucherIcon, ShoppingBag as ShoppingBagIcon } from '@mui/icons-material';
 import GlobalButton from './ui/GlobalButton';
 
 const AnimatedStickyFooter = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isHomePage = location.pathname === '/' || location.pathname === '/home';
   const { scrollY } = useScroll();
   const [scrollDirection, setScrollDirection] = useState('down');
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -111,21 +113,23 @@ const AnimatedStickyFooter = () => {
                     Already have a voucher?
                   </Typography>
                   <Box sx={{ display: 'flex', gap: 2 }}>
-                    <GlobalButton
-                      icon={<HomeIcon />}
-                      variant="outlined"
-                      onClick={() => navigate('/home')}
-                      sx={{
-                        borderColor: '#000000',
-                        color: '#000000',
-                        '&:hover': {
+                    {!isHomePage && (
+                      <GlobalButton
+                        icon={<ShoppingBagIcon />}
+                        variant="outlined"
+                        onClick={() => navigate('/packages')}
+                        sx={{
                           borderColor: '#000000',
-                          backgroundColor: 'rgba(0, 0, 0, 0.1)',
-                        },
-                      }}
-                    >
-                      Home
-                    </GlobalButton>
+                          color: '#000000',
+                          '&:hover': {
+                            borderColor: '#000000',
+                            backgroundColor: 'rgba(0, 0, 0, 0.1)',
+                          },
+                        }}
+                      >
+                        View Packages
+                      </GlobalButton>
+                    )}
                     <GlobalButton
                       icon={<VoucherIcon />}
                       variant="contained"

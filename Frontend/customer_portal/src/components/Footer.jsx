@@ -27,7 +27,7 @@ const Footer = () => {
         bottom: 0,
         left: 0,
         right: 0,
-        backgroundColor: theme.palette.primary.main, // Main Golden Yellow #F2C94C
+        backgroundColor: theme.palette.primary.main, // Main Golden Yellow #FFCC00
         borderTop: `1px solid ${theme.palette.primary.dark}`,
         boxShadow: '0 -2px 10px rgba(0,0,0,0.1)',
         zIndex: theme.zIndex.appBar,

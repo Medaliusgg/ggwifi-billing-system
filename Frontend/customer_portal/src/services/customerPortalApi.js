@@ -104,70 +104,71 @@ export const customerPortalAPI = {
 
   // Packages
   getPackages: async () => {
-    const response = await apiClient.get('/customer/packages');
+    const response = await apiClient.get('/customer-portal/packages');
     return response;
   },
 
   getPackageById: async (id) => {
-    const response = await apiClient.get(`/customer/packages/${id}`);
+    const response = await apiClient.get(`/customer-portal/packages/${id}`);
     return response;
   },
 
   // Sessions
   getActiveSession: async () => {
-    const response = await apiClient.get('/customer/sessions/active');
+    const response = await apiClient.get('/customer-dashboard/sessions');
     return response;
   },
 
   getActiveSessions: async () => {
-    const response = await apiClient.get('/customer/sessions/active');
+    const response = await apiClient.get('/customer-dashboard/sessions');
     return response;
   },
 
   getSessionHistory: async () => {
-    const response = await apiClient.get('/customer/sessions/history');
+    const response = await apiClient.get('/customer-dashboard/sessions');
     return response;
   },
 
   disconnectSession: async (sessionId) => {
-    const response = await apiClient.post(`/customer/sessions/${sessionId}/disconnect`);
+    const response = await apiClient.post(`/customer-dashboard/sessions/${sessionId}/disconnect`);
     return response;
   },
 
   // Purchases
   getPurchaseHistory: async () => {
-    const response = await apiClient.get('/customer/purchases');
+    const response = await apiClient.get('/customer-dashboard/transactions');
     return response;
   },
 
   getPurchaseById: async (id) => {
-    const response = await apiClient.get(`/customer/purchases/${id}`);
+    const response = await apiClient.get(`/customer-dashboard/transactions/${id}`);
     return response;
   },
 
   // Loyalty & Rewards
   getLoyaltyAccount: async () => {
-    const response = await apiClient.get('/customer/loyalty/account');
+    const response = await apiClient.get('/customer-dashboard/loyalty');
     return response;
   },
 
   getLoyaltyProducts: async () => {
-    const response = await apiClient.get('/customer/loyalty/products');
+    // This endpoint may need to be created - using placeholder
+    const response = await apiClient.get('/customer-portal/rewards/products');
     return response;
   },
 
   getLoyaltyProductById: async (id) => {
-    const response = await apiClient.get(`/customer/loyalty/products/${id}`);
+    const response = await apiClient.get(`/customer-portal/rewards/products/${id}`);
     return response;
   },
 
   redeemProduct: async (productId, data) => {
-    const response = await apiClient.post(`/customer/loyalty/products/${productId}/redeem`, data);
+    const response = await apiClient.post(`/customer-portal/rewards/products/${productId}/redeem`, data);
     return response;
   },
 
   getRewardOrders: async () => {
-    const response = await apiClient.get('/customer/loyalty/orders');
+    const response = await apiClient.get('/customer-portal/rewards/orders');
     return response;
   },
 
@@ -179,7 +180,26 @@ export const customerPortalAPI = {
 
   // Phone Verification (for buying packages without login)
   checkPhone: async (phoneNumber) => {
-    const response = await apiClient.post('/customer/check-phone', { phoneNumber });
+    // Check if phone exists via user-management endpoint
+    try {
+      const response = await apiClient.get(`/user-management/profile/phone/${phoneNumber}`);
+      return { data: { isRegistered: true, user: response.data } };
+    } catch (error) {
+      if (error.response?.status === 404) {
+        return { data: { isRegistered: false } };
+      }
+      throw error;
+    }
+  },
+
+  // Customer Dashboard
+  getCustomerDashboard: async (phoneNumber) => {
+    const response = await apiClient.get('/customer-dashboard');
+    return response;
+  },
+
+  getCustomerProfile: async (phoneNumber) => {
+    const response = await apiClient.get('/customer-dashboard/profile');
     return response;
   },
 };

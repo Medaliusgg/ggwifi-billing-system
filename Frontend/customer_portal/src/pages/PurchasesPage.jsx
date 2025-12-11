@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Container,
@@ -10,6 +10,8 @@ import {
   Button,
   useTheme,
   useMediaQuery,
+  TextField,
+  Alert,
 } from '@mui/material';
 import {
   ShoppingBag as ShoppingBagIcon,
@@ -17,19 +19,31 @@ import {
   Pending as PendingIcon,
   Cancel as FailedIcon,
   ArrowForward as ArrowIcon,
+  Phone as PhoneIcon,
+  ShoppingCart as CartIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from 'react-query';
 import GlobalHeader from '../components/GlobalHeader';
 import StickyBottomNav from '../components/StickyBottomNav';
+import PhoneVerificationModal from '../components/PhoneVerificationModal';
 import { customerPortalAPI } from '../services/customerPortalApi';
+import GlobalButton from '../components/ui/GlobalButton';
+import AnimatedSpinner from '../components/ui/AnimatedSpinner';
+import AnimatedNotification from '../components/ui/AnimatedNotification';
 
 const PurchasesPage = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const packageId = searchParams.get('package');
+  const isNewPurchase = window.location.pathname.includes('/new');
   const token = localStorage.getItem('token');
+  const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [verifiedPhone, setVerifiedPhone] = useState(null);
+  const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
   // ✅ GG Wi-Fi OFFICIAL BRAND COLORS
   const colors = {
     background: theme.palette.background.default, // Clean White
@@ -46,15 +60,62 @@ const PurchasesPage = () => {
     successLight: theme.palette.success.light,
   };
 
+  // Fetch package details if purchasing
+  const { data: packageData, isLoading: isLoadingPackage } = useQuery(
+    ['package', packageId],
+    async () => {
+      if (!packageId) return null;
+      const res = await customerPortalAPI.getPackageById(packageId);
+      return res?.data || res;
+    },
+    { enabled: !!packageId && isNewPurchase }
+  );
+
   // Fetch purchase history
   const { data: purchases = [], isLoading } = useQuery(
     ['purchases'],
     async () => {
       const res = await customerPortalAPI.getPurchaseHistory();
-      return res?.data?.purchases || [];
+      return res?.data?.purchases || res?.data?.transactions || [];
     },
-    { enabled: !!token }
+    { enabled: !!token && !isNewPurchase }
   );
+
+  // Handle phone verification for new purchase
+  useEffect(() => {
+    if (isNewPurchase && !token && packageId) {
+      setShowPhoneModal(true);
+    }
+  }, [isNewPurchase, token, packageId]);
+
+  const handlePhoneVerified = (phone) => {
+    setVerifiedPhone(phone);
+    setShowPhoneModal(false);
+    // Proceed with payment
+  };
+
+  const handleInitiatePayment = async () => {
+    if (!packageId) {
+      setNotification({
+        open: true,
+        message: 'No package selected',
+        severity: 'error',
+      });
+      return;
+    }
+
+    if (!token && !verifiedPhone) {
+      setShowPhoneModal(true);
+      return;
+    }
+
+    // TODO: Implement payment initiation
+    setNotification({
+      open: true,
+      message: 'Payment flow will be implemented',
+      severity: 'info',
+    });
+  };
 
   const getStatusChip = (status) => {
     const statusMap = {
@@ -93,13 +154,105 @@ const PurchasesPage = () => {
     );
   };
 
+  // New Purchase Flow
+  if (isNewPurchase) {
+    return (
+      <Box sx={{ minHeight: '100vh', backgroundColor: colors.background, pb: { xs: 8, md: 0 } }}>
+        <GlobalHeader isAuthenticated={!!token} />
+        <Container maxWidth="md" sx={{ py: { xs: 3, md: 4 } }}>
+          {isLoadingPackage ? (
+            <AnimatedSpinner />
+          ) : packageData ? (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <Card
+                sx={{
+                  borderRadius: '16px',
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+                }}
+              >
+                <CardContent sx={{ p: 4 }}>
+                  <Typography variant="h4" sx={{ fontWeight: 700, mb: 3, color: colors.textPrimary }}>
+                    Purchase Package
+                  </Typography>
+                  
+                  <Box sx={{ mb: 3 }}>
+                    <Typography variant="h5" sx={{ fontWeight: 700, mb: 1, color: colors.textPrimary }}>
+                      {packageData.name || packageData.packageName}
+                    </Typography>
+                    <Typography variant="h3" sx={{ fontWeight: 700, color: colors.primary, mb: 2 }}>
+                      TZS {packageData.price?.toLocaleString() || '0'}
+                    </Typography>
+                    <Typography variant="body1" sx={{ color: colors.textSecondary, mb: 2 }}>
+                      {packageData.description || 'High-speed internet package'}
+                    </Typography>
+                    {packageData.duration && (
+                      <Chip
+                        label={`Duration: ${packageData.duration}`}
+                        sx={{ bgcolor: colors.infoLight, color: colors.info, fontWeight: 600 }}
+                      />
+                    )}
+                  </Box>
+
+                  {!token && (
+                    <Alert severity="info" sx={{ mb: 3 }}>
+                      Please verify your phone number to continue with the purchase.
+                    </Alert>
+                  )}
+
+                  <GlobalButton
+                    icon={<CartIcon />}
+                    variant="contained"
+                    fullWidth
+                    onClick={handleInitiatePayment}
+                    disabled={!token && !verifiedPhone}
+                    sx={{
+                      py: 2,
+                      fontSize: '18px',
+                      backgroundColor: colors.primary,
+                      '&:hover': {
+                        backgroundColor: colors.primaryDark,
+                      },
+                    }}
+                  >
+                    {token ? 'Proceed to Payment' : 'Verify & Continue'}
+                  </GlobalButton>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ) : (
+            <Alert severity="error">Package not found</Alert>
+          )}
+        </Container>
+
+        <PhoneVerificationModal
+          open={showPhoneModal}
+          onClose={() => setShowPhoneModal(false)}
+          onVerified={handlePhoneVerified}
+          packageId={packageId}
+        />
+
+        <AnimatedNotification
+          open={notification.open}
+          onClose={() => setNotification({ ...notification, open: false })}
+          message={notification.message}
+          severity={notification.severity}
+        />
+      </Box>
+    );
+  }
+
+  // Purchase History View
   return (
     <Box sx={{ minHeight: '100vh', backgroundColor: colors.background, pb: { xs: 8, md: 0 } }}>
       <GlobalHeader isAuthenticated={!!token} />
 
       <Container maxWidth="lg" sx={{ py: { xs: 3, md: 4 } }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-          <ShoppingBagIcon sx={{ color: colors.info, fontSize: 32 }} />
+          <ShoppingBagIcon sx={{ color: colors.primary, fontSize: 32 }} />
           <Typography
             variant="h4"
             sx={{
