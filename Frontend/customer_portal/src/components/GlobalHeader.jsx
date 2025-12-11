@@ -174,15 +174,23 @@ const GlobalHeader = ({ isAuthenticated, user, onLogout }) => {
           {!isAuthenticated && (
             <Button
               variant="contained"
-              color="primary"
               startIcon={<LoginIcon />}
               onClick={handleLogin}
               sx={{
                 display: { xs: 'none', sm: 'flex' },
                 borderRadius: '12px',
-                fontWeight: 600,
+                fontWeight: 700,
                 textTransform: 'none',
-                px: 2,
+                px: 3,
+                py: 1,
+                backgroundColor: '#000000',
+                color: '#FFFFFF',
+                '&:hover': {
+                  backgroundColor: '#1A1A1A',
+                  transform: 'scale(1.05)',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+                },
+                transition: 'all 0.2s ease',
               }}
             >
               Login

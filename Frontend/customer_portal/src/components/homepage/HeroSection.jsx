@@ -127,7 +127,7 @@ const HeroSection = () => {
             <GlobalButton
               icon={<LoginIcon />}
               variant="contained"
-              color="primary"
+              backgroundContext="white"
               onClick={() => navigate('/login')}
             >
               Get Started
@@ -135,7 +135,7 @@ const HeroSection = () => {
             <GlobalButton
               icon={<ShoppingIcon />}
               variant="outlined"
-              color="primary"
+              backgroundContext="white"
               onClick={() => navigate('/packages')}
             >
               View Packages

@@ -1,7 +1,9 @@
 import React from 'react';
-import { Box, Button, Container, useTheme } from '@mui/material';
+import { Box, Container, useTheme } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { ShoppingBag as ShoppingBagIcon, VpnKey as VoucherIcon } from '@mui/icons-material';
+import GlobalButton from './ui/GlobalButton';
 
 const Footer = () => {
   const theme = useTheme();
@@ -50,31 +52,21 @@ const Footer = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <Button
+            <GlobalButton
+              icon={<ShoppingBagIcon />}
               variant="contained"
               size="large"
+              backgroundContext="yellow"
               onClick={() => navigate('/plans')}
-              fullWidth={false}
               sx={{
-                backgroundColor: theme.palette.text.primary, // Deep Black
-                color: theme.palette.background.paper, // Clean White
-                fontWeight: 700,
                 px: { xs: 3, md: 4 },
-                py: 1.5,
-                borderRadius: '12px',
                 fontSize: { xs: '14px', md: '16px' },
                 minWidth: { xs: 'auto', sm: '200px' },
                 flex: { xs: '1 1 auto', sm: '0 0 auto' },
-                transition: 'all 0.2s ease',
-                '&:hover': {
-                  backgroundColor: '#1A1A1A', // Darker black on hover
-                  transform: 'scale(1.05)',
-                  boxShadow: '0 6px 16px rgba(0, 0, 0, 0.4)',
-                },
               }}
             >
               BUY PACKAGE
-            </Button>
+            </GlobalButton>
           </motion.div>
 
           <motion.div
@@ -82,31 +74,21 @@ const Footer = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.1 }}
           >
-            <Button
+            <GlobalButton
+              icon={<VoucherIcon />}
               variant="contained"
               size="large"
+              backgroundContext="yellow"
               onClick={() => navigate('/voucher-login')}
-              fullWidth={false}
               sx={{
-                backgroundColor: theme.palette.text.primary, // Deep Black
-                color: theme.palette.background.paper, // Clean White
-                fontWeight: 700,
                 px: { xs: 3, md: 4 },
-                py: 1.5,
-                borderRadius: '12px',
                 fontSize: { xs: '14px', md: '16px' },
                 minWidth: { xs: 'auto', sm: '200px' },
                 flex: { xs: '1 1 auto', sm: '0 0 auto' },
-                transition: 'all 0.2s ease',
-                '&:hover': {
-                  backgroundColor: '#1A1A1A', // Darker black on hover
-                  transform: 'scale(1.05)',
-                  boxShadow: '0 6px 16px rgba(0, 0, 0, 0.4)',
-                },
               }}
             >
               ENTER VOUCHER
-            </Button>
+            </GlobalButton>
           </motion.div>
         </Box>
       </Container>

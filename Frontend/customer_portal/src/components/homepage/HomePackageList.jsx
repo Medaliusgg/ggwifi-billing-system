@@ -186,17 +186,11 @@ const HomePackageList = () => {
                             <GlobalButton
                               icon={<ShoppingIcon />}
                               variant="contained"
+                              backgroundContext="white"
                               fullWidth
                               onClick={(e) => {
                                 e.stopPropagation();
                                 navigate(`/packages?package=${pkg.id}`);
-                              }}
-                              sx={{
-                                backgroundColor: accentColor,
-                                '&:hover': {
-                                  backgroundColor: accentColor,
-                                  opacity: 0.9,
-                                },
                               }}
                             >
                               Buy Now

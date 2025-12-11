@@ -12,7 +12,7 @@ import {
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Home as HomeIcon, ShoppingBag as ShoppingBagIcon } from '@mui/icons-material';
+import { Home as HomeIcon, ShoppingBag as ShoppingBagIcon, Wifi as WifiIcon } from '@mui/icons-material';
 import GlobalHeader from '../components/GlobalHeader';
 import GlobalButton from '../components/ui/GlobalButton';
 
@@ -163,27 +163,22 @@ const VoucherLoginPage = () => {
               </Box>
 
               {/* Connect Button */}
-              <Button
-                fullWidth
+              <GlobalButton
+                icon={<WifiIcon />}
                 variant="contained"
+                backgroundContext="white"
+                fullWidth
                 size="large"
                 onClick={handleConnect}
                 disabled={!isCodeComplete}
                 sx={{
-                backgroundColor: isCodeComplete ? colors.success : theme.palette.text.disabled,
-                color: theme.palette.background.paper,
-                  fontWeight: 600,
                   py: 1.5,
-                  borderRadius: '12px',
                   fontSize: '18px',
                   mb: 3,
-                  '&:hover': {
-                    backgroundColor: isCodeComplete ? colors.successDark : theme.palette.text.disabled,
-                  },
                 }}
               >
                 CONNECT NOW
-              </Button>
+              </GlobalButton>
             </CardContent>
           </Card>
         </motion.div>
@@ -214,7 +209,7 @@ const VoucherLoginPage = () => {
               <GlobalButton
                 icon={<HomeIcon />}
                 variant="contained"
-                color="primary"
+                backgroundContext="white"
                 onClick={() => navigate('/home')}
                 sx={{
                   flex: 1,
@@ -227,7 +222,7 @@ const VoucherLoginPage = () => {
               <GlobalButton
                 icon={<ShoppingBagIcon />}
                 variant="contained"
-                color="primary"
+                backgroundContext="white"
                 onClick={() => navigate('/packages')}
                 sx={{
                   flex: 1,

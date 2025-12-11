@@ -206,16 +206,13 @@ const PurchasesPage = () => {
                   <GlobalButton
                     icon={<CartIcon />}
                     variant="contained"
+                    backgroundContext="white"
                     fullWidth
                     onClick={handleInitiatePayment}
                     disabled={!token && !verifiedPhone}
                     sx={{
                       py: 2,
                       fontSize: '18px',
-                      backgroundColor: colors.primary,
-                      '&:hover': {
-                        backgroundColor: colors.primaryDark,
-                      },
                     }}
                   >
                     {token ? 'Proceed to Payment' : 'Verify & Continue'}

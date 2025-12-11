@@ -118,17 +118,8 @@ const AnimatedStickyFooter = () => {
                     <GlobalButton
                       icon={<ShoppingBagIcon />}
                       variant="contained"
+                      backgroundContext="yellow"
                       onClick={() => navigate('/packages')}
-                      sx={{
-                        backgroundColor: '#000000',
-                        color: '#FFFFFF',
-                        '&:hover': {
-                          backgroundColor: '#1A1A1A',
-                          transform: 'scale(1.05)',
-                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
-                        },
-                        transition: 'all 0.2s ease',
-                      }}
                     >
                       View Packages
                     </GlobalButton>
@@ -136,17 +127,8 @@ const AnimatedStickyFooter = () => {
                     <GlobalButton
                       icon={<VoucherIcon />}
                       variant="contained"
+                      backgroundContext="yellow"
                       onClick={() => navigate('/voucher-login')}
-                      sx={{
-                        backgroundColor: '#000000',
-                        color: '#FFFFFF',
-                        '&:hover': {
-                          backgroundColor: '#1A1A1A',
-                          transform: 'scale(1.05)',
-                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
-                        },
-                        transition: 'all 0.2s ease',
-                      }}
                     >
                       Voucher Login
                     </GlobalButton>

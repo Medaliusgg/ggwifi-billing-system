@@ -14,7 +14,9 @@ import {
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { Login as LoginIcon, PersonAdd as PersonAddIcon } from '@mui/icons-material';
 import GlobalHeader from '../components/GlobalHeader';
+import GlobalButton from '../components/ui/GlobalButton';
 import { customerPortalAPI } from '../services/customerPortalApi';
 
 const LoginPage = () => {
@@ -166,48 +168,36 @@ const LoginPage = () => {
                   Use one-time PIN (OTP)
                 </Link>
 
-                <Button
-                  fullWidth
+                <GlobalButton
+                  icon={<LoginIcon />}
                   variant="contained"
+                  backgroundContext="white"
+                  fullWidth
                   type="submit"
                   size="large"
                   disabled={loading}
                   sx={{
-                backgroundColor: colors.warning,
-                color: theme.palette.background.paper,
-                fontWeight: 600,
-                py: 1.5,
-                borderRadius: '12px',
-                fontSize: '18px',
-                mb: 2,
-                '&:hover': {
-                  backgroundColor: colors.warningDark,
-                      boxShadow: '0 4px 12px rgba(244, 140, 6, 0.3)',
-                    },
+                    py: 1.5,
+                    fontSize: '18px',
+                    mb: 2,
                   }}
                 >
                   {loading ? 'Logging in...' : 'LOGIN'}
-                </Button>
+                </GlobalButton>
 
-                <Button
-                  fullWidth
+                <GlobalButton
+                  icon={<PersonAddIcon />}
                   variant="outlined"
+                  backgroundContext="white"
+                  fullWidth
                   onClick={() => navigate('/signup/phone')}
                   sx={{
-                borderColor: colors.info,
-                color: colors.info,
-                fontWeight: 600,
-                py: 1.5,
-                borderRadius: '12px',
-                fontSize: '18px',
-                '&:hover': {
-                  borderColor: theme.palette.info.dark,
-                  backgroundColor: theme.palette.info.light,
-                    },
+                    py: 1.5,
+                    fontSize: '18px',
                   }}
                 >
                   SIGN UP
-                </Button>
+                </GlobalButton>
               </form>
             </CardContent>
           </Card>
