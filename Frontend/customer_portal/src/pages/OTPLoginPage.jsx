@@ -74,6 +74,28 @@ const OTPLoginPage = () => {
     }
   };
 
+  // Normalize phone number before sending
+  const normalizePhone = (phoneNumber) => {
+    if (!phoneNumber) return '';
+    // Remove all non-digit characters except +
+    let normalized = phoneNumber.trim().replace(/[^\d+]/g, '');
+    
+    // If starts with +, keep it
+    if (normalized.startsWith('+')) {
+      return normalized;
+    }
+    // If starts with 255, add +
+    if (normalized.startsWith('255')) {
+      return '+' + normalized;
+    }
+    // If starts with 0, replace with +255
+    if (normalized.startsWith('0')) {
+      return '+255' + normalized.substring(1);
+    }
+    // Otherwise, add +255
+    return '+255' + normalized;
+  };
+
   const handleRequestOTP = async () => {
     if (!phone || phone.trim() === '') {
       setError('Please enter your phone number');
@@ -84,17 +106,23 @@ const OTPLoginPage = () => {
     setLoading(true);
 
     try {
-      const response = await customerPortalAPI.sendOTP(phone);
+      // Normalize phone number before sending
+      const normalizedPhone = normalizePhone(phone);
+      const response = await customerPortalAPI.sendOTP(normalizedPhone);
       
       if (response?.data?.status === 'success') {
         setOtpSent(true);
         setStep(2);
         setError('');
+        // Update phone state with normalized version
+        setPhone(normalizedPhone);
       } else {
         setError(response?.data?.message || 'Failed to send OTP. Please try again.');
       }
     } catch (err) {
-      setError(err?.response?.data?.message || 'Failed to send OTP. Please try again.');
+      const errorMessage = err?.response?.data?.message || 'Failed to send OTP. Please check your phone number and try again.';
+      setError(errorMessage);
+      console.error('OTP Request Error:', err);
     } finally {
       setLoading(false);
     }
@@ -112,7 +140,9 @@ const OTPLoginPage = () => {
     setLoading(true);
 
     try {
-      const response = await customerPortalAPI.verifyOTP(phone, otpCode);
+      // Use normalized phone number
+      const normalizedPhone = normalizePhone(phone);
+      const response = await customerPortalAPI.verifyOTP(normalizedPhone, otpCode);
       
       if (response?.data?.status === 'success' && response?.data?.token) {
         localStorage.setItem('token', response.data.token);
@@ -193,6 +223,7 @@ const OTPLoginPage = () => {
                     value={phone}
                     onChange={handlePhoneChange}
                     required
+                    autoComplete="tel"
                     sx={{ mb: 3 }}
                     placeholder="+255 742 844 024"
                     disabled={loading}
