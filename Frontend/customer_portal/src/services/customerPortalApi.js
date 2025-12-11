@@ -98,7 +98,7 @@ export const customerPortalAPI = {
 
   // Marketing Campaigns
   getCampaigns: async () => {
-    const response = await apiClient.get('/customer-portal/campaigns');
+    const response = await apiClient.get('/customer-portal/marketing/campaigns');
     return response;
   },
 

@@ -50,7 +50,10 @@ const LandingPage = () => {
         const res = await customerPortalAPI.getCampaigns();
         return res?.data?.campaigns || [];
       } catch (error) {
-        console.error('Error fetching campaigns:', error);
+        // Silently fail - campaigns are optional
+        if (error?.response?.status !== 404) {
+          console.error('Error fetching campaigns:', error);
+        }
         return [];
       }
     },
@@ -58,6 +61,8 @@ const LandingPage = () => {
       refetchInterval: 300000,
       retry: false,
       refetchOnWindowFocus: false,
+      // Don't show error for 404 - campaigns endpoint might not be available
+      onError: () => {},
     }
   );
 
