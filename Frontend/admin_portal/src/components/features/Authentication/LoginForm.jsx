@@ -20,12 +20,10 @@ import { motion } from 'framer-motion';
 const LoginForm = () => {
   const navigate = useNavigate();
   const { login, isLoading, error } = useAuthStore();
-  const [loginType, setLoginType] = useState('admin'); // 'admin' or 'staff'
   const [formData, setFormData] = useState({
     username: '',
     password: '',
     phoneNumber: '',
-    staffId: '',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [localError, setLocalError] = useState('');
@@ -39,19 +37,14 @@ const LoginForm = () => {
     e.preventDefault();
     setLocalError('');
 
-    // Validation
+    // Validation - Only Super Admin login required
     if (!formData.username || !formData.password) {
       setLocalError('Username and password are required');
       return;
     }
 
-    if (loginType === 'admin' && !formData.phoneNumber) {
-      setLocalError('Phone number is required for admin login');
-      return;
-    }
-
-    if (loginType === 'staff' && !formData.staffId) {
-      setLocalError('Staff ID is required for staff login');
+    if (!formData.phoneNumber) {
+      setLocalError('Phone number is required for super admin login');
       return;
     }
 
@@ -59,13 +52,19 @@ const LoginForm = () => {
       const credentials = {
         username: formData.username,
         password: formData.password,
-        loginType,
-        ...(loginType === 'admin' ? { phoneNumber: formData.phoneNumber } : { staffId: formData.staffId }),
+        phoneNumber: formData.phoneNumber,
+        loginType: 'admin', // Always use admin login endpoint
       };
 
       const result = await login(credentials);
       
       if (result?.success) {
+        // Verify user is SUPER_ADMIN
+        const user = result.user || result.data?.user;
+        if (user && user.role !== 'SUPER_ADMIN') {
+          setLocalError('Access denied. Only Super Admin can access this portal.');
+          return;
+        }
         navigate('/dashboard');
       } else {
         setLocalError(result?.error || 'Login failed. Please check your credentials.');
