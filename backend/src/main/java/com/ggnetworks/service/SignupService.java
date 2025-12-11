@@ -58,8 +58,9 @@ public class SignupService {
     /**
      * Request OTP for signup
      * Checks if phone number already exists
+     * Uses REQUIRES_NEW propagation to isolate transaction and prevent rollback-only errors
      */
-    @Transactional(noRollbackFor = {org.springframework.dao.DataIntegrityViolationException.class})
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
     public Map<String, Object> requestSignupOTP(String phoneNumber, String ipAddress, String userAgent) {
         Map<String, Object> response = new HashMap<>();
 
@@ -93,16 +94,26 @@ public class SignupService {
             otp.setUserAgent(userAgent);
             
             // Save OTP - retry if there's a constraint violation (e.g., duplicate OTP code)
-            try {
-                customerOTPRepository.save(otp);
-            } catch (org.springframework.dao.DataIntegrityViolationException e) {
-                // Handle database constraint violations - retry with new OTP
-                System.err.println("⚠️ Database constraint violation while saving OTP, retrying with new code: " + e.getMessage());
-                otpCode = generateOTP();
-                otpHash = passwordEncoder.encode(otpCode);
-                otp.setOtpCode(otpCode);
-                otp.setOtpHash(otpHash);
-                customerOTPRepository.save(otp);
+            int retryCount = 0;
+            int maxRetries = 3;
+            while (retryCount < maxRetries) {
+                try {
+                    customerOTPRepository.save(otp);
+                    break; // Success, exit retry loop
+                } catch (org.springframework.dao.DataIntegrityViolationException e) {
+                    retryCount++;
+                    if (retryCount >= maxRetries) {
+                        // Max retries reached, throw exception
+                        System.err.println("❌ Failed to save OTP after " + maxRetries + " retries: " + e.getMessage());
+                        throw e;
+                    }
+                    // Generate new OTP and retry
+                    System.err.println("⚠️ Database constraint violation while saving OTP (attempt " + retryCount + "), retrying with new code...");
+                    otpCode = generateOTP();
+                    otpHash = passwordEncoder.encode(otpCode);
+                    otp.setOtpCode(otpCode);
+                    otp.setOtpHash(otpHash);
+                }
             }
 
             // Send SMS (handle failures gracefully - don't rollback transaction)
@@ -127,13 +138,15 @@ public class SignupService {
             e.printStackTrace();
             response.put("status", "error");
             response.put("message", "Unable to process request. Please try again.");
+            // Don't rethrow - return error response (transaction will commit)
             return response;
         } catch (Exception e) {
             System.err.println("❌ Error requesting signup OTP: " + e.getMessage());
             e.printStackTrace();
             response.put("status", "error");
             response.put("message", "Failed to send OTP. Please try again.");
-            return response;
+            // Re-throw to trigger transaction rollback for unexpected errors
+            throw new RuntimeException("Failed to request signup OTP: " + e.getMessage(), e);
         }
     }
 
