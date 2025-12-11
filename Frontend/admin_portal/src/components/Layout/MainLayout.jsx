@@ -54,7 +54,6 @@ import {
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import useAuthStore from '/src/store/authStore.js';
-import ggwifiTheme from '/src/theme/ggwifiTheme.js';
 
 // Premium Design System Colors
 const palette = {
