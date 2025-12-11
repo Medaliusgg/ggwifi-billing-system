@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Container, Typography, Button } from '@mui/material';
-import { motion, AnimatePresence, useScroll, useMotionValueEvent } from 'framer-motion';
+import { Box, Container, Typography } from '@mui/material';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { VpnKey as VoucherIcon, ShoppingBag as ShoppingBagIcon } from '@mui/icons-material';
 import GlobalButton from './ui/GlobalButton';
@@ -9,29 +9,42 @@ const AnimatedStickyFooter = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const isHomePage = location.pathname === '/' || location.pathname === '/home';
-  const { scrollY } = useScroll();
-  const [scrollDirection, setScrollDirection] = useState('down');
-  const [lastScrollY, setLastScrollY] = useState(0);
   const [showVoucherFooter, setShowVoucherFooter] = useState(false);
 
-  useMotionValueEvent(scrollY, 'change', (latest) => {
-    const current = latest;
-    const previous = lastScrollY;
-    
-    if (current > previous && current > 100) {
-      // Scrolling down
-      setScrollDirection('down');
-      setShowVoucherFooter(false);
-    } else if (current < previous) {
-      // Scrolling up
-      setScrollDirection('up');
-      if (current > 200) {
-        setShowVoucherFooter(true);
+  // Stable scroll detection - only show when near bottom of page
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.scrollY || document.documentElement.scrollTop;
+      const windowHeight = window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight;
+      const distanceFromBottom = documentHeight - (scrollTop + windowHeight);
+      
+      // Show footer only when:
+      // 1. User has scrolled down at least 300px (not at top)
+      // 2. User is within 300px of the bottom of the page
+      const shouldShow = scrollTop > 300 && distanceFromBottom < 300;
+      
+      // Only update state if it changed to prevent unnecessary re-renders
+      setShowVoucherFooter(prev => prev !== shouldShow ? shouldShow : prev);
+    };
+
+    // Throttle scroll events using requestAnimationFrame to prevent excessive updates
+    let ticking = false;
+    const throttledScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          handleScroll();
+          ticking = false;
+        });
+        ticking = true;
       }
-    }
+    };
+
+    window.addEventListener('scroll', throttledScroll, { passive: true });
+    handleScroll(); // Initial check
     
-    setLastScrollY(current);
-  });
+    return () => window.removeEventListener('scroll', throttledScroll);
+  }, []);
 
   return (
     <>
@@ -65,17 +78,19 @@ const AnimatedStickyFooter = () => {
         </Container>
       </Box>
 
-      {/* Animated Sticky Footer (on scroll up) */}
-      <AnimatePresence>
+      {/* Animated Sticky Footer (on scroll up or near bottom) */}
+      <AnimatePresence mode="wait">
         {showVoucherFooter && (
           <motion.div
+            key="voucher-footer"
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
             transition={{
               type: 'spring',
-              stiffness: 300,
-              damping: 30,
+              stiffness: 400,
+              damping: 40,
+              mass: 0.8,
             }}
             style={{
               position: 'fixed',
