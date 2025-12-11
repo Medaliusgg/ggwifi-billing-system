@@ -130,7 +130,7 @@ const RewardsPage = () => {
                   <Typography variant="h3" sx={{ fontWeight: 700, color: colors.info, mb: 0.5 }}>
                     {points.toLocaleString()}
                   </Typography>
-                  <Typography variant="body2" sx={{ color: '#666666' }}>
+                  <Typography variant="body2" sx={{ color: colors.textSecondary }}>
                     GG Points
                   </Typography>
                 </Box>
@@ -149,7 +149,7 @@ const RewardsPage = () => {
 
               <Box sx={{ mt: 3 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                  <Typography variant="body2" sx={{ color: '#666666' }}>
+                  <Typography variant="body2" sx={{ color: colors.textSecondary }}>
                     Progress to {nextTier}
                   </Typography>
                   <Typography variant="body2" sx={{ fontWeight: 600 }}>
@@ -257,11 +257,11 @@ const RewardsPage = () => {
                           fullWidth
                           variant="contained"
                           sx={{
-                            backgroundColor: '#F48C06',
-                            color: '#FFFFFF',
+                            backgroundColor: colors.warning,
+                            color: theme.palette.background.paper,
                             fontWeight: 600,
                             '&:hover': {
-                              backgroundColor: '#D97706',
+                              backgroundColor: colors.warningDark,
                             },
                           }}
                         >
@@ -314,7 +314,7 @@ const RewardsPage = () => {
                           mb: 2,
                         }}
                       />
-                      <Typography variant="body2" sx={{ color: '#666666' }}>
+                      <Typography variant="body2" sx={{ color: colors.textSecondary }}>
                         {order.createdAt
                           ? new Date(order.createdAt).toLocaleDateString()
                           : 'N/A'}

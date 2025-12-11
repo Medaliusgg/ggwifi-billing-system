@@ -41,22 +41,58 @@ apiClient.interceptors.response.use(
 export const customerPortalAPI = {
   // Authentication
   login: async (credentials) => {
-    const response = await apiClient.post('/customer-auth/login', credentials);
+    // Backend expects phoneNumber and pin (not phone and password)
+    const response = await apiClient.post('/customer-auth/login', {
+      phoneNumber: credentials.phone || credentials.phoneNumber,
+      pin: credentials.pin || credentials.password,
+    });
     return response;
   },
 
-  sendOTP: async (data) => {
-    const response = await apiClient.post('/customer-auth/request-otp', data);
+  sendOTP: async (phoneNumber) => {
+    // Backend expects phoneNumber in request body
+    const response = await apiClient.post('/customer-auth/request-otp', {
+      phoneNumber: phoneNumber,
+    });
     return response;
   },
 
-  verifyOTP: async (data) => {
-    const response = await apiClient.post('/customer-auth/verify-otp', data);
+  verifyOTP: async (phoneNumber, otpCode) => {
+    // Backend expects phoneNumber and otpCode
+    const response = await apiClient.post('/customer-auth/verify-otp', {
+      phoneNumber: phoneNumber,
+      otpCode: otpCode,
+    });
     return response;
   },
 
-  signup: async (userData) => {
-    const response = await apiClient.post('/customer-auth/signup', userData);
+  // Signup flow (different endpoints)
+  signupRequestOTP: async (phoneNumber) => {
+    const response = await apiClient.post('/auth/signup/request-otp', {
+      phoneNumber: phoneNumber,
+    });
+    return response;
+  },
+
+  signupVerifyOTP: async (phoneNumber, otpCode) => {
+    const response = await apiClient.post('/auth/signup/verify-otp', {
+      phoneNumber: phoneNumber,
+      otpCode: otpCode,
+    });
+    return response;
+  },
+
+  signupCreate: async (userData) => {
+    // Backend expects: phoneNumber, fullName, email, pin, confirmPin, referralCode, signupToken
+    const response = await apiClient.post('/auth/signup/create', {
+      phoneNumber: userData.phone || userData.phoneNumber,
+      fullName: userData.fullName || `${userData.firstName} ${userData.lastName}`.trim(),
+      email: userData.email || null,
+      pin: userData.pin || userData.password,
+      confirmPin: userData.confirmPin || userData.password,
+      referralCode: userData.referralCode || null,
+      signupToken: userData.signupToken || null,
+    });
     return response;
   },
 

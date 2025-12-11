@@ -50,15 +50,18 @@ const LoginPage = () => {
     setLoading(true);
 
     try {
+      // Backend expects phoneNumber and pin
       const response = await customerPortalAPI.login({
         phone: formData.phone,
-        password: formData.password,
+        password: formData.password, // Will be mapped to 'pin' in API service
       });
 
-      if (response?.data?.token) {
+      if (response?.data?.status === 'success' && response?.data?.token) {
         localStorage.setItem('token', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
+        localStorage.setItem('user', JSON.stringify(response.data.user || {}));
         navigate('/dashboard');
+      } else {
+        setError(response?.data?.message || 'Login failed. Please check your credentials.');
       }
     } catch (err) {
       setError(err?.response?.data?.message || 'Login failed. Please try again.');
@@ -128,13 +131,15 @@ const LoginPage = () => {
 
                 <TextField
                   fullWidth
-                  label="Password"
+                  label="PIN (4 digits)"
                   name="password"
                   type="password"
                   value={formData.password}
                   onChange={handleChange}
                   required
+                  inputProps={{ maxLength: 4, pattern: '[0-9]*' }}
                   sx={{ mb: 2 }}
+                  helperText="Enter your 4-digit PIN"
                 />
 
                 <Link

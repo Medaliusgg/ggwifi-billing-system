@@ -63,14 +63,17 @@ const SignupVerifyPage = () => {
     setLoading(true);
 
     try {
-      const response = await customerPortalAPI.verifyOTP({
-        phone,
-        otp: otpCode,
-      });
+      const response = await customerPortalAPI.signupVerifyOTP(phone, otpCode);
 
-      if (response?.data?.verified) {
+      if (response?.data?.status === 'success') {
         localStorage.setItem('signup_verified', 'true');
+        // Store signup token if provided
+        if (response?.data?.signupToken) {
+          localStorage.setItem('signup_token', response.data.signupToken);
+        }
         navigate('/signup/details');
+      } else {
+        setError(response?.data?.message || 'Invalid OTP. Please try again.');
       }
     } catch (err) {
       setError(err?.response?.data?.message || 'Invalid OTP. Please try again.');

@@ -52,32 +52,38 @@ const SignupDetailsPage = () => {
     setError('');
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      setError('PINs do not match');
       return;
     }
 
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters');
+    // PIN must be exactly 4 digits
+    if (formData.password.length !== 4 || !/^\d{4}$/.test(formData.password)) {
+      setError('PIN must be exactly 4 digits');
       return;
     }
 
     setLoading(true);
 
     try {
-      const response = await customerPortalAPI.signup({
+      const signupToken = localStorage.getItem('signup_token');
+      const fullName = `${formData.firstName} ${formData.lastName}`.trim();
+      
+      const response = await customerPortalAPI.signupCreate({
         phone,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email || undefined,
-        password: formData.password,
+        fullName: fullName,
+        email: formData.email || null,
+        pin: formData.password,
+        confirmPin: formData.confirmPassword,
+        signupToken: signupToken,
       });
 
-      if (response?.data?.token) {
+      if (response?.data?.status === 'success' && response?.data?.token) {
         localStorage.setItem('token', response.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
+        localStorage.setItem('user', JSON.stringify(response.data.user || {}));
         // Clear signup flow data
         localStorage.removeItem('signup_phone');
         localStorage.removeItem('signup_verified');
+        localStorage.removeItem('signup_token');
         
         // Show welcome message with rewards
         navigate('/dashboard', {
@@ -89,9 +95,11 @@ const SignupDetailsPage = () => {
             },
           },
         });
+      } else {
+        setError(response?.data?.message || 'Failed to create account. Please try again.');
       }
     } catch (err) {
-      setError(err?.response?.data?.message || 'Registration failed. Please try again.');
+      setError(err?.response?.data?.message || 'Failed to create account. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -193,12 +201,13 @@ const SignupDetailsPage = () => {
 
                 <TextField
                   fullWidth
-                  label="Confirm Password"
+                  label="Confirm PIN"
                   name="confirmPassword"
                   type="password"
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   required
+                  inputProps={{ maxLength: 4, pattern: '[0-9]*' }}
                   sx={{ mb: 3 }}
                 />
 

@@ -10,6 +10,7 @@ import { ggwifiOfficialTheme } from './theme/ggwifiOfficialTheme';
 import LandingPage from './pages/LandingPage';
 import VoucherLoginPage from './pages/VoucherLoginPage';
 import LoginPage from './pages/LoginPage';
+import OTPLoginPage from './pages/OTPLoginPage';
 import SignupPhonePage from './pages/SignupPhonePage';
 import SignupVerifyPage from './pages/SignupVerifyPage';
 import SignupDetailsPage from './pages/SignupDetailsPage';
@@ -49,7 +50,7 @@ function App() {
             <Route path="/index.html" element={<Navigate to="/home" replace />} />
             <Route path="/voucher-login" element={<VoucherLoginPage />} />
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/otp-login" element={<LoginPage />} />
+            <Route path="/otp-login" element={<OTPLoginPage />} />
             
             {/* Signup Flow */}
             <Route path="/signup/phone" element={<SignupPhonePage />} />

@@ -67,9 +67,9 @@ const PlansPage = () => {
     <Card
       sx={{
         background: isOffer
-          ? 'linear-gradient(135deg, #FFF3E6 0%, #FFFFFF 100%)'
-          : 'linear-gradient(135deg, #FFFFFF 0%, #F5F9FC 100%)',
-        border: isOffer ? '2px solid #F48C06' : '1px solid #EEEEEE',
+          ? `linear-gradient(135deg, ${theme.palette.warning.light} 0%, ${theme.palette.background.paper} 100%)`
+          : `linear-gradient(135deg, ${theme.palette.background.paper} 0%, ${colors.background} 100%)`,
+        border: isOffer ? `2px solid ${cardColors.warning}` : `1px solid ${theme.palette.divider}`,
         borderRadius: '16px',
         position: 'relative',
         overflow: 'visible',

@@ -43,10 +43,16 @@ const SignupPhonePage = () => {
     setLoading(true);
 
     try {
-      const response = await customerPortalAPI.sendOTP({ phone });
-      if (response?.data?.success) {
+      const response = await customerPortalAPI.signupRequestOTP(phone);
+      if (response?.data?.status === 'success') {
         localStorage.setItem('signup_phone', phone);
+        // Store signup token if provided
+        if (response?.data?.signupToken) {
+          localStorage.setItem('signup_token', response.data.signupToken);
+        }
         navigate('/signup/verify');
+      } else {
+        setError(response?.data?.message || 'Failed to send OTP. Please try again.');
       }
     } catch (err) {
       setError(err?.response?.data?.message || 'Failed to send OTP. Please try again.');
