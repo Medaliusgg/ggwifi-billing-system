@@ -1,0 +1,297 @@
+import React from 'react';
+import {
+  Box,
+  Container,
+  Typography,
+  Button,
+  Card,
+  CardContent,
+  Grid,
+  Avatar,
+  Chip,
+  useTheme,
+  useMediaQuery,
+} from '@mui/material';
+import {
+  Security as SecurityIcon,
+  Speed as SpeedIcon,
+  CardGiftcard as GiftIcon,
+  Payment as PaymentIcon,
+  LocationOn as LocationIcon,
+  Star as StarIcon,
+  ArrowForward as ArrowForwardIcon,
+} from '@mui/icons-material';
+import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import { useQuery } from 'react-query';
+import GlobalHeader from '../components/GlobalHeader';
+import MarketingCarousel from '../components/MarketingCarousel';
+import { customerPortalAPI } from '../services/customerPortalApi';
+
+const LandingPage = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const navigate = useNavigate();
+
+  // Fetch marketing campaigns
+  const { data: campaigns = [] } = useQuery(
+    ['marketing-campaigns'],
+    async () => {
+      const res = await customerPortalAPI.getCampaigns();
+      return res?.data?.campaigns || [];
+    },
+    { refetchInterval: 300000 }
+  );
+
+  const trustFeatures = [
+    { icon: <SecurityIcon />, title: 'Secure Network', desc: 'Encrypted connection' },
+    { icon: <SpeedIcon />, title: 'Fast Speeds', desc: 'High-speed internet' },
+    { icon: <GiftIcon />, title: 'Reward Points', desc: 'Loyalty system' },
+    { icon: <PaymentIcon />, title: 'Safe Payment', desc: 'ZenoPay secure' },
+    { icon: <LocationIcon />, title: 'Reliable Coverage', desc: 'Wide network' },
+  ];
+
+  const testimonials = [
+    { name: 'Ahmed M.', comment: 'Fast and reliable!', rating: 5 },
+    { name: 'Fatuma K.', comment: 'Great customer service', rating: 5 },
+    { name: 'John D.', comment: 'Best WiFi in town', rating: 5 },
+  ];
+
+  return (
+    <Box sx={{ minHeight: '100vh', backgroundColor: '#F5F9FC' }}>
+      <GlobalHeader isAuthenticated={false} />
+
+      <Container maxWidth="lg" sx={{ py: { xs: 3, md: 5 } }}>
+        {/* Welcome Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <Box sx={{ textAlign: 'center', mb: 4 }}>
+            <Typography
+              variant="h3"
+              sx={{
+                fontWeight: 700,
+                color: '#0A0A0A',
+                mb: 2,
+                fontSize: { xs: '28px', md: '40px' },
+              }}
+            >
+              Welcome to GG Wi-Fi
+            </Typography>
+            <Typography
+              variant="h6"
+              sx={{
+                color: '#666666',
+                mb: 1,
+                fontSize: { xs: '16px', md: '20px' },
+              }}
+            >
+              Fast. Reliable. Community-driven internet.
+            </Typography>
+            <Typography
+              variant="body1"
+              sx={{
+                color: '#48C7F2',
+                fontWeight: 600,
+                fontSize: { xs: '14px', md: '18px' },
+              }}
+            >
+              "The signal that cares."
+            </Typography>
+          </Box>
+        </motion.div>
+
+        {/* Marketing Carousel */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          <Box sx={{ mb: 5 }}>
+            <MarketingCarousel campaigns={campaigns} />
+          </Box>
+        </motion.div>
+
+        {/* Trust Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+        >
+          <Typography
+            variant="h5"
+            sx={{
+              fontWeight: 700,
+              textAlign: 'center',
+              mb: 3,
+              color: '#0A0A0A',
+            }}
+          >
+            Why GG Wi-Fi?
+          </Typography>
+          <Grid container spacing={2} sx={{ mb: 5 }}>
+            {trustFeatures.map((feature, index) => (
+              <Grid item xs={6} sm={4} md={2.4} key={index}>
+                <Card
+                  sx={{
+                    textAlign: 'center',
+                    background: 'linear-gradient(135deg, #FFFFFF 0%, #F5F9FC 100%)',
+                    border: '1px solid #EEEEEE',
+                    borderRadius: '12px',
+                    p: 2,
+                    height: '100%',
+                    '&:hover': {
+                      boxShadow: '0 4px 12px rgba(72, 199, 242, 0.2)',
+                    },
+                  }}
+                >
+                  <Avatar
+                    sx={{
+                      bgcolor: '#48C7F2',
+                      color: '#FFFFFF',
+                      width: 48,
+                      height: 48,
+                      mx: 'auto',
+                      mb: 1,
+                    }}
+                  >
+                    {feature.icon}
+                  </Avatar>
+                  <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+                    {feature.title}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: '#666666' }}>
+                    {feature.desc}
+                  </Typography>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        </motion.div>
+
+        {/* Testimonials */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+        >
+          <Typography
+            variant="h5"
+            sx={{
+              fontWeight: 700,
+              textAlign: 'center',
+              mb: 3,
+              color: '#0A0A0A',
+            }}
+          >
+            What Our Customers Say
+          </Typography>
+          <Box
+            sx={{
+              display: 'flex',
+              gap: 2,
+              overflowX: 'auto',
+              pb: 2,
+              mb: 5,
+              '&::-webkit-scrollbar': { display: 'none' },
+            }}
+          >
+            {testimonials.map((testimonial, index) => (
+              <Card
+                key={index}
+                sx={{
+                  minWidth: 280,
+                  background: 'linear-gradient(135deg, #FFFFFF 0%, #F5F9FC 100%)',
+                  border: '1px solid #EEEEEE',
+                  borderRadius: '12px',
+                  p: 2,
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                  <Avatar sx={{ bgcolor: '#48C7F2', mr: 1 }}>
+                    {testimonial.name[0]}
+                  </Avatar>
+                  <Box>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                      {testimonial.name}
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 0.5 }}>
+                      {[...Array(testimonial.rating)].map((_, i) => (
+                        <StarIcon key={i} sx={{ fontSize: 16, color: '#FFD700' }} />
+                      ))}
+                    </Box>
+                  </Box>
+                </Box>
+                <Typography variant="body2" sx={{ color: '#666666' }}>
+                  "{testimonial.comment}"
+                </Typography>
+              </Card>
+            ))}
+          </Box>
+        </motion.div>
+
+        {/* Action Buttons */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.5 }}
+        >
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: { xs: 'column', md: 'row' },
+              gap: 2,
+              justifyContent: 'center',
+              mb: 5,
+            }}
+          >
+            <Button
+              variant="contained"
+              size="large"
+              onClick={() => navigate('/plans')}
+              sx={{
+                backgroundColor: '#007BFF', // Blue
+                color: '#FFFFFF',
+                fontWeight: 600,
+                px: 4,
+                py: 1.5,
+                borderRadius: '12px',
+                fontSize: { xs: '16px', md: '18px' },
+                '&:hover': {
+                  backgroundColor: '#0056B3',
+                  boxShadow: '0 4px 12px rgba(0, 123, 255, 0.3)',
+                },
+              }}
+            >
+              BUY PACKAGE
+            </Button>
+            <Button
+              variant="contained"
+              size="large"
+              onClick={() => navigate('/voucher-login')}
+              sx={{
+                backgroundColor: '#F48C06', // Orange
+                color: '#FFFFFF',
+                fontWeight: 600,
+                px: 4,
+                py: 1.5,
+                borderRadius: '12px',
+                fontSize: { xs: '16px', md: '18px' },
+                '&:hover': {
+                  backgroundColor: '#D97706',
+                  boxShadow: '0 4px 12px rgba(244, 140, 6, 0.3)',
+                },
+              }}
+            >
+              ENTER VOUCHER
+            </Button>
+          </Box>
+        </motion.div>
+      </Container>
+    </Box>
+  );
+};
+
+export default LandingPage;

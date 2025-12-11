@@ -1,58 +1,145 @@
 import axios from 'axios';
 
-// Production API URL - Update VITE_API_URL in .env for different environments
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api.ggwifi.co.tz/api/v1';
 
-// Create axios instance with default config
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 30000,
+  timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: false,
 });
 
-// Customer Portal API - Matching Backend Endpoints EXACTLY
+// Request interceptor to add auth token
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor for error handling
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('user');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
 export const customerPortalAPI = {
-  // Test endpoint
-  test: () => apiClient.get('/customer-portal/test'),
+  // Authentication
+  login: async (credentials) => {
+    const response = await apiClient.post('/customer-auth/login', credentials);
+    return response;
+  },
 
-  // Package endpoints
-  getPackages: () => apiClient.get('/customer-portal/packages'),
+  sendOTP: async (data) => {
+    const response = await apiClient.post('/customer-auth/request-otp', data);
+    return response;
+  },
 
-  // Payment endpoints
-  processPayment: (paymentData) => apiClient.post('/customer-portal/payment', paymentData),
-  
-  // Webhook endpoints (for payment gateway callbacks)
-  handleZenoPayWebhook: (webhookData) => apiClient.post('/customer-portal/webhook/zenopay', webhookData),
+  verifyOTP: async (data) => {
+    const response = await apiClient.post('/customer-auth/verify-otp', data);
+    return response;
+  },
 
-  // Customer profile endpoints
-  getCustomerProfile: (phoneNumber) => apiClient.get(`/customer-portal/customer/${phoneNumber}/profile`),
-  getCustomerDashboard: (phoneNumber) => apiClient.get(`/customer-portal/customer/${phoneNumber}/dashboard`),
-  getCustomerUsage: (phoneNumber) => apiClient.get(`/customer-portal/customer/${phoneNumber}/usage`),
-  getCustomerPayments: (phoneNumber) => apiClient.get(`/customer-portal/customer/${phoneNumber}/payments`),
+  signup: async (userData) => {
+    const response = await apiClient.post('/customer-auth/signup', userData);
+    return response;
+  },
 
-  // Voucher endpoints
-  validateVoucher: (voucherCode) => apiClient.get(`/customer-portal/voucher/${voucherCode}/validate`),
-  activateVoucher: (voucherCode, activationData) => apiClient.post(`/customer-portal/voucher/${voucherCode}/activate`, activationData),
-  
-  // Session endpoints
-  getSessionStatus: (voucherCode) => apiClient.get(`/customer-portal/voucher/${voucherCode}/session/status`),
-  recordHeartbeat: (voucherCode, heartbeatData) => apiClient.post(`/customer-portal/voucher/${voucherCode}/session/heartbeat`, heartbeatData),
-  reconnectSession: (voucherCode, reconnectData) => apiClient.post(`/customer-portal/voucher/${voucherCode}/session/reconnect`, reconnectData),
-  reconnectWithToken: (reconnectData) => apiClient.post(`/customer-portal/session/reconnect-token`, reconnectData),
-  
-  // Marketing endpoints
-  getCampaigns: () => apiClient.get('/customer-portal/marketing/campaigns'),
-  trackCampaignImpression: (campaignId) => apiClient.post(`/customer-portal/marketing/campaigns/${campaignId}/impression`),
-  
-  // Referral endpoints
-  getReferralCode: () => apiClient.get('/customer-portal/referral/code'),
-  getReferralStats: () => apiClient.get('/customer-portal/referral/stats'),
-  
-  // Phone check endpoint
-  checkPhoneExists: (phoneNumber) => apiClient.get(`/customer-portal/check-phone/${encodeURIComponent(phoneNumber)}`),
+  // Marketing Campaigns
+  getCampaigns: async () => {
+    const response = await apiClient.get('/customer-portal/campaigns');
+    return response;
+  },
+
+  // Packages
+  getPackages: async () => {
+    const response = await apiClient.get('/customer/packages');
+    return response;
+  },
+
+  getPackageById: async (id) => {
+    const response = await apiClient.get(`/customer/packages/${id}`);
+    return response;
+  },
+
+  // Sessions
+  getActiveSession: async () => {
+    const response = await apiClient.get('/customer/sessions/active');
+    return response;
+  },
+
+  getActiveSessions: async () => {
+    const response = await apiClient.get('/customer/sessions/active');
+    return response;
+  },
+
+  getSessionHistory: async () => {
+    const response = await apiClient.get('/customer/sessions/history');
+    return response;
+  },
+
+  disconnectSession: async (sessionId) => {
+    const response = await apiClient.post(`/customer/sessions/${sessionId}/disconnect`);
+    return response;
+  },
+
+  // Purchases
+  getPurchaseHistory: async () => {
+    const response = await apiClient.get('/customer/purchases');
+    return response;
+  },
+
+  getPurchaseById: async (id) => {
+    const response = await apiClient.get(`/customer/purchases/${id}`);
+    return response;
+  },
+
+  // Loyalty & Rewards
+  getLoyaltyAccount: async () => {
+    const response = await apiClient.get('/customer/loyalty/account');
+    return response;
+  },
+
+  getLoyaltyProducts: async () => {
+    const response = await apiClient.get('/customer/loyalty/products');
+    return response;
+  },
+
+  getLoyaltyProductById: async (id) => {
+    const response = await apiClient.get(`/customer/loyalty/products/${id}`);
+    return response;
+  },
+
+  redeemProduct: async (productId, data) => {
+    const response = await apiClient.post(`/customer/loyalty/products/${productId}/redeem`, data);
+    return response;
+  },
+
+  getRewardOrders: async () => {
+    const response = await apiClient.get('/customer/loyalty/orders');
+    return response;
+  },
+
+  // Voucher
+  voucherLogin: async (voucherCode) => {
+    const response = await apiClient.post('/customer-portal/voucher-login', { voucherCode });
+    return response;
+  },
 };
 
 export default customerPortalAPI;

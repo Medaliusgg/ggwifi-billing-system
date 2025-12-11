@@ -1,0 +1,228 @@
+import React, { useState } from 'react';
+import {
+  Box,
+  Container,
+  Typography,
+  TextField,
+  Button,
+  Card,
+  CardContent,
+  useTheme,
+  useMediaQuery,
+  Alert,
+} from '@mui/material';
+import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import GlobalHeader from '../components/GlobalHeader';
+import { customerPortalAPI } from '../services/customerPortalApi';
+
+const SignupDetailsPage = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const phone = localStorage.getItem('signup_phone');
+  const verified = localStorage.getItem('signup_verified');
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+    setError('');
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await customerPortalAPI.signup({
+        phone,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email || undefined,
+        password: formData.password,
+      });
+
+      if (response?.data?.token) {
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        // Clear signup flow data
+        localStorage.removeItem('signup_phone');
+        localStorage.removeItem('signup_verified');
+        
+        // Show welcome message with rewards
+        navigate('/dashboard', {
+          state: {
+            welcome: true,
+            rewards: {
+              voucher: 'Free 20-minute GG Offer voucher',
+              points: 50,
+            },
+          },
+        });
+      }
+    } catch (err) {
+      setError(err?.response?.data?.message || 'Registration failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!phone || !verified) {
+    navigate('/signup/phone');
+    return null;
+  }
+
+  return (
+    <Box sx={{ minHeight: '100vh', backgroundColor: '#F5F9FC' }}>
+      <GlobalHeader isAuthenticated={false} />
+
+      <Container maxWidth="sm" sx={{ py: { xs: 4, md: 6 } }}>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <Card
+            sx={{
+              background: 'linear-gradient(135deg, #FFFFFF 0%, #F5F9FC 100%)',
+              border: '1px solid #EEEEEE',
+              borderRadius: '16px',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+            }}
+          >
+            <CardContent sx={{ p: { xs: 3, md: 4 } }}>
+              <Typography
+                variant="h4"
+                sx={{
+                  fontWeight: 700,
+                  textAlign: 'center',
+                  mb: 1,
+                  color: '#0A0A0A',
+                }}
+              >
+                Complete Registration
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{
+                  textAlign: 'center',
+                  mb: 4,
+                  color: '#666666',
+                }}
+              >
+                Step 3 of 3: Fill in your details
+              </Typography>
+
+              {error && (
+                <Alert severity="error" sx={{ mb: 3 }}>
+                  {error}
+                </Alert>
+              )}
+
+              <form onSubmit={handleSubmit}>
+                <TextField
+                  fullWidth
+                  label="Full Name"
+                  name="firstName"
+                  value={formData.firstName}
+                  onChange={handleChange}
+                  required
+                  sx={{ mb: 2 }}
+                />
+
+                <TextField
+                  fullWidth
+                  label="Last Name"
+                  name="lastName"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  required
+                  sx={{ mb: 2 }}
+                />
+
+                <TextField
+                  fullWidth
+                  label="Email (Optional)"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  sx={{ mb: 2 }}
+                />
+
+                <TextField
+                  fullWidth
+                  label="Password"
+                  name="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                  sx={{ mb: 2 }}
+                />
+
+                <TextField
+                  fullWidth
+                  label="Confirm Password"
+                  name="confirmPassword"
+                  type="password"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  required
+                  sx={{ mb: 3 }}
+                />
+
+                <Button
+                  fullWidth
+                  variant="contained"
+                  type="submit"
+                  size="large"
+                  disabled={loading}
+                  sx={{
+                    backgroundColor: '#F48C06', // Orange
+                    color: '#FFFFFF',
+                    fontWeight: 600,
+                    py: 1.5,
+                    borderRadius: '12px',
+                    fontSize: '18px',
+                    '&:hover': {
+                      backgroundColor: '#D97706',
+                      boxShadow: '0 4px 12px rgba(244, 140, 6, 0.3)',
+                    },
+                  }}
+                >
+                  {loading ? 'Creating Account...' : 'CREATE ACCOUNT'}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </Container>
+    </Box>
+  );
+};
+
+export default SignupDetailsPage;
