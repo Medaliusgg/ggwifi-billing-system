@@ -28,21 +28,35 @@ public class SignupController {
             @RequestBody Map<String, String> request,
             HttpServletRequest httpRequest) {
 
-        String phoneNumber = request.get("phoneNumber");
-        if (phoneNumber == null || phoneNumber.trim().isEmpty()) {
-            return ResponseEntity.badRequest()
-                .body(Map.of("status", "error", "message", "Phone number is required"));
-        }
+        try {
+            String phoneNumber = request.get("phoneNumber");
+            if (phoneNumber == null || phoneNumber.trim().isEmpty()) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("status", "error", "message", "Phone number is required"));
+            }
 
-        String ipAddress = httpRequest.getRemoteAddr();
-        String userAgent = httpRequest.getHeader("User-Agent");
+            String ipAddress = httpRequest.getRemoteAddr();
+            String userAgent = httpRequest.getHeader("User-Agent");
 
-        Map<String, Object> response = signupService.requestSignupOTP(phoneNumber, ipAddress, userAgent);
+            Map<String, Object> response = signupService.requestSignupOTP(phoneNumber, ipAddress, userAgent);
 
-        if ("success".equals(response.get("status"))) {
-            return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.badRequest().body(response);
+            if ("success".equals(response.get("status"))) {
+                return ResponseEntity.ok(response);
+            } else {
+                return ResponseEntity.badRequest().body(response);
+            }
+        } catch (Exception e) {
+            // Log the exception for debugging
+            System.err.println("❌ SignupController Error in requestSignupOTP: " + e.getMessage());
+            e.printStackTrace();
+            
+            // Return 500 with error message
+            return ResponseEntity.status(500)
+                .body(Map.of(
+                    "status", "error",
+                    "message", "Internal server error. Please try again later or contact support.",
+                    "error", e.getMessage()
+                ));
         }
     }
 

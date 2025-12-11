@@ -88,9 +88,24 @@ const SignupPhonePage = () => {
         }
       }
     } catch (err) {
-      const errorMessage = err?.response?.data?.message || 'Failed to send OTP. Please check your phone number and try again.';
+      // Handle different error scenarios
+      let errorMessage = 'Failed to send OTP. Please try again.';
+      
+      if (err?.response?.status === 500) {
+        errorMessage = 'Server error occurred. Please contact support or try again later.';
+        console.error('Signup OTP 500 Error:', err?.response?.data || err);
+      } else if (err?.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err?.message) {
+        errorMessage = err.message;
+      }
+      
       setError(errorMessage);
-      console.error('Signup OTP Error:', err);
+      console.error('Signup OTP Error Details:', {
+        status: err?.response?.status,
+        message: err?.response?.data?.message,
+        error: err,
+      });
     } finally {
       setLoading(false);
     }
