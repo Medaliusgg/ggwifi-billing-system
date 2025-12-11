@@ -27,8 +27,8 @@ const Footer = () => {
         bottom: 0,
         left: 0,
         right: 0,
-        backgroundColor: colors.background,
-        borderTop: `1px solid ${theme.palette.divider}`,
+        backgroundColor: theme.palette.primary.main, // Golden Yellow #FFCC00
+        borderTop: `1px solid ${theme.palette.primary.dark}`,
         boxShadow: '0 -2px 10px rgba(0,0,0,0.1)',
         zIndex: theme.zIndex.appBar,
         py: 2,
@@ -84,7 +84,7 @@ const Footer = () => {
               onClick={() => navigate('/voucher-login')}
               fullWidth={false}
               sx={{
-                backgroundColor: colors.warning, // Orange - Alert/offer color
+                backgroundColor: theme.palette.text.primary, // Deep Black
                 color: theme.palette.background.paper, // Clean White
                 fontWeight: 600,
                 px: { xs: 3, md: 4 },
@@ -93,8 +93,8 @@ const Footer = () => {
                 fontSize: { xs: '14px', md: '16px' },
                 minWidth: { xs: '100%', sm: '200px' },
                 '&:hover': {
-                  backgroundColor: colors.warningDark,
-                  boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)',
+                  backgroundColor: '#1A1A1A', // Darker black
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
                 },
               }}
             >

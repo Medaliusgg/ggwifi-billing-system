@@ -63,10 +63,10 @@ const GlobalHeader = ({ isAuthenticated, user, onLogout }) => {
     <AppBar
       position="sticky"
       sx={{
-        backgroundColor: theme.palette.background.paper, // Clean White
+        backgroundColor: theme.palette.primary.main, // Golden Yellow #FFCC00
         color: theme.palette.text.primary, // Deep Black Text
         boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-        borderBottom: `1px solid ${theme.palette.divider}`,
+        borderBottom: `1px solid ${theme.palette.primary.dark}`,
         zIndex: theme.zIndex.drawer + 1,
       }}
     >
@@ -79,16 +79,16 @@ const GlobalHeader = ({ isAuthenticated, user, onLogout }) => {
           onClick={() => navigate('/home')}
           sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 1 }}
         >
-              <Typography
-                variant="h6"
-                sx={{
-                  fontWeight: 700,
-                  color: theme.palette.primary.main, // Primary Yellow #FFCC00
-                  fontSize: { xs: '18px', md: '24px' },
-                }}
-              >
-                GG Wi-Fi
-              </Typography>
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: 700,
+              color: theme.palette.text.primary, // Deep Black (on yellow background)
+              fontSize: { xs: '18px', md: '24px' },
+            }}
+          >
+            GG Wi-Fi
+          </Typography>
         </Box>
 
         {/* Right Icons */}
@@ -98,7 +98,7 @@ const GlobalHeader = ({ isAuthenticated, user, onLogout }) => {
             onClick={handleWhatsApp}
             sx={{
               color: theme.palette.text.primary, // Deep Black
-              '&:hover': { backgroundColor: 'rgba(255, 204, 0, 0.1)' }, // Light yellow hover
+              '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.1)' }, // Dark hover on yellow
             }}
             size={isMobile ? 'small' : 'medium'}
           >
@@ -110,7 +110,7 @@ const GlobalHeader = ({ isAuthenticated, user, onLogout }) => {
             onClick={handlePhoneCall}
             sx={{
               color: theme.palette.text.primary, // Deep Black
-              '&:hover': { backgroundColor: 'rgba(255, 204, 0, 0.1)' }, // Light yellow hover
+              '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.1)' }, // Dark hover on yellow
             }}
             size={isMobile ? 'small' : 'medium'}
           >
@@ -122,7 +122,7 @@ const GlobalHeader = ({ isAuthenticated, user, onLogout }) => {
             onClick={handleAccountMenuOpen}
             sx={{
               color: theme.palette.text.primary, // Deep Black
-              '&:hover': { backgroundColor: 'rgba(255, 204, 0, 0.1)' }, // Light yellow hover
+              '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.1)' }, // Dark hover on yellow
             }}
             size={isMobile ? 'small' : 'medium'}
           >
@@ -131,8 +131,8 @@ const GlobalHeader = ({ isAuthenticated, user, onLogout }) => {
                 sx={{
                   width: 32,
                   height: 32,
-                  bgcolor: theme.palette.primary.main, // Primary Yellow
-                  color: theme.palette.text.primary, // Deep Black
+                  bgcolor: theme.palette.text.primary, // Deep Black
+                  color: theme.palette.primary.main, // Golden Yellow
                   fontSize: '14px',
                 }}
               >
