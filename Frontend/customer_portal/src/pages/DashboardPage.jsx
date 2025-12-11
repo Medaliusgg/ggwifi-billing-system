@@ -129,10 +129,10 @@ const DashboardPage = () => {
         >
           <Card
             sx={{
-              background: 'linear-gradient(135deg, #48C7F2 0%, #38B2D0 100%)',
+              background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.primaryDark} 100%)`, // Primary Yellow gradient
               borderRadius: '16px',
               mb: 3,
-              color: '#FFFFFF',
+              color: colors.textPrimary, // Deep Black
             }}
           >
             <CardContent sx={{ p: 3 }}>
@@ -150,10 +150,10 @@ const DashboardPage = () => {
                   {user?.firstName?.[0] || user?.phone?.[0] || 'U'}
                 </Avatar>
                 <Box sx={{ flex: 1 }}>
-                  <Typography variant="h5" sx={{ fontWeight: 700, mb: 0.5 }}>
+                  <Typography variant="h5" sx={{ fontWeight: 700, mb: 0.5, color: colors.textPrimary }}>
                     Welcome back, {user?.firstName?.toUpperCase() || 'USER'}
                   </Typography>
-                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                  <Typography variant="body2" sx={{ color: colors.textSecondary }}>
                     Enjoy the fast and reliable GG Wi-Fi network
                   </Typography>
                 </Box>
@@ -259,7 +259,7 @@ const DashboardPage = () => {
                 </Box>
 
                 <Box sx={{ mb: 3 }}>
-                  <Typography variant="body2" sx={{ color: '#666666', mb: 1 }}>
+                  <Typography variant="body2" sx={{ color: colors.textSecondary, mb: 1 }}>
                     Remaining Time
                   </Typography>
                   <CountdownTimer
@@ -282,7 +282,7 @@ const DashboardPage = () => {
                     >
                       <DownloadIcon sx={{ color: colors.info }} /> {/* Blue - secondary accent */}
                       <Box>
-                        <Typography variant="caption" sx={{ color: '#666666', display: 'block' }}>
+                        <Typography variant="caption" sx={{ color: colors.textSecondary, display: 'block' }}>
                           Download
                         </Typography>
                         <Typography variant="body2" sx={{ fontWeight: 600 }}>
@@ -302,7 +302,7 @@ const DashboardPage = () => {
                         borderRadius: '8px',
                       }}
                     >
-                      <UploadIcon sx={{ color: colors.success }} />
+                      <UploadIcon sx={{ color: colors.success }} /> {/* Green - secondary accent */}
                       <Box>
                         <Typography variant="caption" sx={{ color: '#666666', display: 'block' }}>
                           Upload
