@@ -18,13 +18,16 @@ const VoucherLoginPage = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const navigate = useNavigate();
+  // ✅ GG Wi-Fi OFFICIAL BRAND COLORS
   const colors = {
-    background: theme.palette.background.default,
-    textPrimary: theme.palette.text.primary,
-    textSecondary: theme.palette.text.secondary,
-    info: theme.palette.info.main,
-    success: theme.palette.success.main,
+    background: theme.palette.background.default, // Clean White
+    textPrimary: theme.palette.text.primary, // Deep Black
+    textSecondary: theme.palette.text.secondary, // Dark Gray
+    primary: theme.palette.primary.main, // Primary Yellow #FFCC00
+    primaryDark: theme.palette.primary.dark,
+    success: theme.palette.success.main, // Green - Success/Connect button
     successDark: theme.palette.success.dark,
+    info: theme.palette.info.main, // Blue - secondary accent
   };
   const [voucherCode, setVoucherCode] = useState(['', '', '', '', '', '']);
   const inputRefs = useRef([]);
@@ -144,12 +147,12 @@ const VoucherLoginPage = () => {
                         borderRadius: '12px',
                         backgroundColor: '#FFFFFF',
                         border: '2px solid',
-                        borderColor: char ? colors.info : theme.palette.divider,
+                        borderColor: char ? colors.primary : theme.palette.divider,
                         '&:hover': {
-                          borderColor: colors.info,
+                          borderColor: colors.primary,
                         },
                         '&.Mui-focused': {
-                          borderColor: colors.info,
+                          borderColor: colors.primary,
                         },
                       },
                     }}
@@ -196,7 +199,7 @@ const VoucherLoginPage = () => {
             variant="outlined"
             onClick={() => navigate('/plans')}
             sx={{
-            borderColor: colors.info,
+            borderColor: colors.info, // Blue - secondary accent for footer buttons
             color: colors.info,
               fontWeight: 600,
               px: 3,
@@ -214,7 +217,7 @@ const VoucherLoginPage = () => {
             variant="outlined"
             onClick={() => navigate('/home')}
             sx={{
-            borderColor: colors.info,
+            borderColor: colors.info, // Blue - secondary accent for footer buttons
             color: colors.info,
               fontWeight: 600,
               px: 3,

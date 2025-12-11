@@ -55,8 +55,8 @@ const StickyBottomNav = () => {
           left: 0,
           right: 0,
           zIndex: theme.zIndex.appBar + 1,
-          backgroundColor: '#FFFFFF',
-          borderTop: '1px solid #EEEEEE',
+          backgroundColor: theme.palette.background.paper, // Clean White
+          borderTop: `1px solid ${theme.palette.divider}`,
           boxShadow: '0 -2px 10px rgba(0,0,0,0.1)',
         }}
         elevation={8}
@@ -68,9 +68,9 @@ const StickyBottomNav = () => {
             '& .MuiBottomNavigationAction-root': {
               minWidth: 'auto',
               padding: '8px 4px',
-              color: theme.palette.text.secondary,
+              color: theme.palette.text.secondary, // Dark Gray
               '&.Mui-selected': {
-                color: theme.palette.warning.main, // Orange from theme
+                color: theme.palette.primary.main, // Primary Yellow #FFCC00
                 '& .MuiBottomNavigationAction-label': {
                   fontSize: '0.7rem',
                   fontWeight: 600,

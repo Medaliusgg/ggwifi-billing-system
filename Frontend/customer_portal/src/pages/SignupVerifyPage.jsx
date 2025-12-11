@@ -20,13 +20,14 @@ const SignupVerifyPage = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const navigate = useNavigate();
+  // ✅ GG Wi-Fi OFFICIAL BRAND COLORS
   const colors = {
-    background: theme.palette.background.default,
-    textPrimary: theme.palette.text.primary,
-    textSecondary: theme.palette.text.secondary,
-    info: theme.palette.info.main,
-    warning: theme.palette.warning.main,
-    warningDark: theme.palette.warning.dark,
+    background: theme.palette.background.default, // Clean White
+    textPrimary: theme.palette.text.primary, // Deep Black #000000
+    textSecondary: theme.palette.text.secondary, // Dark Gray #333333
+    primary: theme.palette.primary.main, // Primary Yellow #FFCC00
+    primaryDark: theme.palette.primary.dark,
+    info: theme.palette.info.main, // Blue - for OTP input borders (secondary accent)
   };
   const [otp, setOtp] = useState(['', '', '', '']);
   const inputRefs = useRef([]);
@@ -165,12 +166,12 @@ const SignupVerifyPage = () => {
                         borderRadius: '12px',
                         backgroundColor: theme.palette.background.paper,
                         border: '2px solid',
-                        borderColor: digit ? colors.info : theme.palette.divider,
+                        borderColor: digit ? colors.primary : theme.palette.divider,
                         '&:hover': {
-                          borderColor: colors.info,
+                          borderColor: colors.primary,
                         },
                         '&.Mui-focused': {
-                          borderColor: colors.info,
+                          borderColor: colors.primary,
                         },
                       },
                     }}
@@ -185,19 +186,20 @@ const SignupVerifyPage = () => {
                 onClick={handleSubmit}
                 disabled={!isOtpComplete || loading}
                 sx={{
-                backgroundColor: isOtpComplete ? colors.warning : theme.palette.text.disabled,
-                color: theme.palette.background.paper,
+                backgroundColor: isOtpComplete ? colors.primary : theme.palette.text.disabled,
+                color: colors.textPrimary, // Deep Black
                 fontWeight: 600,
                 py: 1.5,
                 borderRadius: '12px',
                 fontSize: '18px',
                 '&:hover': {
-                  backgroundColor: isOtpComplete ? colors.warningDark : theme.palette.text.disabled,
-                  },
-                }}
-              >
-                {loading ? 'Verifying...' : 'Verify'}
-              </Button>
+                  backgroundColor: isOtpComplete ? colors.primaryDark : theme.palette.text.disabled,
+                  boxShadow: isOtpComplete ? '0 4px 12px rgba(255, 204, 0, 0.3)' : 'none',
+                },
+              }}
+            >
+              {loading ? 'Verifying...' : 'Verify'}
+            </Button>
             </CardContent>
           </Card>
         </motion.div>

@@ -20,12 +20,13 @@ const SignupPhonePage = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const navigate = useNavigate();
+  // ✅ GG Wi-Fi OFFICIAL BRAND COLORS
   const colors = {
-    background: theme.palette.background.default,
-    textPrimary: theme.palette.text.primary,
-    textSecondary: theme.palette.text.secondary,
-    warning: theme.palette.warning.main,
-    warningDark: theme.palette.warning.dark,
+    background: theme.palette.background.default, // Clean White
+    textPrimary: theme.palette.text.primary, // Deep Black #000000
+    textSecondary: theme.palette.text.secondary, // Dark Gray #333333
+    primary: theme.palette.primary.main, // Primary Yellow #FFCC00
+    primaryDark: theme.palette.primary.dark,
   };
   const [phone, setPhone] = useState('');
   const [error, setError] = useState('');
@@ -177,15 +178,15 @@ const SignupPhonePage = () => {
                   size="large"
                   disabled={loading}
                   sx={{
-                backgroundColor: colors.warning,
-                color: theme.palette.background.paper,
+                backgroundColor: colors.primary, // Primary Yellow #FFCC00
+                color: colors.textPrimary, // Deep Black
                 fontWeight: 600,
                 py: 1.5,
                 borderRadius: '12px',
                 fontSize: '18px',
                 '&:hover': {
-                  backgroundColor: colors.warningDark,
-                      boxShadow: '0 4px 12px rgba(244, 140, 6, 0.3)',
+                  backgroundColor: colors.primaryDark,
+                      boxShadow: '0 4px 12px rgba(255, 204, 0, 0.3)',
                     },
                   }}
                 >

@@ -63,8 +63,10 @@ const GlobalHeader = ({ isAuthenticated, user, onLogout }) => {
     <AppBar
       position="sticky"
       sx={{
-        backgroundColor: theme.palette.info.main, // Use theme info color (Blue)
+        backgroundColor: theme.palette.background.paper, // Clean White
+        color: theme.palette.text.primary, // Deep Black Text
         boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+        borderBottom: `1px solid ${theme.palette.divider}`,
         zIndex: theme.zIndex.drawer + 1,
       }}
     >
@@ -77,16 +79,16 @@ const GlobalHeader = ({ isAuthenticated, user, onLogout }) => {
           onClick={() => navigate('/home')}
           sx={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 1 }}
         >
-          <Typography
-            variant="h6"
-            sx={{
-              fontWeight: 700,
-              color: '#FFFFFF',
-              fontSize: { xs: '18px', md: '24px' },
-            }}
-          >
-            GG Wi-Fi
-          </Typography>
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: 700,
+                  color: theme.palette.primary.main, // Primary Yellow #FFCC00
+                  fontSize: { xs: '18px', md: '24px' },
+                }}
+              >
+                GG Wi-Fi
+              </Typography>
         </Box>
 
         {/* Right Icons */}
@@ -95,8 +97,8 @@ const GlobalHeader = ({ isAuthenticated, user, onLogout }) => {
           <IconButton
             onClick={handleWhatsApp}
             sx={{
-              color: '#FFFFFF',
-              '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' },
+              color: theme.palette.text.primary, // Deep Black
+              '&:hover': { backgroundColor: 'rgba(255, 204, 0, 0.1)' }, // Light yellow hover
             }}
             size={isMobile ? 'small' : 'medium'}
           >
@@ -107,8 +109,8 @@ const GlobalHeader = ({ isAuthenticated, user, onLogout }) => {
           <IconButton
             onClick={handlePhoneCall}
             sx={{
-              color: '#FFFFFF',
-              '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' },
+              color: theme.palette.text.primary, // Deep Black
+              '&:hover': { backgroundColor: 'rgba(255, 204, 0, 0.1)' }, // Light yellow hover
             }}
             size={isMobile ? 'small' : 'medium'}
           >
@@ -119,8 +121,8 @@ const GlobalHeader = ({ isAuthenticated, user, onLogout }) => {
           <IconButton
             onClick={handleAccountMenuOpen}
             sx={{
-              color: '#FFFFFF',
-              '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' },
+              color: theme.palette.text.primary, // Deep Black
+              '&:hover': { backgroundColor: 'rgba(255, 204, 0, 0.1)' }, // Light yellow hover
             }}
             size={isMobile ? 'small' : 'medium'}
           >
@@ -129,8 +131,8 @@ const GlobalHeader = ({ isAuthenticated, user, onLogout }) => {
                 sx={{
                   width: 32,
                   height: 32,
-                  bgcolor: theme.palette.background.paper,
-                  color: theme.palette.info.main,
+                  bgcolor: theme.palette.primary.main, // Primary Yellow
+                  color: theme.palette.text.primary, // Deep Black
                   fontSize: '14px',
                 }}
               >

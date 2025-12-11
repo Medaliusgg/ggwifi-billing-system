@@ -32,14 +32,17 @@ const ConnectionsPage = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const token = localStorage.getItem('token');
+  // ✅ GG Wi-Fi OFFICIAL BRAND COLORS
   const colors = {
-    background: theme.palette.background.default,
-    textPrimary: theme.palette.text.primary,
-    textSecondary: theme.palette.text.secondary,
-    info: theme.palette.info.main,
-    success: theme.palette.success.main,
+    background: theme.palette.background.default, // Clean White
+    textPrimary: theme.palette.text.primary, // Deep Black #000000
+    textSecondary: theme.palette.text.secondary, // Dark Gray #333333
+    primary: theme.palette.primary.main, // Primary Yellow #FFCC00
+    // Secondary Accents
+    info: theme.palette.info.main, // Blue - Icons
+    success: theme.palette.success.main, // Green - Success states
     successLight: theme.palette.success.light,
-    error: theme.palette.error.main,
+    error: theme.palette.error.main, // Red - Error states
     errorLight: theme.palette.error.light,
   };
 

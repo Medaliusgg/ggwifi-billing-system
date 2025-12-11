@@ -31,13 +31,19 @@ const PlansPage = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(0);
   const token = localStorage.getItem('token');
+  // ✅ GG Wi-Fi OFFICIAL BRAND COLORS
   const colors = {
-    background: theme.palette.background.default,
-    textPrimary: theme.palette.text.primary,
-    textSecondary: theme.palette.text.secondary,
-    info: theme.palette.info.main,
-    warning: theme.palette.warning.main,
+    background: theme.palette.background.default, // Clean White
+    textPrimary: theme.palette.text.primary, // Deep Black #000000
+    textSecondary: theme.palette.text.secondary, // Dark Gray #333333
+    primary: theme.palette.primary.main, // Primary Yellow #FFCC00
+    primaryDark: theme.palette.primary.dark,
+    // Secondary Accents
+    info: theme.palette.info.main, // Blue - Universal packages
+    infoDark: theme.palette.info.dark,
+    warning: theme.palette.warning.main, // Orange - Offer packages
     warningDark: theme.palette.warning.dark,
+    purple: '#8B5CF6', // Purple - Premium plans
   };
 
   // Fetch packages
@@ -130,14 +136,14 @@ const PlansPage = () => {
 
         <Box sx={{ mb: 3 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-            <SpeedIcon sx={{ fontSize: 18, color: cardColors.info }} />
+            <SpeedIcon sx={{ fontSize: 18, color: cardColors.info }} /> {/* Blue - secondary accent */}
             <Typography variant="body2" sx={{ color: cardColors.textSecondary }}>
               Duration: {pkg.duration || pkg.durationDays + ' days' || 'N/A'}
             </Typography>
           </Box>
           {pkg.speed && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-              <SpeedIcon sx={{ fontSize: 18, color: cardColors.info }} />
+              <SpeedIcon sx={{ fontSize: 18, color: cardColors.info }} /> {/* Blue - secondary accent */}
               <Typography variant="body2" sx={{ color: cardColors.textSecondary }}>
                 Speed: {pkg.speed}
               </Typography>
@@ -158,8 +164,8 @@ const PlansPage = () => {
           variant="contained"
           onClick={() => handleBuyPackage(pkg)}
           sx={{
-            backgroundColor: isOffer ? cardColors.warning : cardColors.info,
-            color: theme.palette.background.paper,
+            backgroundColor: isOffer ? cardColors.warning : cardColors.info, // Orange for offers, Blue for universal
+            color: theme.palette.background.paper, // Clean White
             fontWeight: 600,
             py: 1.5,
             borderRadius: '12px',
@@ -201,11 +207,11 @@ const PlansPage = () => {
                 fontWeight: 600,
                 fontSize: '16px',
                 '&.Mui-selected': {
-                  color: colors.info,
+                  color: colors.info, // Blue - secondary accent
                 },
               },
               '& .MuiTabs-indicator': {
-                backgroundColor: colors.info,
+                backgroundColor: colors.info, // Blue - secondary accent
               },
             }}
           >

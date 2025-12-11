@@ -8,11 +8,13 @@ const Footer = () => {
   const navigate = useNavigate();
   
   const colors = {
-    background: theme.palette.background.paper,
-    textPrimary: theme.palette.text.primary,
-    textSecondary: theme.palette.text.secondary,
-    info: theme.palette.info.main,
-    warning: theme.palette.warning.main,
+    background: theme.palette.background.paper, // Clean White
+    textPrimary: theme.palette.text.primary, // Deep Black
+    textSecondary: theme.palette.text.secondary, // Dark Gray
+    primary: theme.palette.primary.main, // Primary Yellow #FFCC00
+    primaryDark: theme.palette.primary.dark, // Darker yellow
+    info: theme.palette.info.main, // Blue - for package buttons
+    warning: theme.palette.warning.main, // Orange - for voucher buttons
     warningDark: theme.palette.warning.dark,
     infoDark: theme.palette.info.dark,
   };
@@ -82,8 +84,8 @@ const Footer = () => {
               onClick={() => navigate('/voucher-login')}
               fullWidth={false}
               sx={{
-                backgroundColor: colors.warning,
-                color: theme.palette.background.paper,
+                backgroundColor: colors.warning, // Orange - Alert/offer color
+                color: theme.palette.background.paper, // Clean White
                 fontWeight: 600,
                 px: { xs: 3, md: 4 },
                 py: 1.5,
@@ -92,7 +94,7 @@ const Footer = () => {
                 minWidth: { xs: '100%', sm: '200px' },
                 '&:hover': {
                   backgroundColor: colors.warningDark,
-                  boxShadow: '0 4px 12px rgba(244, 140, 6, 0.3)',
+                  boxShadow: '0 4px 12px rgba(245, 158, 11, 0.3)',
                 },
               }}
             >

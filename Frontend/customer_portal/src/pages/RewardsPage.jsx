@@ -34,15 +34,19 @@ const RewardsPage = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(0);
   const token = localStorage.getItem('token');
+  // ✅ GG Wi-Fi OFFICIAL BRAND COLORS
   const colors = {
-    background: theme.palette.background.default,
-    textPrimary: theme.palette.text.primary,
-    textSecondary: theme.palette.text.secondary,
-    info: theme.palette.info.main,
+    background: theme.palette.background.default, // Clean White
+    textPrimary: theme.palette.text.primary, // Deep Black #000000
+    textSecondary: theme.palette.text.secondary, // Dark Gray #333333
+    primary: theme.palette.primary.main, // Primary Yellow #FFCC00
+    primaryDark: theme.palette.primary.dark,
+    // Secondary Accents
+    info: theme.palette.info.main, // Blue - Points display, progress bar
     infoDark: theme.palette.info.dark,
-    warning: theme.palette.warning.main,
+    warning: theme.palette.warning.main, // Orange - Redeem buttons
     warningDark: theme.palette.warning.dark,
-    success: theme.palette.success.main,
+    success: theme.palette.success.main, // Green - Fulfilled status
     successLight: theme.palette.success.light,
     warningLight: theme.palette.warning.light,
   };
@@ -98,7 +102,7 @@ const RewardsPage = () => {
 
       <Container maxWidth="lg" sx={{ py: { xs: 3, md: 4 } }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-          <GiftIcon sx={{ color: colors.info, fontSize: 32 }} />
+          <GiftIcon sx={{ color: colors.primary, fontSize: 32 }} /> {/* Primary Yellow */}
           <Typography
             variant="h4"
             sx={{
@@ -127,7 +131,7 @@ const RewardsPage = () => {
             <CardContent sx={{ p: 3 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                 <Box>
-                  <Typography variant="h3" sx={{ fontWeight: 700, color: colors.info, mb: 0.5 }}>
+                  <Typography variant="h3" sx={{ fontWeight: 700, color: colors.primary, mb: 0.5 }}>
                     {points.toLocaleString()}
                   </Typography>
                   <Typography variant="body2" sx={{ color: colors.textSecondary }}>
@@ -164,7 +168,7 @@ const RewardsPage = () => {
                     borderRadius: '4px',
                     backgroundColor: theme.palette.divider,
                     '& .MuiLinearProgress-bar': {
-                      backgroundColor: colors.info,
+                      backgroundColor: colors.primary, // Primary Yellow
                     },
                   }}
                 />
@@ -184,11 +188,11 @@ const RewardsPage = () => {
                 fontWeight: 600,
                 fontSize: '16px',
                 '&.Mui-selected': {
-                  color: colors.info,
+                  color: colors.primary, // Primary Yellow
                 },
               },
               '& .MuiTabs-indicator': {
-                backgroundColor: colors.info,
+                backgroundColor: colors.primary, // Primary Yellow
               },
             }}
           >

@@ -21,13 +21,16 @@ const OTPLoginPage = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const navigate = useNavigate();
+  // ✅ GG Wi-Fi OFFICIAL BRAND COLORS
   const colors = {
-    background: theme.palette.background.default,
-    textPrimary: theme.palette.text.primary,
-    textSecondary: theme.palette.text.secondary,
-    info: theme.palette.info.main,
-    warning: theme.palette.warning.main,
+    background: theme.palette.background.default, // Clean White
+    textPrimary: theme.palette.text.primary, // Deep Black #000000
+    textSecondary: theme.palette.text.secondary, // Dark Gray #333333
+    primary: theme.palette.primary.main, // Primary Yellow #FFCC00
+    primaryDark: theme.palette.primary.dark,
+    warning: theme.palette.warning.main, // Orange - for buttons (secondary accent)
     warningDark: theme.palette.warning.dark,
+    info: theme.palette.info.main, // Blue - for OTP input borders (secondary accent)
   };
   
   const [step, setStep] = useState(1); // 1: Enter phone, 2: Enter OTP
@@ -236,20 +239,21 @@ const OTPLoginPage = () => {
                     size="large"
                     disabled={loading || !phone.trim()}
                     sx={{
-                      backgroundColor: colors.warning,
-                      color: theme.palette.background.paper,
-                      fontWeight: 600,
-                      py: 1.5,
-                      borderRadius: '12px',
-                      fontSize: '18px',
-                      mb: 2,
-                      '&:hover': {
-                        backgroundColor: colors.warningDark,
-                      },
-                    }}
-                  >
-                    {loading ? 'Sending OTP...' : 'SEND OTP'}
-                  </Button>
+                backgroundColor: colors.primary, // Primary Yellow #FFCC00
+                color: colors.textPrimary, // Deep Black
+                fontWeight: 600,
+                py: 1.5,
+                borderRadius: '12px',
+                fontSize: '18px',
+                mb: 2,
+                '&:hover': {
+                  backgroundColor: colors.primaryDark,
+                  boxShadow: '0 4px 12px rgba(255, 204, 0, 0.3)',
+                },
+              }}
+            >
+              {loading ? 'Sending OTP...' : 'SEND OTP'}
+            </Button>
 
                   <Link
                     component="button"
@@ -302,7 +306,7 @@ const OTPLoginPage = () => {
                             borderRadius: '12px',
                             backgroundColor: theme.palette.background.paper,
                             border: '2px solid',
-                            borderColor: digit ? colors.info : theme.palette.divider,
+                            borderColor: digit ? colors.primary : theme.palette.divider,
                             '&:hover': {
                               borderColor: colors.info,
                             },
@@ -322,20 +326,21 @@ const OTPLoginPage = () => {
                     size="large"
                     disabled={loading || !isOtpComplete}
                     sx={{
-                      backgroundColor: isOtpComplete ? colors.warning : theme.palette.text.disabled,
-                      color: theme.palette.background.paper,
-                      fontWeight: 600,
-                      py: 1.5,
-                      borderRadius: '12px',
-                      fontSize: '18px',
-                      mb: 2,
-                      '&:hover': {
-                        backgroundColor: isOtpComplete ? colors.warningDark : theme.palette.text.disabled,
-                      },
-                    }}
-                  >
-                    {loading ? 'Verifying...' : 'VERIFY & LOGIN'}
-                  </Button>
+                    backgroundColor: isOtpComplete ? colors.primary : theme.palette.text.disabled,
+                    color: colors.textPrimary, // Deep Black
+                    fontWeight: 600,
+                    py: 1.5,
+                    borderRadius: '12px',
+                    fontSize: '18px',
+                    mb: 2,
+                    '&:hover': {
+                      backgroundColor: isOtpComplete ? colors.primaryDark : theme.palette.text.disabled,
+                      boxShadow: isOtpComplete ? '0 4px 12px rgba(255, 204, 0, 0.3)' : 'none',
+                    },
+                  }}
+                >
+                  {loading ? 'Verifying...' : 'VERIFY & LOGIN'}
+                </Button>
 
                   <Box sx={{ textAlign: 'center', mb: 2 }}>
                     <Link

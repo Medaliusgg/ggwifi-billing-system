@@ -37,17 +37,21 @@ const DashboardPage = () => {
   const location = useLocation();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const token = localStorage.getItem('token');
+  // ✅ GG Wi-Fi OFFICIAL BRAND COLORS
   const colors = {
-    background: theme.palette.background.default,
-    textPrimary: theme.palette.text.primary,
-    textSecondary: theme.palette.text.secondary,
-    info: theme.palette.info.main,
+    background: theme.palette.background.default, // Clean White
+    textPrimary: theme.palette.text.primary, // Deep Black #000000
+    textSecondary: theme.palette.text.secondary, // Dark Gray #333333
+    primary: theme.palette.primary.main, // Primary Yellow #FFCC00
+    primaryDark: theme.palette.primary.dark,
+    // Secondary Accents
+    info: theme.palette.info.main, // Blue - Access Code button
     infoDark: theme.palette.info.dark,
-    warning: theme.palette.warning.main,
-    warningDark: theme.palette.warning.dark,
-    success: theme.palette.success.main,
-    successLight: theme.palette.success.light,
     infoLight: theme.palette.info.light,
+    warning: theme.palette.warning.main, // Orange - Voucher Code button
+    warningDark: theme.palette.warning.dark,
+    success: theme.palette.success.main, // Green - Success states
+    successLight: theme.palette.success.light,
   };
 
   // Check if user is authenticated
@@ -135,8 +139,8 @@ const DashboardPage = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <Avatar
                   sx={{
-                    bgcolor: theme.palette.background.paper,
-                    color: colors.info,
+                    bgcolor: colors.textPrimary, // Deep Black
+                    color: colors.primary, // Primary Yellow
                     width: 56,
                     height: 56,
                     fontSize: '24px',
@@ -276,7 +280,7 @@ const DashboardPage = () => {
                         borderRadius: '8px',
                       }}
                     >
-                      <DownloadIcon sx={{ color: colors.info }} />
+                      <DownloadIcon sx={{ color: colors.info }} /> {/* Blue - secondary accent */}
                       <Box>
                         <Typography variant="caption" sx={{ color: '#666666', display: 'block' }}>
                           Download
@@ -329,7 +333,7 @@ const DashboardPage = () => {
               <Button
                 onClick={() => navigate('/plans')}
                 sx={{
-                  color: colors.info,
+                  color: colors.primary, // Primary Yellow
                   fontWeight: 600,
                   textTransform: 'none',
                 }}

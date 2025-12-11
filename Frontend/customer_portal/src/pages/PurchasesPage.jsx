@@ -30,17 +30,20 @@ const PurchasesPage = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
+  // ✅ GG Wi-Fi OFFICIAL BRAND COLORS
   const colors = {
-    background: theme.palette.background.default,
-    textPrimary: theme.palette.text.primary,
-    textSecondary: theme.palette.text.secondary,
-    info: theme.palette.info.main,
+    background: theme.palette.background.default, // Clean White
+    textPrimary: theme.palette.text.primary, // Deep Black #000000
+    textSecondary: theme.palette.text.secondary, // Dark Gray #333333
+    primary: theme.palette.primary.main, // Primary Yellow #FFCC00
+    // Secondary Accents
+    info: theme.palette.info.main, // Blue - Amount display, buttons
     infoDark: theme.palette.info.dark,
     infoLight: theme.palette.info.light,
-    warning: theme.palette.warning.main,
-    success: theme.palette.success.main,
-    successLight: theme.palette.success.light,
+    warning: theme.palette.warning.main, // Orange - Pending status
     warningLight: theme.palette.warning.light,
+    success: theme.palette.success.main, // Green - Paid status
+    successLight: theme.palette.success.light,
   };
 
   // Fetch purchase history

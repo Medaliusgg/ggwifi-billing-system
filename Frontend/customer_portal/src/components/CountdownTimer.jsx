@@ -64,8 +64,8 @@ const CountdownTimer = ({ targetTime, onExpire }) => {
     >
       <Box
         sx={{
-          backgroundColor: theme.palette.info.main,
-          color: theme.palette.background.paper,
+          backgroundColor: theme.palette.primary.main, // Primary Yellow #FFCC00
+          color: theme.palette.text.primary, // Deep Black
           borderRadius: '8px',
           padding: '8px 12px',
           minWidth: 60,
@@ -79,13 +79,13 @@ const CountdownTimer = ({ targetTime, onExpire }) => {
           HRS
         </Typography>
       </Box>
-      <Typography variant="h5" sx={{ color: theme.palette.info.main, fontWeight: 700 }}>
+      <Typography variant="h5" sx={{ color: theme.palette.primary.main, fontWeight: 700 }}>
         :
       </Typography>
       <Box
         sx={{
-          backgroundColor: theme.palette.info.main,
-          color: theme.palette.background.paper,
+          backgroundColor: theme.palette.primary.main, // Primary Yellow #FFCC00
+          color: theme.palette.text.primary, // Deep Black
           borderRadius: '8px',
           padding: '8px 12px',
           minWidth: 60,
@@ -99,13 +99,13 @@ const CountdownTimer = ({ targetTime, onExpire }) => {
           MIN
         </Typography>
       </Box>
-      <Typography variant="h5" sx={{ color: theme.palette.info.main, fontWeight: 700 }}>
+      <Typography variant="h5" sx={{ color: theme.palette.primary.main, fontWeight: 700 }}>
         :
       </Typography>
       <Box
         sx={{
-          backgroundColor: theme.palette.info.main,
-          color: theme.palette.background.paper,
+          backgroundColor: theme.palette.primary.main, // Primary Yellow #FFCC00
+          color: theme.palette.text.primary, // Deep Black
           borderRadius: '8px',
           padding: '8px 12px',
           minWidth: 60,

@@ -31,15 +31,18 @@ const LandingPage = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
-  // GG Color Theme - Use theme colors only
+  // ✅ GG Wi-Fi OFFICIAL BRAND COLORS (LOCKED-IN)
   const colors = {
-    background: theme.palette.background.default,
-    textPrimary: theme.palette.text.primary,
-    textSecondary: theme.palette.text.secondary,
-    info: theme.palette.info.main,
-    warning: theme.palette.warning.main,
-    success: theme.palette.success.main,
-    primary: theme.palette.primary.main,
+    background: theme.palette.background.default, // Clean White
+    textPrimary: theme.palette.text.primary, // Deep Black #000000
+    textSecondary: theme.palette.text.secondary, // Dark Gray #333333
+    primary: theme.palette.primary.main, // Primary Yellow #FFCC00
+    primaryDark: theme.palette.primary.dark, // Darker yellow
+    // Secondary Accents (supportive only)
+    info: theme.palette.info.main, // Blue - Package category, trust badges
+    warning: theme.palette.warning.main, // Orange - Alerts, offer banners
+    success: theme.palette.success.main, // Green - Success, offer packages
+    purple: '#8B5CF6', // Purple - Premium plans
   };
 
   // Fetch marketing campaigns
@@ -149,7 +152,7 @@ const LandingPage = () => {
               fontWeight: 700,
               textAlign: 'center',
               mb: 3,
-              color: '#0A0A0A',
+              color: colors.textPrimary, // Deep Black
             }}
           >
             Why GG Wi-Fi?
@@ -160,20 +163,21 @@ const LandingPage = () => {
                 <Card
                   sx={{
                     textAlign: 'center',
-                    background: 'linear-gradient(135deg, #FFFFFF 0%, #F5F9FC 100%)',
-                    border: '1px solid #EEEEEE',
+                    background: theme.palette.background.paper, // Clean White
+                    border: `1px solid ${theme.palette.divider}`,
                     borderRadius: '12px',
                     p: 2,
                     height: '100%',
                     '&:hover': {
-                      boxShadow: '0 4px 12px rgba(72, 199, 242, 0.2)',
+                      boxShadow: '0 4px 12px rgba(255, 204, 0, 0.2)', // Primary Yellow shadow
+                      borderColor: colors.primary, // Primary Yellow border on hover
                     },
                   }}
                 >
                   <Avatar
                     sx={{
-                      bgcolor: colors.info,
-                      color: theme.palette.background.paper,
+                      bgcolor: colors.info, // Blue - Trust badge color
+                      color: theme.palette.background.paper, // Clean White
                       width: 48,
                       height: 48,
                       mx: 'auto',
@@ -182,10 +186,10 @@ const LandingPage = () => {
                   >
                     {feature.icon}
                   </Avatar>
-                  <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5, color: colors.textPrimary }}>
                     {feature.title}
                   </Typography>
-                  <Typography variant="caption" sx={{ color: '#666666' }}>
+                  <Typography variant="caption" sx={{ color: colors.textSecondary }}>
                     {feature.desc}
                   </Typography>
                 </Card>
@@ -206,7 +210,7 @@ const LandingPage = () => {
               fontWeight: 700,
               textAlign: 'center',
               mb: 3,
-              color: '#0A0A0A',
+              color: colors.textPrimary, // Deep Black
             }}
           >
             What Our Customers Say
@@ -233,7 +237,7 @@ const LandingPage = () => {
                 }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                  <Avatar sx={{ bgcolor: colors.info, mr: 1 }}>
+                  <Avatar sx={{ bgcolor: colors.primary, color: colors.textPrimary, mr: 1 }}>
                     {testimonial.name[0]}
                   </Avatar>
                   <Box>
@@ -247,7 +251,7 @@ const LandingPage = () => {
                     </Box>
                   </Box>
                 </Box>
-                <Typography variant="body2" sx={{ color: '#666666' }}>
+                <Typography variant="body2" sx={{ color: colors.textSecondary }}>
                   "{testimonial.comment}"
                 </Typography>
               </Card>
