@@ -27,7 +27,7 @@ const Footer = () => {
         bottom: 0,
         left: 0,
         right: 0,
-        backgroundColor: theme.palette.primary.main, // Golden Yellow #FFCC00
+        backgroundColor: theme.palette.primary.main, // Main Golden Yellow #F2C94C
         borderTop: `1px solid ${theme.palette.primary.dark}`,
         boxShadow: '0 -2px 10px rgba(0,0,0,0.1)',
         zIndex: theme.zIndex.appBar,
@@ -38,10 +38,11 @@ const Footer = () => {
         <Box
           sx={{
             display: 'flex',
-            flexDirection: { xs: 'column', sm: 'row' },
+            flexDirection: 'row', // Always horizontal
             gap: 2,
             justifyContent: 'center',
             alignItems: 'center',
+            flexWrap: { xs: 'wrap', sm: 'nowrap' }, // Wrap on very small screens only
           }}
         >
           <motion.div
@@ -62,7 +63,8 @@ const Footer = () => {
                 py: 1.5,
                 borderRadius: '12px',
                 fontSize: { xs: '14px', md: '16px' },
-                minWidth: { xs: '100%', sm: '200px' },
+                minWidth: { xs: 'auto', sm: '200px' },
+                flex: { xs: '1 1 auto', sm: '0 0 auto' },
                 '&:hover': {
                   backgroundColor: colors.infoDark,
                   boxShadow: '0 4px 12px rgba(72, 199, 242, 0.3)',
@@ -91,7 +93,8 @@ const Footer = () => {
                 py: 1.5,
                 borderRadius: '12px',
                 fontSize: { xs: '14px', md: '16px' },
-                minWidth: { xs: '100%', sm: '200px' },
+                minWidth: { xs: 'auto', sm: '200px' },
+                flex: { xs: '1 1 auto', sm: '0 0 auto' },
                 '&:hover': {
                   backgroundColor: '#1A1A1A', // Darker black
                   boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',

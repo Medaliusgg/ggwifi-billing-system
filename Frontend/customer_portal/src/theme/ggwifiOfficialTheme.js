@@ -5,11 +5,11 @@ import { createTheme } from "@mui/material/styles";
 
 export const ggwifiOfficialTheme = createTheme({
   palette: {
-    // ✅ GG Wi-Fi OFFICIAL BRAND COLORS (LOCKED-IN)
+    // ✅ GG Wi-Fi HYBRID GOLDEN YELLOW THEME
     primary: {
-      main: "#FFCC00",        // Primary Yellow - GG Wi-Fi brand color
-      dark: "#E6B800",        // Darker yellow for hover
-      light: "#FFD633",       // Lighter yellow
+      main: "#F2C94C",        // Main Golden Yellow - GG Wi-Fi brand color
+      dark: "#E0B335",        // Stronger/Darker Golden Yellow for hover
+      light: "#F8D97A",       // Lighter golden yellow
       contrastText: "#000000", // Deep Black Text
     },
     secondary: {
@@ -36,7 +36,7 @@ export const ggwifiOfficialTheme = createTheme({
       dark: "#D97706",
     },
     info: {
-      main: "#3B82F6",        // Blue - Package category colors, trust badges
+      main: "#3B82F6",        // Blue - Package category colors, trust badges, primary accent
       light: "#EAF4FF",
       dark: "#2563EB",
     },
@@ -116,10 +116,10 @@ export const ggwifiOfficialTheme = createTheme({
           },
         },
         containedPrimary: {
-          backgroundColor: "#FFCC00", // Primary Yellow
+          backgroundColor: "#F2C94C", // Main Golden Yellow
           color: "#000000", // Deep Black Text
           "&:hover": {
-            backgroundColor: "#E6B800", // Darker yellow
+            backgroundColor: "#E0B335", // Stronger Golden Yellow
           },
         },
         containedSecondary: {
@@ -130,11 +130,11 @@ export const ggwifiOfficialTheme = createTheme({
           },
         },
         outlinedPrimary: {
-          borderColor: "#FFCC00", // Primary Yellow
+          borderColor: "#F2C94C", // Main Golden Yellow
           color: "#000000", // Deep Black Text
           "&:hover": {
-            borderColor: "#E6B800",
-            backgroundColor: "rgba(255, 204, 0, 0.1)",
+            borderColor: "#E0B335", // Stronger Golden Yellow
+            backgroundColor: "rgba(242, 201, 76, 0.1)",
           },
         },
       },
@@ -189,14 +189,14 @@ export const ggwifiOfficialTheme = createTheme({
             borderColor: "#E5E7EB",
           },
           "&:hover .MuiOutlinedInput-notchedOutline": {
-            borderColor: "#FFCC00", // Primary Yellow
+            borderColor: "#F2C94C", // Main Golden Yellow
           },
           "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-            borderColor: "#FFCC00", // Primary Yellow
+            borderColor: "#F2C94C", // Main Golden Yellow
             borderWidth: "2px",
           },
           "&.Mui-focused": {
-            boxShadow: "0 0 0 3px rgba(255, 204, 0, 0.35)",
+            boxShadow: "0 0 0 3px rgba(242, 201, 76, 0.35)",
           },
         },
         input: {
@@ -216,7 +216,7 @@ export const ggwifiOfficialTheme = createTheme({
             color: "#333333", // Dark Gray Text
           },
           "& .MuiInputLabel-root.Mui-focused": {
-            color: "#FFCC00", // Primary Yellow
+            color: "#F2C94C", // Main Golden Yellow
           },
         },
       },

@@ -63,7 +63,7 @@ const GlobalHeader = ({ isAuthenticated, user, onLogout }) => {
     <AppBar
       position="sticky"
       sx={{
-        backgroundColor: theme.palette.primary.main, // Golden Yellow #FFCC00
+        backgroundColor: theme.palette.primary.main, // Main Golden Yellow #F2C94C
         color: theme.palette.text.primary, // Deep Black Text
         boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
         borderBottom: `1px solid ${theme.palette.primary.dark}`,
