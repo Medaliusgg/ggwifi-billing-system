@@ -33,6 +33,7 @@
     "react-router-dom": "^6.21.3",
     "recharts": "^2.10.4",
     "sockjs-client": "^1.6.1",
+    "web-vitals": "^5.1.0",
     "zustand": "^4.5.7"
   },
   "devDependencies": {
