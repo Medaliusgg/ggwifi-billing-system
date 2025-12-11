@@ -37,10 +37,19 @@ const LandingPage = () => {
   const { data: campaigns = [] } = useQuery(
     ['marketing-campaigns'],
     async () => {
-      const res = await customerPortalAPI.getCampaigns();
-      return res?.data?.campaigns || [];
+      try {
+        const res = await customerPortalAPI.getCampaigns();
+        return res?.data?.campaigns || [];
+      } catch (error) {
+        console.error('Error fetching campaigns:', error);
+        return [];
+      }
     },
-    { refetchInterval: 300000 }
+    { 
+      refetchInterval: 300000,
+      retry: false,
+      refetchOnWindowFocus: false,
+    }
   );
 
   const trustFeatures = [

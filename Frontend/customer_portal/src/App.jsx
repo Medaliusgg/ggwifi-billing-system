@@ -46,6 +46,7 @@ function App() {
             {/* Public Routes */}
             <Route path="/home" element={<LandingPage />} />
             <Route path="/" element={<Navigate to="/home" replace />} />
+            <Route path="/index.html" element={<Navigate to="/home" replace />} />
             <Route path="/voucher-login" element={<VoucherLoginPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/otp-login" element={<LoginPage />} />
