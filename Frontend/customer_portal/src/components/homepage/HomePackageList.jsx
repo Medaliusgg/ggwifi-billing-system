@@ -67,15 +67,25 @@ const HomePackageList = () => {
     }
   );
 
-  const universalPackages = (packagesData?.packages || []).filter(
-    (pkg) => pkg.categoryType === 'UNIVERSAL' || !pkg.categoryType
+  const allPackages = packagesData?.packages || [];
+  console.log('HomePackageList - All packages:', allPackages);
+  
+  const universalPackages = allPackages.filter(
+    (pkg) => pkg.categoryType === 'UNIVERSAL' || !pkg.categoryType || pkg.categoryType === null
   );
+  console.log('HomePackageList - Universal packages:', universalPackages);
 
-  const offerPackages = (packagesData?.packages || []).filter(
+  const offerPackages = allPackages.filter(
     (pkg) => pkg.categoryType === 'OFFER' || pkg.packageType === 'TIME_BASED_OFFER'
   );
+  console.log('HomePackageList - Offer packages:', offerPackages);
 
-  const packages = activeTab === 0 ? universalPackages : offerPackages;
+  // If no packages in selected tab, show all packages as fallback
+  const packages = activeTab === 0 
+    ? (universalPackages.length > 0 ? universalPackages : allPackages)
+    : (offerPackages.length > 0 ? offerPackages : allPackages);
+  
+  console.log('HomePackageList - Displayed packages:', packages);
 
   // Auto-focus animation every 3 seconds
   React.useEffect(() => {
