@@ -144,22 +144,42 @@ const GlobalHeader = ({ isAuthenticated, user, onLogout }) => {
               gap: 1.5 
             }}
           >
-          {/* Logo Image - Using transparent PNG if available */}
-          <Box
-            component="img"
-            src="/logo.png"
+          {/* Circular Logo Avatar */}
+          <Avatar
+            component={motion.div}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            src="/gg-logo.png"
             alt="GG Wi-Fi Logo"
             onError={(e) => {
-              // Fallback if logo not found
+              // Fallback to text avatar if logo not found
               e.target.style.display = 'none';
+              const parent = e.target.parentElement;
+              if (parent) {
+                parent.textContent = 'GG';
+                parent.style.display = 'flex';
+                parent.style.alignItems = 'center';
+                parent.style.justifyContent = 'center';
+              }
             }}
             sx={{
               width: { xs: 40, md: 48 },
               height: { xs: 40, md: 48 },
-              borderRadius: '50%',
-              objectFit: 'cover',
+              bgcolor: theme.palette.text.primary, // Black background
+              color: theme.palette.primary.main, // Yellow text/icon
+              fontWeight: 700,
+              fontSize: { xs: '16px', md: '20px' },
+              border: `2px solid ${theme.palette.primary.dark}`,
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              '&:hover': {
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.25)',
+              },
             }}
-          />
+          >
+            GG
+          </Avatar>
           <Typography
             variant="h6"
             sx={{
