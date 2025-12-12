@@ -149,8 +149,14 @@ const GlobalHeader = ({ isAuthenticated, user, onLogout }) => {
             component={motion.div}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            src="/gg-logo.png"
+            src="/gg-logo-transparent.png"
             alt="GG Wi-Fi Logo"
+            imgProps={{
+              style: {
+                objectFit: 'contain',
+                padding: '4px',
+              },
+            }}
             onError={(e) => {
               // Fallback to text avatar if logo not found
               e.target.style.display = 'none';
@@ -165,14 +171,21 @@ const GlobalHeader = ({ isAuthenticated, user, onLogout }) => {
             sx={{
               width: { xs: 40, md: 48 },
               height: { xs: 40, md: 48 },
-              bgcolor: theme.palette.text.primary, // Black background
-              color: theme.palette.primary.main, // Yellow text/icon
+              bgcolor: 'transparent', // Transparent background to show logo's design
+              color: theme.palette.primary.main, // Yellow text/icon fallback
               fontWeight: 700,
               fontSize: { xs: '16px', md: '20px' },
               border: `2px solid ${theme.palette.primary.dark}`,
               boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
               cursor: 'pointer',
               transition: 'all 0.2s ease',
+              overflow: 'hidden',
+              '& img': {
+                width: '100%',
+                height: '100%',
+                objectFit: 'contain',
+                padding: '4px',
+              },
               '&:hover': {
                 boxShadow: '0 4px 12px rgba(0, 0, 0, 0.25)',
               },
