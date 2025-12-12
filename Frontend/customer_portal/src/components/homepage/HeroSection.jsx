@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Container, Typography, Button } from '@mui/material';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Login as LoginIcon, ShoppingBag as ShoppingIcon } from '@mui/icons-material';
+import { PersonAdd as PersonAddIcon, ShoppingBag as ShoppingIcon } from '@mui/icons-material';
 import GlobalButton from '../ui/GlobalButton';
 
 const HeroSection = () => {
@@ -20,7 +20,7 @@ const HeroSection = () => {
         backgroundColor: '#FFFFFF',
       }}
     >
-      {/* Parallax Background Elements */}
+      {/* Parallax Background Elements with Networked Lines */}
       <motion.div
         style={{
           position: 'absolute',
@@ -29,46 +29,78 @@ const HeroSection = () => {
           right: 0,
           bottom: 0,
           zIndex: 0,
+          overflow: 'hidden',
         }}
       >
-        <motion.div
-          animate={{
-            y: [0, -20, 0],
-          }}
-          transition={{
-            duration: 6,
-            repeat: Infinity,
-            ease: 'easeInOut',
-          }}
+        {/* Device nodes */}
+        {[0, 1, 2, 3, 4].map((i) => {
+          const positions = [
+            { top: '15%', left: '10%' },
+            { top: '25%', right: '15%' },
+            { bottom: '20%', left: '20%' },
+            { bottom: '30%', right: '10%' },
+            { top: '50%', left: '50%' },
+          ];
+          return (
+            <motion.div
+              key={i}
+              animate={{
+                y: [0, -15, 0],
+                scale: [1, 1.1, 1],
+              }}
+              transition={{
+                duration: 4 + i,
+                repeat: Infinity,
+                ease: 'easeInOut',
+                delay: i * 0.5,
+              }}
+              style={{
+                position: 'absolute',
+                width: '60px',
+                height: '60px',
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, rgba(255, 204, 0, 0.3) 0%, rgba(255, 204, 0, 0.1) 100%)',
+                border: '2px solid rgba(255, 204, 0, 0.5)',
+                ...positions[i],
+              }}
+            />
+          );
+        })}
+        
+        {/* Networked lines connecting devices */}
+        <svg
           style={{
             position: 'absolute',
-            width: '200px',
-            height: '200px',
-            borderRadius: '50%',
-            background: 'linear-gradient(135deg, rgba(255, 204, 0, 0.1) 0%, rgba(255, 204, 0, 0.05) 100%)',
-            top: '10%',
-            left: '10%',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            zIndex: -1,
           }}
-        />
-        <motion.div
-          animate={{
-            y: [0, 20, 0],
-          }}
-          transition={{
-            duration: 8,
-            repeat: Infinity,
-            ease: 'easeInOut',
-          }}
-          style={{
-            position: 'absolute',
-            width: '150px',
-            height: '150px',
-            borderRadius: '50%',
-            background: 'linear-gradient(135deg, rgba(255, 204, 0, 0.08) 0%, rgba(255, 204, 0, 0.03) 100%)',
-            bottom: '15%',
-            right: '15%',
-          }}
-        />
+        >
+          {[0, 1, 2].map((i) => (
+            <motion.line
+              key={i}
+              x1={`${20 + i * 20}%`}
+              y1={`${15 + i * 10}%`}
+              x2={`${60 + i * 10}%`}
+              y2={`${70 - i * 15}%`}
+              stroke="rgba(255, 204, 0, 0.2)"
+              strokeWidth="2"
+              strokeDasharray="5,5"
+              animate={{
+                pathLength: [0, 1, 0],
+                opacity: [0.2, 0.5, 0.2],
+              }}
+              transition={{
+                duration: 3 + i,
+                repeat: Infinity,
+                ease: 'easeInOut',
+                delay: i * 0.8,
+              }}
+            />
+          ))}
+        </svg>
       </motion.div>
 
       <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
@@ -91,13 +123,18 @@ const HeroSection = () => {
           </Typography>
           <Typography
             variant="h2"
+            component={motion.h2}
             sx={{
-              fontWeight: 600,
+              fontWeight: 700,
+              fontStyle: 'italic',
               fontSize: { xs: '20px', md: '28px' },
               textAlign: 'center',
               mb: 1,
               color: '#333333',
             }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.6 }}
           >
             The Signal That Cares
           </Typography>
@@ -125,12 +162,12 @@ const HeroSection = () => {
             }}
           >
             <GlobalButton
-              icon={<LoginIcon />}
+              icon={<PersonAddIcon />}
               variant="contained"
               backgroundContext="white"
-              onClick={() => navigate('/login')}
+              onClick={() => navigate('/signup/phone')}
             >
-              Get Started
+              Are you new? Create account
             </GlobalButton>
             <GlobalButton
               icon={<ShoppingIcon />}

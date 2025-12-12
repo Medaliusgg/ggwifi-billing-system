@@ -18,6 +18,7 @@ import {
   AccountCircle as AccountIcon,
   Login as LoginIcon,
   Logout as LogoutIcon,
+  PersonAdd as PersonAddIcon,
 } from '@mui/icons-material';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -170,31 +171,59 @@ const GlobalHeader = ({ isAuthenticated, user, onLogout }) => {
             <PhoneIcon />
           </IconButton>
 
-          {/* Login Button (if not authenticated) */}
+          {/* Login/Sign-up Menu (if not authenticated) */}
           {!isAuthenticated && (
-            <Button
-              variant="contained"
-              startIcon={<LoginIcon />}
-              onClick={handleLogin}
-              sx={{
-                display: { xs: 'none', sm: 'flex' },
-                borderRadius: '12px',
-                fontWeight: 700,
-                textTransform: 'none',
-                px: 3,
-                py: 1,
-                backgroundColor: '#000000',
-                color: '#FFFFFF',
-                '&:hover': {
-                  backgroundColor: '#1A1A1A',
-                  transform: 'scale(1.05)',
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
-                },
-                transition: 'all 0.2s ease',
-              }}
-            >
-              Login
-            </Button>
+            <Box sx={{ display: { xs: 'none', sm: 'flex' }, gap: 1 }}>
+              <Button
+                component={motion.button}
+                variant="contained"
+                startIcon={<LoginIcon />}
+                onClick={handleLogin}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                sx={{
+                  borderRadius: '12px',
+                  fontWeight: 700,
+                  textTransform: 'none',
+                  px: 3,
+                  py: 1,
+                  backgroundColor: '#000000',
+                  color: '#FFFFFF',
+                  '&:hover': {
+                    backgroundColor: '#1A1A1A',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+                  },
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                Login
+              </Button>
+              <Button
+                component={motion.button}
+                variant="outlined"
+                startIcon={<PersonAddIcon />}
+                onClick={() => navigate('/signup/phone')}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                sx={{
+                  borderRadius: '12px',
+                  fontWeight: 700,
+                  textTransform: 'none',
+                  px: 3,
+                  py: 1,
+                  borderColor: '#000000',
+                  color: '#000000',
+                  '&:hover': {
+                    borderColor: '#000000',
+                    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
+                  },
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                Sign Up
+              </Button>
+            </Box>
           )}
 
           {/* Account/Login Icon */}

@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, CircularProgress } from '@mui/material';
 import { motion } from 'framer-motion';
 
-const AnimatedSpinner = ({ size = 40, color = '#FFCC00' }) => {
+const AnimatedSpinner = ({ size = 40, color = '#E6B800' }) => { // Dark golden yellow
   return (
     <Box
       sx={{

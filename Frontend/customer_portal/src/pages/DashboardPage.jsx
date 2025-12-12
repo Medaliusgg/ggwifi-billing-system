@@ -20,7 +20,6 @@ import {
   Speed as SpeedIcon,
   CloudDownload as DownloadIcon,
   CloudUpload as UploadIcon,
-  Close as CloseIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -28,6 +27,7 @@ import { useQuery } from 'react-query';
 import GlobalHeader from '../components/GlobalHeader';
 import StickyBottomNav from '../components/StickyBottomNav';
 import CountdownTimer from '../components/CountdownTimer';
+import AnimatedSpinner from '../components/ui/AnimatedSpinner';
 import { customerPortalAPI } from '../services/customerPortalApi';
 
 const DashboardPage = () => {
@@ -61,14 +61,24 @@ const DashboardPage = () => {
     }
   }, [token, navigate]);
 
-  // Fetch active session
-  const { data: activeSession, refetch: refetchSession } = useQuery(
+  // Fetch active session with loading spinner
+  const { data: activeSession, refetch: refetchSession, isLoading: sessionLoading } = useQuery(
     ['active-session'],
     async () => {
       const res = await customerPortalAPI.getActiveSession();
       return res?.data?.session || null;
     },
     { enabled: !!token, refetchInterval: 5000 }
+  );
+
+  // Fetch loyalty status
+  const { data: loyaltyData } = useQuery(
+    ['loyalty-status'],
+    async () => {
+      const res = await customerPortalAPI.getLoyaltyAccount();
+      return res?.data || {};
+    },
+    { enabled: !!token }
   );
 
   // Fetch suggested packages
@@ -81,16 +91,7 @@ const DashboardPage = () => {
     { enabled: !!token }
   );
 
-  const handleDisconnect = async () => {
-    if (activeSession?.id) {
-      try {
-        await customerPortalAPI.disconnectSession(activeSession.id);
-        refetchSession();
-      } catch (err) {
-        console.error('Failed to disconnect:', err);
-      }
-    }
-  };
+  // Disconnect feature removed - only admin can disconnect sessions
 
   // Show welcome message if coming from signup
   const showWelcome = location.state?.welcome;
@@ -100,7 +101,14 @@ const DashboardPage = () => {
     <Box sx={{ minHeight: '100vh', backgroundColor: colors.background, pb: { xs: 8, md: 0 } }}>
       <GlobalHeader isAuthenticated={!!token} user={user} />
 
-      <Container maxWidth="lg" sx={{ py: { xs: 3, md: 4 } }}>
+      <Container maxWidth="lg" sx={{ py: { xs: 2, md: 3 } }}>
+        {/* Loading Spinner */}
+        {sessionLoading && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+            <AnimatedSpinner size={50} color="#E6B800" />
+          </Box>
+        )}
+        
         {/* Welcome Message */}
         {showWelcome && rewards && (
           <Alert
@@ -121,7 +129,7 @@ const DashboardPage = () => {
           </Alert>
         )}
 
-        {/* Welcome Bar */}
+        {/* Welcome Bar - Compact with Loyalty Points */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -129,32 +137,32 @@ const DashboardPage = () => {
         >
           <Card
             sx={{
-              background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.primaryDark} 100%)`, // Primary Yellow gradient
-              borderRadius: '16px',
-              mb: 3,
-              color: colors.textPrimary, // Deep Black
+              background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.primaryDark} 100%)`,
+              borderRadius: '12px',
+              mb: 2,
+              color: colors.textPrimary,
             }}
           >
-            <CardContent sx={{ p: 3 }}>
+            <CardContent sx={{ p: 2 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <Avatar
                   sx={{
-                    bgcolor: colors.textPrimary, // Deep Black
-                    color: colors.primary, // Primary Yellow
-                    width: 56,
-                    height: 56,
-                    fontSize: '24px',
+                    bgcolor: colors.textPrimary,
+                    color: colors.primary,
+                    width: 48,
+                    height: 48,
+                    fontSize: '20px',
                     fontWeight: 700,
                   }}
                 >
                   {user?.firstName?.[0] || user?.phone?.[0] || 'U'}
                 </Avatar>
                 <Box sx={{ flex: 1 }}>
-                  <Typography variant="h5" sx={{ fontWeight: 700, mb: 0.5, color: colors.textPrimary }}>
-                    Welcome back, {user?.firstName?.toUpperCase() || 'USER'}
+                  <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 0.5, color: colors.textPrimary, fontSize: '16px' }}>
+                    Welcome, {user?.firstName || 'User'}
                   </Typography>
-                  <Typography variant="body2" sx={{ color: colors.textSecondary }}>
-                    Enjoy the fast and reliable GG Wi-Fi network
+                  <Typography variant="caption" sx={{ color: colors.textSecondary, fontSize: '12px' }}>
+                    {loyaltyData?.points || 0} GG Points
                   </Typography>
                 </Box>
               </Box>
@@ -162,61 +170,36 @@ const DashboardPage = () => {
           </Card>
         </motion.div>
 
-        {/* Quick Action Buttons */}
+        {/* Quick Action - Voucher Code Only */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
         >
-          <Grid container spacing={2} sx={{ mb: 3 }}>
-            <Grid item xs={6}>
-              <Button
-                fullWidth
-                variant="contained"
-                onClick={() => navigate('/voucher-login')}
-                sx={{
-                backgroundColor: colors.warning,
-                color: theme.palette.background.paper,
-                fontWeight: 600,
-                py: 2,
-                borderRadius: '12px',
-                fontSize: '16px',
-                '&:hover': {
-                  backgroundColor: colors.warningDark,
-                    boxShadow: '0 4px 12px rgba(244, 140, 6, 0.3)',
-                  },
-                }}
-                startIcon={<VoucherIcon />}
-              >
-                VOUCHER CODE
-              </Button>
-            </Grid>
-            <Grid item xs={6}>
-              <Button
-                fullWidth
-                variant="contained"
-                onClick={() => navigate('/voucher-login')}
-                sx={{
-                backgroundColor: colors.info,
-                color: theme.palette.background.paper,
-                fontWeight: 600,
-                py: 2,
-                borderRadius: '12px',
-                fontSize: '16px',
-                '&:hover': {
-                  backgroundColor: colors.infoDark,
-                    boxShadow: '0 4px 12px rgba(0, 123, 255, 0.3)',
-                  },
-                }}
-                startIcon={<AccessIcon />}
-              >
-                ACCESS CODE
-              </Button>
-            </Grid>
-          </Grid>
+          <Button
+            fullWidth
+            variant="contained"
+            onClick={() => navigate('/voucher-login')}
+            sx={{
+              backgroundColor: colors.warning,
+              color: theme.palette.background.paper,
+              fontWeight: 600,
+              py: 1.5,
+              borderRadius: '12px',
+              fontSize: '14px',
+              mb: 2,
+              '&:hover': {
+                backgroundColor: colors.warningDark,
+                boxShadow: '0 4px 12px rgba(244, 140, 6, 0.3)',
+              },
+            }}
+            startIcon={<VoucherIcon />}
+          >
+            VOUCHER CODE
+          </Button>
         </motion.div>
 
-        {/* Active Session Card */}
+        {/* Active Session Card - Compact */}
         {activeSession && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -227,65 +210,57 @@ const DashboardPage = () => {
               sx={{
                 background: `linear-gradient(135deg, ${theme.palette.background.paper} 0%, ${colors.background} 100%)`,
                 border: `1px solid ${theme.palette.divider}`,
-                borderRadius: '16px',
-                mb: 3,
+                borderRadius: '12px',
+                mb: 2,
               }}
             >
-              <CardContent sx={{ p: 3 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 2 }}>
-                  <Box>
-                    <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
+              <CardContent sx={{ p: 2 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 0.5, fontSize: '14px' }}>
                       Active Session
                     </Typography>
                     <Chip
                       label={activeSession.sessionType || 'Hotspot'}
+                      size="small"
                       sx={{
                         bgcolor: colors.success,
                         color: theme.palette.background.paper,
                         fontWeight: 600,
+                        fontSize: '11px',
+                        height: '20px',
                       }}
                     />
                   </Box>
-                  <Button
-                    size="small"
-                    onClick={handleDisconnect}
-                    sx={{
-                      color: theme.palette.error.main,
-                      minWidth: 'auto',
-                    }}
-                  >
-                    <CloseIcon />
-                  </Button>
+                  <Box sx={{ textAlign: 'right' }}>
+                    <Typography variant="caption" sx={{ color: colors.textSecondary, display: 'block', mb: 0.5 }}>
+                      Remaining
+                    </Typography>
+                    <CountdownTimer
+                      targetTime={activeSession.expiresAt}
+                      onExpire={() => refetchSession()}
+                    />
+                  </Box>
                 </Box>
 
-                <Box sx={{ mb: 3 }}>
-                  <Typography variant="body2" sx={{ color: colors.textSecondary, mb: 1 }}>
-                    Remaining Time
-                  </Typography>
-                  <CountdownTimer
-                    targetTime={activeSession.expiresAt}
-                    onExpire={() => refetchSession()}
-                  />
-                </Box>
-
-                <Grid container spacing={2}>
+                <Grid container spacing={1}>
                   <Grid item xs={6}>
                     <Box
                       sx={{
                         display: 'flex',
                         alignItems: 'center',
-                        gap: 1,
-                        p: 2,
+                        gap: 0.5,
+                        p: 1.5,
                         backgroundColor: colors.infoLight,
                         borderRadius: '8px',
                       }}
                     >
-                      <DownloadIcon sx={{ color: colors.info }} /> {/* Blue - secondary accent */}
+                      <DownloadIcon sx={{ color: colors.info, fontSize: '18px' }} />
                       <Box>
-                        <Typography variant="caption" sx={{ color: colors.textSecondary, display: 'block' }}>
+                        <Typography variant="caption" sx={{ color: colors.textSecondary, display: 'block', fontSize: '10px' }}>
                           Download
                         </Typography>
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '12px' }}>
                           {activeSession.downloadUsage || '0 MB'}
                         </Typography>
                       </Box>
@@ -296,18 +271,18 @@ const DashboardPage = () => {
                       sx={{
                         display: 'flex',
                         alignItems: 'center',
-                        gap: 1,
-                        p: 2,
+                        gap: 0.5,
+                        p: 1.5,
                         backgroundColor: colors.successLight,
                         borderRadius: '8px',
                       }}
                     >
-                      <UploadIcon sx={{ color: colors.success }} /> {/* Green - secondary accent */}
+                      <UploadIcon sx={{ color: colors.success, fontSize: '18px' }} />
                       <Box>
-                        <Typography variant="caption" sx={{ color: colors.textSecondary, display: 'block' }}>
+                        <Typography variant="caption" sx={{ color: colors.textSecondary, display: 'block', fontSize: '10px' }}>
                           Upload
                         </Typography>
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '12px' }}>
                           {activeSession.uploadUsage || '0 MB'}
                         </Typography>
                       </Box>

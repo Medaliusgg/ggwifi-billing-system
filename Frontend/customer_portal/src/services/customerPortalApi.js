@@ -81,6 +81,20 @@ apiClient.interceptors.response.use(
         }
       }
       
+      // 403 Forbidden - Usually CORS issue or permission denied
+      if (error.response.status === 403) {
+        console.error('CORS/Forbidden Error (403):', {
+          message: 'Access denied. This may be a CORS configuration issue. Please contact support.',
+          url: error.config?.url,
+        });
+        return Promise.reject({
+          ...error,
+          isCorsError: true,
+          isForbidden: true,
+          message: 'Access denied. The server is blocking this request. Please contact support if this persists.',
+        });
+      }
+      
       // 502 Bad Gateway - backend might be down
       if (error.response.status === 502) {
         console.error('Backend Error (502):', {

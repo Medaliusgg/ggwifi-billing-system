@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Container, Typography, Card, CardContent, Grid, Tabs, Tab, Chip } from '@mui/material';
+import { Box, Container, Typography, Card, CardContent, Grid, Button } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Speed as SpeedIcon, ShoppingCart as ShoppingIcon } from '@mui/icons-material';
@@ -79,30 +79,79 @@ const HomePackageList = () => {
           Choose Your Package
         </Typography>
 
-        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 4 }}>
-          <Tabs
-            value={activeTab}
-            onChange={(e, newValue) => {
-              setActiveTab(newValue);
-              setFocusedIndex(0);
-            }}
+        {/* Central Switching Button with Beautiful Transition */}
+        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
+          <Box
             sx={{
-              '& .MuiTab-root': {
-                textTransform: 'none',
-                fontWeight: 600,
-                fontSize: '16px',
-                '&.Mui-selected': {
-                  color: '#FFCC00',
-                },
-              },
-              '& .MuiTabs-indicator': {
-                backgroundColor: '#FFCC00',
-              },
+              display: 'flex',
+              backgroundColor: '#F5F5F5',
+              borderRadius: '16px',
+              p: 0.5,
+              position: 'relative',
+              width: 'fit-content',
             }}
           >
-            <Tab label="Universal Packages" />
-            <Tab label="Offer Packages" />
-          </Tabs>
+            <motion.div
+              animate={{
+                x: activeTab === 0 ? 0 : '100%',
+              }}
+              transition={{
+                type: 'spring',
+                stiffness: 300,
+                damping: 30,
+              }}
+              style={{
+                position: 'absolute',
+                top: 4,
+                bottom: 4,
+                left: 4,
+                width: 'calc(50% - 4px)',
+                backgroundColor: activeTab === 0 ? '#10B981' : '#8B5CF6',
+                borderRadius: '12px',
+                zIndex: 0,
+              }}
+            />
+            <Button
+              onClick={() => {
+                setActiveTab(0);
+                setFocusedIndex(0);
+              }}
+              sx={{
+                position: 'relative',
+                zIndex: 1,
+                textTransform: 'none',
+                fontWeight: 700,
+                fontSize: '16px',
+                px: 4,
+                py: 1.5,
+                color: activeTab === 0 ? '#FFFFFF' : '#666666',
+                borderRadius: '12px',
+                transition: 'color 0.3s ease',
+              }}
+            >
+              Universal Packages
+            </Button>
+            <Button
+              onClick={() => {
+                setActiveTab(1);
+                setFocusedIndex(0);
+              }}
+              sx={{
+                position: 'relative',
+                zIndex: 1,
+                textTransform: 'none',
+                fontWeight: 700,
+                fontSize: '16px',
+                px: 4,
+                py: 1.5,
+                color: activeTab === 1 ? '#FFFFFF' : '#666666',
+                borderRadius: '12px',
+                transition: 'color 0.3s ease',
+              }}
+            >
+              Offer Packages
+            </Button>
+          </Box>
         </Box>
 
         {isLoading ? (
@@ -116,7 +165,7 @@ const HomePackageList = () => {
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.3 }}
             >
-              <Grid container spacing={3}>
+              <Grid container spacing={3} sx={{ maxWidth: '1200px', mx: 'auto' }}>
                 {packages.slice(0, 4).map((pkg, index) => {
                   const isFocused = focusedIndex === index;
                   const accentColor = getAccentColor(index);

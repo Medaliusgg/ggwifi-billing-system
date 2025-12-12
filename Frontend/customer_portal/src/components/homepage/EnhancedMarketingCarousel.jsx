@@ -160,7 +160,7 @@ const EnhancedMarketingCarousel = ({ campaigns = [] }) => {
         </>
       )}
 
-      {/* Dot Indicators */}
+      {/* Dot Indicators with Focus Ring */}
       {campaigns.length > 1 && (
         <Box
           sx={{
@@ -171,25 +171,60 @@ const EnhancedMarketingCarousel = ({ campaigns = [] }) => {
             display: 'flex',
             gap: 1,
             zIndex: 2,
+            alignItems: 'center',
           }}
         >
-          {campaigns.map((_, index) => (
-            <Box
-              key={index}
-              onClick={() => {
-                setDirection(index > currentIndex ? 1 : -1);
-                setCurrentIndex(index);
-              }}
-              sx={{
-                width: currentIndex === index ? 24 : 8,
-                height: 8,
-                borderRadius: '4px',
-                backgroundColor: currentIndex === index ? '#FFCC00' : 'rgba(255, 255, 255, 0.5)',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease',
-              }}
-            />
-          ))}
+          {campaigns.map((_, index) => {
+            const isActive = currentIndex === index;
+            return (
+              <motion.div
+                key={index}
+                onClick={() => {
+                  setDirection(index > currentIndex ? 1 : -1);
+                  setCurrentIndex(index);
+                }}
+                whileHover={{ scale: 1.2 }}
+                whileTap={{ scale: 0.9 }}
+                style={{ cursor: 'pointer' }}
+              >
+                <Box
+                  sx={{
+                    width: isActive ? 24 : 8,
+                    height: 8,
+                    borderRadius: '4px',
+                    backgroundColor: isActive ? '#FFCC00' : 'rgba(255, 255, 255, 0.5)',
+                    transition: 'all 0.3s ease',
+                    position: 'relative',
+                  }}
+                >
+                  {isActive && (
+                    <motion.div
+                      animate={{
+                        boxShadow: [
+                          '0 0 0 0 rgba(255, 204, 0, 0.7)',
+                          '0 0 0 8px rgba(255, 204, 0, 0)',
+                          '0 0 0 0 rgba(255, 204, 0, 0.7)',
+                        ],
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                      }}
+                      style={{
+                        position: 'absolute',
+                        top: -4,
+                        left: -4,
+                        right: -4,
+                        bottom: -4,
+                        borderRadius: '8px',
+                        border: '2px solid #FFCC00',
+                      }}
+                    />
+                  )}
+                </Box>
+              </motion.div>
+            );
+          })}
         </Box>
       )}
     </Box>

@@ -8,6 +8,8 @@ import {
   Typography,
   Box,
   Alert,
+  LinearProgress,
+  CircularProgress,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import { customerPortalAPI } from '../services/customerPortalApi';
@@ -20,6 +22,7 @@ const PhoneVerificationModal = ({ open, onClose, onVerified, packageId }) => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [verificationStatus, setVerificationStatus] = useState('idle'); // idle, verifying, verified, failed
   const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
 
   const handleVerify = async () => {
@@ -30,6 +33,7 @@ const PhoneVerificationModal = ({ open, onClose, onVerified, packageId }) => {
 
     setLoading(true);
     setError('');
+    setVerificationStatus('verifying');
 
     try {
       // Check if phone is registered
@@ -37,6 +41,7 @@ const PhoneVerificationModal = ({ open, onClose, onVerified, packageId }) => {
       
       if (response?.data?.isRegistered) {
         // Phone is registered, allow payment
+        setVerificationStatus('verified');
         setNotification({
           open: true,
           message: 'Phone number verified! Proceeding to payment...',
@@ -48,6 +53,7 @@ const PhoneVerificationModal = ({ open, onClose, onVerified, packageId }) => {
         }, 1500);
       } else {
         // Phone not registered, force signup
+        setVerificationStatus('failed');
         setNotification({
           open: true,
           message: 'Phone number not registered. Please sign up first.',
@@ -60,6 +66,7 @@ const PhoneVerificationModal = ({ open, onClose, onVerified, packageId }) => {
         }, 2000);
       }
     } catch (err) {
+      setVerificationStatus('failed');
       setError(err?.response?.data?.message || 'Failed to verify phone number');
     } finally {
       setLoading(false);
@@ -100,6 +107,7 @@ const PhoneVerificationModal = ({ open, onClose, onVerified, packageId }) => {
             onChange={(e) => {
               setPhoneNumber(e.target.value);
               setError('');
+              setVerificationStatus('idle');
             }}
             placeholder="+255 742 844 024"
             disabled={loading}
@@ -108,9 +116,78 @@ const PhoneVerificationModal = ({ open, onClose, onVerified, packageId }) => {
               startAdornment: <PhoneIcon sx={{ mr: 1, color: '#666666' }} />,
             }}
           />
-          {loading && (
+          
+          {/* Progress Bar Indicator */}
+          {verificationStatus !== 'idle' && (
             <Box sx={{ mt: 2 }}>
-              <AnimatedSpinner size={30} />
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                {verificationStatus === 'verifying' && (
+                  <>
+                    <CircularProgress size={16} sx={{ color: '#FFCC00' }} />
+                    <Typography variant="caption" sx={{ color: '#666666' }}>
+                      Verifying phone number...
+                    </Typography>
+                  </>
+                )}
+                {verificationStatus === 'verified' && (
+                  <>
+                    <Box
+                      sx={{
+                        width: 16,
+                        height: 16,
+                        borderRadius: '50%',
+                        backgroundColor: '#10B981',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Typography variant="caption" sx={{ color: '#FFFFFF', fontSize: '10px' }}>
+                        ✓
+                      </Typography>
+                    </Box>
+                    <Typography variant="caption" sx={{ color: '#10B981', fontWeight: 600 }}>
+                      Phone verified!
+                    </Typography>
+                  </>
+                )}
+                {verificationStatus === 'failed' && (
+                  <>
+                    <Box
+                      sx={{
+                        width: 16,
+                        height: 16,
+                        borderRadius: '50%',
+                        backgroundColor: '#EF4444',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Typography variant="caption" sx={{ color: '#FFFFFF', fontSize: '10px' }}>
+                        ✕
+                      </Typography>
+                    </Box>
+                    <Typography variant="caption" sx={{ color: '#EF4444', fontWeight: 600 }}>
+                      Not registered - Please sign up
+                    </Typography>
+                  </>
+                )}
+              </Box>
+              <LinearProgress
+                variant={verificationStatus === 'verifying' ? 'indeterminate' : 'determinate'}
+                value={verificationStatus === 'verified' ? 100 : verificationStatus === 'failed' ? 100 : 0}
+                sx={{
+                  height: 6,
+                  borderRadius: 3,
+                  backgroundColor: '#E5E7EB',
+                  '& .MuiLinearProgress-bar': {
+                    backgroundColor: 
+                      verificationStatus === 'verified' ? '#10B981' :
+                      verificationStatus === 'failed' ? '#EF4444' : '#FFCC00',
+                  },
+                }}
+              />
             </Box>
           )}
         </DialogContent>

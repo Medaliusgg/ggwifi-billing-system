@@ -28,6 +28,7 @@ import { useQuery } from 'react-query';
 import GlobalHeader from '../components/GlobalHeader';
 import StickyBottomNav from '../components/StickyBottomNav';
 import PhoneVerificationModal from '../components/PhoneVerificationModal';
+import PaymentMethodCards from '../components/PaymentMethodCards';
 import { customerPortalAPI } from '../services/customerPortalApi';
 import GlobalButton from '../components/ui/GlobalButton';
 import AnimatedSpinner from '../components/ui/AnimatedSpinner';
@@ -43,6 +44,9 @@ const PurchasesPage = () => {
   const token = localStorage.getItem('token');
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [verifiedPhone, setVerifiedPhone] = useState(null);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
+  const [paymentStatus, setPaymentStatus] = useState(null); // null, processing, success, failed, timeout, insufficient_funds
+  const [voucherCode, setVoucherCode] = useState(null);
   const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
   // ✅ GG Wi-Fi OFFICIAL BRAND COLORS
   const colors = {
@@ -109,12 +113,56 @@ const PurchasesPage = () => {
       return;
     }
 
-    // TODO: Implement payment initiation
-    setNotification({
-      open: true,
-      message: 'Payment flow will be implemented',
-      severity: 'info',
-    });
+    if (!selectedPaymentMethod && (token || verifiedPhone)) {
+      setNotification({
+        open: true,
+        message: 'Please select a payment method',
+        severity: 'warning',
+      });
+      return;
+    }
+
+    // Set payment status to processing
+    setPaymentStatus('processing');
+
+    try {
+      // TODO: Implement actual payment initiation with SELCOM
+      // This is a placeholder - replace with actual API call
+      // const response = await customerPortalAPI.initiatePayment({
+      //   packageId,
+      //   paymentMethod: selectedPaymentMethod,
+      //   phoneNumber: verifiedPhone || user?.phone,
+      // });
+
+      // Simulate payment processing
+      setTimeout(() => {
+        // Simulate webhook response
+        const mockWebhookStatus = 'success'; // This would come from backend webhook
+        
+        if (mockWebhookStatus === 'success') {
+          setPaymentStatus('success');
+          setVoucherCode('ABC123'); // This would come from backend
+          setNotification({
+            open: true,
+            message: 'Payment successful! Voucher code generated.',
+            severity: 'success',
+          });
+        } else if (mockWebhookStatus === 'failed') {
+          setPaymentStatus('failed');
+        } else if (mockWebhookStatus === 'timeout') {
+          setPaymentStatus('timeout');
+        } else if (mockWebhookStatus === 'insufficient_funds') {
+          setPaymentStatus('insufficient_funds');
+        }
+      }, 3000);
+    } catch (err) {
+      setPaymentStatus('failed');
+      setNotification({
+        open: true,
+        message: err?.response?.data?.message || 'Payment failed. Please try again.',
+        severity: 'error',
+      });
+    }
   };
 
   const getStatusChip = (status) => {
@@ -203,20 +251,161 @@ const PurchasesPage = () => {
                     </Alert>
                   )}
 
+                  {/* Payment Method Selection */}
+                  {(token || verifiedPhone) && !paymentStatus && (
+                    <PaymentMethodCards
+                      selectedMethod={selectedPaymentMethod}
+                      onSelect={setSelectedPaymentMethod}
+                    />
+                  )}
+
+                  {/* Payment Status UI */}
+                  {paymentStatus && (
+                    <Box sx={{ mb: 3 }}>
+                      {paymentStatus === 'processing' && (
+                        <Alert 
+                          severity="info" 
+                          sx={{ 
+                            mb: 2,
+                            '& .MuiAlert-icon': { color: '#FFCC00' },
+                          }}
+                        >
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <AnimatedSpinner size={24} color="#FFCC00" />
+                            <Typography variant="body2">
+                              Processing payment... Please wait.
+                            </Typography>
+                          </Box>
+                        </Alert>
+                      )}
+                      {paymentStatus === 'success' && voucherCode && (
+                        <Alert severity="success" sx={{ mb: 2 }}>
+                          <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
+                            Payment Successful! 🎉
+                          </Typography>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                            <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                              Voucher Code:
+                            </Typography>
+                            <Box
+                              component={motion.div}
+                              sx={{
+                                p: 1.5,
+                                backgroundColor: '#F5F5F5',
+                                borderRadius: '8px',
+                                fontFamily: 'monospace',
+                                fontSize: '18px',
+                                fontWeight: 700,
+                                color: '#000000',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1,
+                              }}
+                              whileHover={{ scale: 1.05 }}
+                            >
+                              {voucherCode}
+                              <motion.button
+                                onClick={() => {
+                                  navigator.clipboard.writeText(voucherCode);
+                                  setNotification({
+                                    open: true,
+                                    message: 'Voucher code copied!',
+                                    severity: 'success',
+                                  });
+                                }}
+                                style={{
+                                  border: 'none',
+                                  background: '#FFCC00',
+                                  color: '#000000',
+                                  borderRadius: '6px',
+                                  padding: '4px 12px',
+                                  cursor: 'pointer',
+                                  fontWeight: 600,
+                                  fontSize: '12px',
+                                }}
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
+                              >
+                                Copy
+                              </motion.button>
+                            </Box>
+                          </Box>
+                          <Typography variant="body2" sx={{ color: '#666666' }}>
+                            Voucher code has been sent to your phone via SMS.
+                          </Typography>
+                        </Alert>
+                      )}
+                      {paymentStatus === 'failed' && (
+                        <Alert severity="error" sx={{ mb: 2 }}>
+                          <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
+                            Payment Failed
+                          </Typography>
+                          <Typography variant="body2">
+                            Your payment could not be processed. Please try again or contact support.
+                          </Typography>
+                        </Alert>
+                      )}
+                      {paymentStatus === 'timeout' && (
+                        <Alert severity="warning" sx={{ mb: 2 }}>
+                          <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
+                            Payment Timeout
+                          </Typography>
+                          <Typography variant="body2">
+                            Payment request timed out. Please try again.
+                          </Typography>
+                        </Alert>
+                      )}
+                      {paymentStatus === 'insufficient_funds' && (
+                        <Alert severity="warning" sx={{ mb: 2 }}>
+                          <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
+                            Insufficient Funds
+                          </Typography>
+                          <Typography variant="body2">
+                            Your account balance is insufficient. Please top up and try again.
+                          </Typography>
+                        </Alert>
+                      )}
+                    </Box>
+                  )}
+
                   <GlobalButton
                     icon={<CartIcon />}
                     variant="contained"
                     backgroundContext="white"
                     fullWidth
                     onClick={handleInitiatePayment}
-                    disabled={!token && !verifiedPhone}
+                    disabled={(!token && !verifiedPhone) || (paymentStatus === 'processing') || (!selectedPaymentMethod && (token || verifiedPhone))}
                     sx={{
                       py: 2,
                       fontSize: '18px',
                     }}
                   >
-                    {token ? 'Proceed to Payment' : 'Verify & Continue'}
+                    {paymentStatus === 'processing' 
+                      ? 'Processing...' 
+                      : paymentStatus === 'success'
+                      ? 'View Dashboard'
+                      : !selectedPaymentMethod && (token || verifiedPhone)
+                      ? 'Select Payment Method'
+                      : token 
+                      ? 'Proceed to Payment' 
+                      : 'Verify & Continue'}
                   </GlobalButton>
+                  
+                  {paymentStatus === 'success' && (
+                    <GlobalButton
+                      variant="outlined"
+                      backgroundContext="white"
+                      fullWidth
+                      onClick={() => navigate('/dashboard')}
+                      sx={{
+                        py: 2,
+                        fontSize: '18px',
+                        mt: 2,
+                      }}
+                    >
+                      Go to Dashboard
+                    </GlobalButton>
+                  )}
                 </CardContent>
               </Card>
             </motion.div>
