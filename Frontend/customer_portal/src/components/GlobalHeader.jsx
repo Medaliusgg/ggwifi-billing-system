@@ -19,6 +19,7 @@ import {
   Login as LoginIcon,
   Logout as LogoutIcon,
   PersonAdd as PersonAddIcon,
+  ArrowBack as ArrowBackIcon,
 } from '@mui/icons-material';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -77,6 +78,15 @@ const GlobalHeader = ({ isAuthenticated, user, onLogout }) => {
     handleAccountMenuClose();
   };
 
+  const handleBack = () => {
+    // Navigate back in history, or to home if no history
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate('/home');
+    }
+  };
+
   // Always yellow background, but adjust opacity/shadow on scroll
   const boxShadow = scrolled 
     ? '0 2px 8px rgba(0,0,0,0.15)' 
@@ -95,19 +105,45 @@ const GlobalHeader = ({ isAuthenticated, user, onLogout }) => {
       }}
     >
       <Toolbar sx={{ justifyContent: 'space-between', px: { xs: 1, md: 3 } }}>
-        {/* Logo */}
-        <Box
-          component={motion.div}
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          onClick={() => navigate('/home')}
-          sx={{ 
-            cursor: 'pointer', 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: 1.5 
-          }}
-        >
+        {/* Left Side: Back Button (if not home) + Logo */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, md: 2 } }}>
+          {/* Back Arrow Button - Only show when NOT on home page */}
+          {!isHomePage && (
+            <IconButton
+              component={motion.button}
+              onClick={handleBack}
+              whileHover={{ scale: 1.1, x: -2 }}
+              whileTap={{ scale: 0.9 }}
+              sx={{
+                color: theme.palette.text.primary, // Black on yellow
+                backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                '&:hover': {
+                  backgroundColor: 'rgba(0, 0, 0, 0.15)',
+                  transform: 'translateX(-2px)',
+                },
+                transition: 'all 0.2s ease',
+                mr: { xs: 0.5, md: 1 },
+              }}
+              size={isMobile ? 'small' : 'medium'}
+              aria-label="Go back"
+            >
+              <ArrowBackIcon />
+            </IconButton>
+          )}
+          
+          {/* Logo */}
+          <Box
+            component={motion.div}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            onClick={() => navigate('/home')}
+            sx={{ 
+              cursor: 'pointer', 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 1.5 
+            }}
+          >
           {/* Logo Image - Using transparent PNG if available */}
           <Box
             component="img"
@@ -135,6 +171,7 @@ const GlobalHeader = ({ isAuthenticated, user, onLogout }) => {
           >
             GG Wi-Fi
           </Typography>
+        </Box>
         </Box>
 
         {/* Right Icons */}
