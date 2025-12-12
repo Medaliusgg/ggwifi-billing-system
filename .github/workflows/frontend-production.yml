@@ -1,0 +1,74 @@
+name: Frontend - Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'Frontend/**'
+      - '.github/workflows/frontend-production.yml'
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "DEPLOY" to confirm production deployment'
+        required: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment: production  # Requires manual approval
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Verify deployment confirmation
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          if [ "${{ github.event.inputs.confirm }}" != "DEPLOY" ]; then
+            echo "❌ Deployment not confirmed. Type 'DEPLOY' to proceed."
+            exit 1
+          fi
+          echo "✅ Deployment confirmed"
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: Frontend/admin_portal/package-lock.json
+      
+      - name: Install dependencies
+        working-directory: ./Frontend/admin_portal
+        run: |
+          npm ci
+          echo "✅ Dependencies installed"
+      
+      - name: Build frontend
+        working-directory: ./Frontend/admin_portal
+        env:
+          VITE_API_BASE_URL: ${{ secrets.PRODUCTION_API_URL || 'https://api.ggwifi.co.tz/api/v1' }}
+        run: |
+          npm run build
+          echo "✅ Frontend build completed"
+      
+      - name: Deploy to Cloudflare Pages (Production)
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: ggwifi-admin
+          directory: Frontend/admin_portal/dist
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          wranglerVersion: '3'
+      
+      - name: Notify deployment status
+        if: always()
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ Frontend deployed to production successfully"
+            echo "🌐 Production URL: https://admin.ggwifi.co.tz"
+          else
+            echo "❌ Frontend deployment to production failed"
+          fi
+

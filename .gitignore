@@ -1,149 +1,70 @@
-# Dependencies
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+# Backend
+backend/target/
+backend/.mvn/
+backend/mvnw
+backend/mvnw.cmd
+backend/.classpath
+backend/.project
+backend/.settings/
+backend/*.log
+backend/application-local.properties
+backend/application-*.yml
+!backend/application.yml
+!backend/application-production.yml.example
 
-# Build outputs
-dist/
-build/
-target/
+# Frontend
+Frontend/*/node_modules/
+Frontend/*/dist/
+Frontend/*/build/
+Frontend/*/.env.local
+Frontend/*/.env.production.local
+Frontend/*/.env.development.local
+Frontend/*/.vite/
+Frontend/*/.cache/
+Frontend/*/coverage/
+Frontend/*/.DS_Store
 
-# Environment variables
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# IDE files
-.vscode/
+# IDE
 .idea/
+.vscode/
+*.iml
 *.swp
 *.swo
 *~
 
-# OS generated files
+# OS
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
 
 # Logs
-logs
 *.log
+logs/
+*.log.*
 
-# Runtime data
-pids
-*.pid
-*.seed
-*.pid.lock
+# Secrets
+*.pem
+*.key
+*.crt
+secrets/
+.env
+.env.*
 
-# Coverage directory used by tools like istanbul
-coverage/
-
-# Dependency directories
-jspm_packages/
-
-# Optional npm cache directory
-.npm
-
-# Optional eslint cache
-.eslintcache
-
-# Microbundle cache
-.rpt2_cache/
-.rts2_cache_cjs/
-.rts2_cache_es/
-.rts2_cache_umd/
-
-# Optional REPL history
-.node_repl_history
-
-# Output of 'npm pack'
-*.tgz
-
-# Yarn Integrity file
-.yarn-integrity
-
-# parcel-bundler cache (https://parceljs.org/)
-.cache
-.parcel-cache
-
-# Next.js build output
-.next
-
-# Nuxt.js build / generate output
-.nuxt
-
-# Gatsby files
-.cache/
-public
-# Allow logo files in public folder
-!Frontend/customer_portal/public/*.png
-!Frontend/customer_portal/public/*.ico
-!Frontend/customer_portal/public/*.jpg
-!Frontend/customer_portal/public/*.jpeg
-!Frontend/customer_portal/public/*.svg
-
-# Storybook build outputs
-.out
-.storybook-out
-
-# Temporary folders
+# Temporary files
 tmp/
 temp/
+*.tmp
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-
-# Java compiled files
-*.class
+# Deployment
+deploy/
 *.jar
-*.war
-*.ear
+!backend/target/*.jar
 
-# Maven
-target/
-pom.xml.tag
-pom.xml.releaseBackup
-pom.xml.versionsBackup
-pom.xml.next
-release.properties
-dependency-reduced-pom.xml
-buildNumber.properties
-.mvn/timing.properties
-.mvn/wrapper/maven-wrapper.jar
-
-# Gradle
-.gradle
-build/
-!gradle/wrapper/gradle-wrapper.jar
-
-# Database files
+# Database
 *.db
 *.sqlite
 *.sqlite3
 
 # Backup files
-*.bak
+backup/
 *.backup
-
-# SSL certificates
-*.pem
-*.key
-*.crt
-
-# Local development files
-local.properties
-.env.development
+*.bak

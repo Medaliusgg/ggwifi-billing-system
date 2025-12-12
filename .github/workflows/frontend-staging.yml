@@ -1,0 +1,60 @@
+name: Frontend - Deploy to Staging
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - 'Frontend/**'
+      - '.github/workflows/frontend-staging.yml'
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: Frontend/admin_portal/package-lock.json
+      
+      - name: Install dependencies
+        working-directory: ./Frontend/admin_portal
+        run: |
+          npm ci
+          echo "✅ Dependencies installed"
+      
+      - name: Build frontend
+        working-directory: ./Frontend/admin_portal
+        env:
+          VITE_API_BASE_URL: ${{ secrets.STAGING_API_URL || 'https://staging-api.ggwifi.co.tz/api/v1' }}
+        run: |
+          npm run build
+          echo "✅ Frontend build completed"
+      
+      - name: Deploy to Cloudflare Pages (Staging)
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: ggwifi-admin-staging
+          directory: Frontend/admin_portal/dist
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          wranglerVersion: '3'
+      
+      - name: Notify deployment status
+        if: always()
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ Frontend deployed to staging successfully"
+            echo "🌐 Staging URL: https://staging-admin.ggwifi.co.tz"
+          else
+            echo "❌ Frontend deployment to staging failed"
+          fi
+
