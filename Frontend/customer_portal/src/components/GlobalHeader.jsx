@@ -188,9 +188,9 @@ const GlobalHeader = ({ isAuthenticated, user, onLogout }) => {
                 sx={{
                   width: '100%',
                   height: '100%',
-                  objectFit: 'cover',
+                  objectFit: 'contain',
                   objectPosition: 'center',
-                  transform: 'scale(1.4)',
+                  transform: 'scale(1.5)',
                 }}
               />
             )}
