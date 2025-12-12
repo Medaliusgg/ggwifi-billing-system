@@ -82,6 +82,12 @@ jspm_packages/
 # Gatsby files
 .cache/
 public
+# Allow logo files in public folder
+!Frontend/customer_portal/public/*.png
+!Frontend/customer_portal/public/*.ico
+!Frontend/customer_portal/public/*.jpg
+!Frontend/customer_portal/public/*.jpeg
+!Frontend/customer_portal/public/*.svg
 
 # Storybook build outputs
 .out
