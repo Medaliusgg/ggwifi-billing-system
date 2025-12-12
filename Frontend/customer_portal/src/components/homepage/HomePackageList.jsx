@@ -156,6 +156,18 @@ const HomePackageList = () => {
 
         {isLoading ? (
           <AnimatedSpinner />
+        ) : packagesError ? (
+          <Box sx={{ textAlign: 'center', py: 4 }}>
+            <Typography variant="body1" sx={{ color: '#666666' }}>
+              Unable to load packages. Please try again later.
+            </Typography>
+          </Box>
+        ) : packages.length === 0 ? (
+          <Box sx={{ textAlign: 'center', py: 4 }}>
+            <Typography variant="body1" sx={{ color: '#666666' }}>
+              No packages available at the moment.
+            </Typography>
+          </Box>
         ) : (
           <AnimatePresence mode="wait">
             <motion.div

@@ -47,13 +47,26 @@ const PlansPage = () => {
   };
 
   // Fetch packages (public endpoint - no token required)
-  const { data: packagesData, isLoading } = useQuery(
+  const { data: packagesData, isLoading, error: packagesError } = useQuery(
     ['packages'],
     async () => {
-      const res = await customerPortalAPI.getPackages();
-      return res?.data || {};
+      try {
+        const res = await customerPortalAPI.getPackages();
+        // Handle different response structures
+        const packages = res?.data?.packages || res?.data?.data?.packages || res?.data || [];
+        console.log('PlansPage - Packages fetched:', packages);
+        return Array.isArray(packages) ? { packages } : { packages: packages.packages || [] };
+      } catch (error) {
+        console.error('PlansPage - Error fetching packages:', error);
+        return { packages: [] };
+      }
     },
-    { enabled: true } // Always enabled since packages are public
+    { 
+      enabled: true, // Always enabled since packages are public
+      retry: 1,
+      refetchOnWindowFocus: false,
+      staleTime: 5 * 60 * 1000,
+    }
   );
 
   const universalPackages = (packagesData?.packages || []).filter(

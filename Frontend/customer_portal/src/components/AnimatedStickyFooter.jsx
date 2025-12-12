@@ -10,8 +10,9 @@ const AnimatedStickyFooter = () => {
   const location = useLocation();
   const isHomePage = location.pathname === '/' || location.pathname === '/home';
   const [showVoucherFooter, setShowVoucherFooter] = useState(false);
+  const [isAtBottom, setIsAtBottom] = useState(false);
 
-  // Stable scroll detection - only show when near bottom of page
+  // Scroll detection - show voucher footer when scrolling, hide at bottom
   useEffect(() => {
     const handleScroll = () => {
       const scrollTop = window.scrollY || document.documentElement.scrollTop;
@@ -19,10 +20,14 @@ const AnimatedStickyFooter = () => {
       const documentHeight = document.documentElement.scrollHeight;
       const distanceFromBottom = documentHeight - (scrollTop + windowHeight);
       
-      // Show footer only when:
-      // 1. User has scrolled down at least 300px (not at top)
-      // 2. User is within 300px of the bottom of the page
-      const shouldShow = scrollTop > 300 && distanceFromBottom < 300;
+      // Check if at the very bottom (within 50px)
+      const atBottom = distanceFromBottom <= 50;
+      setIsAtBottom(atBottom);
+      
+      // Show voucher footer when:
+      // 1. User has scrolled down at least 200px (not at top)
+      // 2. User is NOT at the bottom (so real footer shows at bottom)
+      const shouldShow = scrollTop > 200 && !atBottom;
       
       // Only update state if it changed to prevent unnecessary re-renders
       setShowVoucherFooter(prev => prev !== shouldShow ? shouldShow : prev);
@@ -48,39 +53,41 @@ const AnimatedStickyFooter = () => {
 
   return (
     <>
-      {/* Normal Footer (always at bottom) - Yellow background */}
-      <Box
-        component="footer"
-        sx={{
-          backgroundColor: '#FFCC00', // Golden Yellow
-          borderTop: '2px solid #E6B800',
-          py: 4,
-          mt: 'auto',
-          boxShadow: '0 -2px 10px rgba(0,0,0,0.1)',
-        }}
-      >
-        <Container maxWidth="lg">
-          <Box
-            sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: 2,
-            }}
-          >
-            <Typography variant="body2" sx={{ color: '#000000', fontWeight: 600 }}>
-              © 2025 GG Wi-Fi. All rights reserved.
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              {/* Social icons can be added here */}
+      {/* Normal Footer (only at bottom of page) - Yellow background */}
+      {isAtBottom && (
+        <Box
+          component="footer"
+          sx={{
+            backgroundColor: '#FFCC00', // Golden Yellow
+            borderTop: '2px solid #E6B800',
+            py: 4,
+            mt: 'auto',
+            boxShadow: '0 -2px 10px rgba(0,0,0,0.1)',
+          }}
+        >
+          <Container maxWidth="lg">
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 2,
+              }}
+            >
+              <Typography variant="body2" sx={{ color: '#000000', fontWeight: 600 }}>
+                © 2025 GG Wi-Fi. All rights reserved.
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                {/* Social icons can be added here */}
+              </Box>
             </Box>
-          </Box>
-        </Container>
-      </Box>
+          </Container>
+        </Box>
+      )}
 
-      {/* Animated Sticky Footer (on scroll up or near bottom) */}
+      {/* Animated Sticky Footer (voucher login button when scrolling, not at bottom) */}
       <AnimatePresence mode="wait">
-        {showVoucherFooter && (
+        {showVoucherFooter && !isAtBottom && (
           <motion.div
             key="voucher-footer"
             initial={{ y: 100, opacity: 0 }}
@@ -113,41 +120,23 @@ const AnimatedStickyFooter = () => {
                   sx={{
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'space-between',
+                    justifyContent: 'center',
                     gap: 2,
                     flexWrap: 'wrap',
                   }}
                 >
-                  <Typography
-                    variant="h6"
+                  <GlobalButton
+                    icon={<VoucherIcon />}
+                    variant="contained"
+                    backgroundContext="yellow"
+                    onClick={() => navigate('/voucher-login')}
                     sx={{
-                      fontWeight: 600,
-                      color: '#000000',
-                      fontSize: { xs: '16px', md: '18px' },
+                      px: 4,
+                      py: 1.5,
                     }}
                   >
-                    Already have a voucher?
-                  </Typography>
-                  <Box sx={{ display: 'flex', gap: 2 }}>
-                    {!isHomePage && (
-                    <GlobalButton
-                      icon={<ShoppingBagIcon />}
-                      variant="contained"
-                      backgroundContext="yellow"
-                      onClick={() => navigate('/packages')}
-                    >
-                      View Packages
-                    </GlobalButton>
-                    )}
-                    <GlobalButton
-                      icon={<VoucherIcon />}
-                      variant="contained"
-                      backgroundContext="yellow"
-                      onClick={() => navigate('/voucher-login')}
-                    >
-                      Voucher Login
-                    </GlobalButton>
-                  </Box>
+                    Already have a voucher? Login
+                  </GlobalButton>
                 </Box>
               </Container>
             </Box>
