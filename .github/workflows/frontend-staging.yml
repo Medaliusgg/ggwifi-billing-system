@@ -7,6 +7,13 @@ on:
     paths:
       - 'Frontend/**'
       - '.github/workflows/frontend-staging.yml'
+  pull_request:
+    branches:
+      - develop
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'Frontend/**'
+      - '.github/workflows/frontend-staging.yml'
   workflow_dispatch:
 
 jobs:
