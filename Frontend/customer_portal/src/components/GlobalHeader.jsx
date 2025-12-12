@@ -31,6 +31,7 @@ const GlobalHeader = ({ isAuthenticated, user, onLogout }) => {
   const location = useLocation();
   const [accountMenuAnchor, setAccountMenuAnchor] = useState(null);
   const [scrolled, setScrolled] = useState(false);
+  const [logoError, setLogoError] = useState(false);
   const { scrollY } = useScroll();
 
   const isHomePage = location.pathname === '/' || location.pathname === '/home';
@@ -145,54 +146,54 @@ const GlobalHeader = ({ isAuthenticated, user, onLogout }) => {
             }}
           >
           {/* Circular Logo Avatar */}
-          <Avatar
+          <Box
             component={motion.div}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            src="/gg-logo-transparent.png"
-            alt="GG Wi-Fi Logo"
-            imgProps={{
-              style: {
-                objectFit: 'contain',
-                padding: '4px',
-              },
-            }}
-            onError={(e) => {
-              // Fallback to text avatar if logo not found
-              e.target.style.display = 'none';
-              const parent = e.target.parentElement;
-              if (parent) {
-                parent.textContent = 'GG';
-                parent.style.display = 'flex';
-                parent.style.alignItems = 'center';
-                parent.style.justifyContent = 'center';
-              }
-            }}
+            onClick={() => navigate('/home')}
             sx={{
+              cursor: 'pointer',
               width: { xs: 40, md: 48 },
               height: { xs: 40, md: 48 },
-              bgcolor: 'transparent', // Transparent background to show logo's design
-              color: theme.palette.primary.main, // Yellow text/icon fallback
-              fontWeight: 700,
-              fontSize: { xs: '16px', md: '20px' },
+              borderRadius: '50%',
+              overflow: 'hidden',
               border: `2px solid ${theme.palette.primary.dark}`,
               boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
-              cursor: 'pointer',
               transition: 'all 0.2s ease',
-              overflow: 'hidden',
-              '& img': {
-                width: '100%',
-                height: '100%',
-                objectFit: 'contain',
-                padding: '4px',
-              },
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              bgcolor: logoError ? theme.palette.text.primary : 'transparent',
               '&:hover': {
                 boxShadow: '0 4px 12px rgba(0, 0, 0, 0.25)',
               },
             }}
           >
-            GG
-          </Avatar>
+            {logoError ? (
+              <Typography
+                sx={{
+                  fontWeight: 700,
+                  fontSize: { xs: '16px', md: '20px' },
+                  color: theme.palette.primary.main,
+                }}
+              >
+                GG
+              </Typography>
+            ) : (
+              <Box
+                component="img"
+                src="/gg-logo-transparent.png"
+                alt="GG Wi-Fi Logo"
+                onError={() => setLogoError(true)}
+                sx={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'contain',
+                  padding: '4px',
+                }}
+              />
+            )}
+          </Box>
           <Typography
             variant="h6"
             sx={{
