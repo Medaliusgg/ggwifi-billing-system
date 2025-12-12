@@ -13,29 +13,57 @@ const HomePackageList = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [focusedIndex, setFocusedIndex] = useState(0);
 
-  const { data: packagesData, isLoading } = useQuery(
+  const { data: packagesData, isLoading, error: packagesError } = useQuery(
     ['packages'],
     async () => {
       try {
         const res = await customerPortalAPI.getPackages();
+        console.log('HomePackageList - Raw API response:', res);
+        
         // Handle network errors gracefully
         if (res?.isNetworkError || res?.isBackendError) {
+          console.warn('Network/Backend error, returning empty packages');
           return { packages: [] };
         }
-        return res?.data || { packages: [] };
+        
+        // Handle different response structures
+        let packages = [];
+        if (res?.data) {
+          if (Array.isArray(res.data)) {
+            packages = res.data;
+          } else if (res.data.packages && Array.isArray(res.data.packages)) {
+            packages = res.data.packages;
+          } else if (res.data.data && Array.isArray(res.data.data)) {
+            packages = res.data.data;
+          } else if (res.data.data?.packages && Array.isArray(res.data.data.packages)) {
+            packages = res.data.data.packages;
+          }
+        }
+        
+        console.log('HomePackageList - Extracted packages:', packages);
+        console.log('HomePackageList - Package count:', packages.length);
+        
+        return { packages };
       } catch (error) {
+        // Log error for debugging
+        console.error('HomePackageList - Error fetching packages:', error);
+        console.error('Error details:', {
+          message: error?.message,
+          response: error?.response?.data,
+          status: error?.response?.status,
+        });
         // Silently handle network/CORS errors
         if (error?.isNetworkError || error?.isBackendError || error?.code === 'ERR_NETWORK') {
           return { packages: [] };
         }
-        console.error('Error fetching packages:', error);
         return { packages: [] };
       }
     },
     {
-      retry: false,
+      retry: 2,
       refetchOnWindowFocus: false,
-      retryOnMount: false,
+      retryOnMount: true,
+      staleTime: 5 * 60 * 1000, // 5 minutes
     }
   );
 
@@ -164,9 +192,14 @@ const HomePackageList = () => {
           </Box>
         ) : packages.length === 0 ? (
           <Box sx={{ textAlign: 'center', py: 4 }}>
-            <Typography variant="body1" sx={{ color: '#666666' }}>
+            <Typography variant="body1" sx={{ color: '#666666', mb: 1 }}>
               No packages available at the moment.
             </Typography>
+            {packagesError && (
+              <Typography variant="caption" sx={{ color: '#999999' }}>
+                Error: {packagesError?.message || 'Unable to load packages'}
+              </Typography>
+            )}
           </Box>
         ) : (
           <AnimatePresence mode="wait">
