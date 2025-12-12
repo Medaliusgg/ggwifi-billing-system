@@ -7,6 +7,13 @@ on:
     paths:
       - 'backend/**'
       - '.github/workflows/backend-staging.yml'
+  pull_request:
+    branches:
+      - develop
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-staging.yml'
   workflow_dispatch:
 
 jobs:
