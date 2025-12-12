@@ -146,55 +146,39 @@ const GlobalHeader = ({ isAuthenticated, user, onLogout }) => {
             }}
           >
           {/* Circular Logo Avatar */}
-          <Box
+          <Avatar
             component={motion.div}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => navigate('/home')}
+            src={logoError ? undefined : "/gg-logo-transparent.png"}
+            alt="GG Wi-Fi Logo"
+            onError={() => setLogoError(true)}
             sx={{
               cursor: 'pointer',
               width: { xs: 40, md: 48 },
               height: { xs: 40, md: 48 },
-              borderRadius: '50%',
-              overflow: 'hidden',
               border: `2px solid ${theme.palette.primary.dark}`,
               boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
               transition: 'all 0.2s ease',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
               bgcolor: logoError ? theme.palette.text.primary : 'transparent',
+              color: theme.palette.primary.main,
+              fontWeight: 700,
+              fontSize: { xs: '16px', md: '20px' },
+              '& img': {
+                objectFit: 'contain',
+                objectPosition: 'center',
+                transform: 'scale(1.5)',
+                width: '100%',
+                height: '100%',
+              },
               '&:hover': {
                 boxShadow: '0 4px 12px rgba(0, 0, 0, 0.25)',
               },
             }}
           >
-            {logoError ? (
-              <Typography
-                sx={{
-                  fontWeight: 700,
-                  fontSize: { xs: '16px', md: '20px' },
-                  color: theme.palette.primary.main,
-                }}
-              >
-                GG
-              </Typography>
-            ) : (
-              <Box
-                component="img"
-                src="/gg-logo-transparent.png"
-                alt="GG Wi-Fi Logo"
-                onError={() => setLogoError(true)}
-                sx={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'contain',
-                  objectPosition: 'center',
-                  transform: 'scale(1.5)',
-                }}
-              />
-            )}
-          </Box>
+            {logoError ? 'GG' : undefined}
+          </Avatar>
           <Typography
             variant="h6"
             sx={{
